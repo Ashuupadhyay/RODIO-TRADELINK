@@ -86,8 +86,9 @@ if (existingUser) {
         });
 
         await user.save();
+        console.log("successfully registered");
 
-        await sendEmail(email, "Successfully Registered to Rodio",
+       /* await sendEmail(email, "Successfully Registered to Rodio",
 `
 <!DOCTYPE html>
 <html>
@@ -241,7 +242,7 @@ Indore, Madhya Pradesh, India
         return res.status(201).json({
             success: true,
             message: "User Registered Successfully"
-        });
+        });*/
 
     } catch (error) {
         console.log(error);
