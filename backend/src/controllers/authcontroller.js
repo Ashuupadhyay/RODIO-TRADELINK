@@ -238,11 +238,11 @@ Indore, Madhya Pradesh, India
 </body>
 </html>
 `);
-
+*/
         return res.status(201).json({
             success: true,
             message: "User Registered Successfully"
-        });*/
+        });
 
     } catch (error) {
         console.log(error);
