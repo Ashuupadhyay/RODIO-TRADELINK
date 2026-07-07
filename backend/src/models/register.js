@@ -39,5 +39,5 @@ enum: ["user", "transporter", "broker"],
     timestamps: true,
   }
 );
-
+console.log("Allowed roles:", userSchema.path("role").enumValues);
 module.exports = mongoose.model("User", userSchema);
