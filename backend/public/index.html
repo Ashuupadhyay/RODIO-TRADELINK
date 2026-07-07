@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rodio OTP Demo</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="box">
+
+    <h2>Forgot Password</h2>
+
+    <input
+        type="text"
+        id="mobile"
+        placeholder="+91XXXXXXXXXX"
+    >
+
+    <div id="recaptcha-container"></div>
+
+    <button id="sendOtp">
+        Send OTP
+    </button>
+
+    <br><br>
+
+    <input
+        type="text"
+        id="otp"
+        placeholder="Enter OTP"
+    >
+
+    <button id="verifyOtp">
+        Verify OTP
+    </button>
+
+</div>
+
+<script type="module" src="script.js"></script>
+
+</body>
+</html>
