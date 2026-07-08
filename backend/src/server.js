@@ -9,6 +9,9 @@ const cors = require("cors");
 
 const app = require("./app");
 const businessRoute = require("./routes/businessrout");
+const searchRoutes = require("./routes/vichlesearch");
+
+app.use("/api/business", searchRoutes);
 
 app.use("/api/business", businessRoute);
 /*const paymentRoutes = require("./routes/paymentrout");*/
