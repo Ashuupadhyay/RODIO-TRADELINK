@@ -300,6 +300,25 @@ const token = jwt.sign(
         expiresIn: process.env.JWT_EXPIRE
     }
 );
+// Role wise redirect path
+let redirectTo = "";
+
+switch (user.role) {
+    case "user":
+        redirectTo = "/user-dashboard";
+        break;
+
+    case "broker":
+        redirectTo = "/broker-dashboard";
+        break;
+
+    case "transporter":
+        redirectTo = "/transporter-dashboard";
+        break;
+
+    default:
+        redirectTo = "/";
+}
 // Cookie me save (optional)
 res.cookie("token", token, {
     httpOnly: true,
@@ -314,10 +333,11 @@ return res.status(200).json({
     
     success: true,
     message: "Login Successful",
-    token,
+   token,
+    redirectTo,
     user: {
         id: user._id,
-         role: user.role,
+        role: user.role,
         name: user.name,
         email: user.email,
         mobile: user.mobile
