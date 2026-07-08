@@ -28,6 +28,16 @@ const businessSchema = new mongoose.Schema({
             "Others"
         ]
     },
+    lineto: {
+  type: String,
+    
+
+    },
+    linefrom: {
+  type: String,
+    
+
+    },
 
     // Basic Details
     firmName: {
@@ -35,6 +45,32 @@ const businessSchema = new mongoose.Schema({
     
         trim: true
     },
+    // Vehicle Types
+vehicleTypes: [{
+    type: String,
+    enum: [
+        "Mini Truck",
+        "Pickup",
+        "Tata Ace",
+        "Bolero Pickup",
+        "Eicher",
+        "Truck",
+        "Container",
+        "Trailer",
+        "Open Body Truck",
+        "Closed Body Truck",
+        "Tanker",
+        "Tipper",
+        "LCV",
+        "HCV",
+        "Tempo",
+        "Canter",
+        "Mahindra Jeeto",
+        "Ashok Leyland Dost",
+        "Tractor Trolley",
+        "Refrigerated Truck"
+    ]
+}],
 
     ownerName: {
         type: String,
