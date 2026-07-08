@@ -1,101 +1,177 @@
 const Business = require("../models/business");
-const cloudinary = require("../config/cloudnary");
-const streamifier = require("streamifier");
+const { customAlphabet } = require("nanoid");
 
+const nanoid = customAlphabet(
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+    4
+);
 
-
-const registerBusiness = async (req, res) => {
-    try {console.log("BODY:", req.body);
+const createBusiness = async (req, res) => {
+    try {
 
         const {
-            businessType,
-            businessName,
+            category,
+            firmName,
             ownerName,
             address,
+            currentCity,
+            currentState,
+            pincode,
             phoneNumber,
-            landlineNumber,
-            gstNumber,
+            alternatePhone,
             email,
+            website,
             socialMedia,
-            workingArea,
-            vehicleType,
-            lineto,
-            linefrom,
-            freightCharge,
-            verificationIdType
+            acceptedTerms,
+            referredBy
         } = req.body;
-console.log({
-    linefrom,
-    lineto,
-    vehicleType
-});
 
-        if (!req.file) {
+        // Validation
+        if (
+            !category ||
+            !ownerName ||
+            !address ||
+            !currentCity ||
+            !currentState ||
+            !pincode ||
+            !phoneNumber ||
+            !email ||
+            acceptedTerms !== true
+        ) {
             return res.status(400).json({
                 success: false,
-                message: "Please upload verification document"
+                message: "Please fill all required fields."
             });
         }
-             console.log(cloudinary.config());
-        // Upload to Cloudinary
-        const uploadResult = await new Promise((resolve, reject) => {
 
-            const stream = cloudinary.uploader.upload_stream(
-                {
-                    folder: "business_documents",
-                    resource_type: "auto"
-                },
-                (error, result) => {
-                    if (error) return reject(error);
-                    resolve(result);
-                }
-            );
-
-            streamifier.createReadStream(req.file.buffer).pipe(stream);
+        // Duplicate Mobile
+        const mobileExists = await Business.findOne({
+            phoneNumber
         });
+
+        if (mobileExists) {
+            return res.status(400).json({
+                success: false,
+                message: "Phone Number already exists."
+            });
+        }
+
+        // Duplicate Email
+        const emailExists = await Business.findOne({
+            email: email.toLowerCase()
+        });
+
+        if (emailExists) {
+            return res.status(400).json({
+                success: false,
+                message: "Email already exists."
+            });
+        }
+
+        // Business ID
+        const businessId =
+            "RDL" + Date.now();
+
+        // Referral Code
+        const referralCode = nanoid();
 
         const business = await Business.create({
 
-            businessType,
-            businessName,
+            user: req.user.id,
+
+            category,
+            firmName,
             ownerName,
             address,
+            currentCity,
+            currentState,
+            pincode,
             phoneNumber,
-            landlineNumber,
-            gstNumber,
-            email,
+            alternatePhone,
+            email: email.toLowerCase(),
+            website,
             socialMedia,
-            workingArea,
-            vehicleType,
-            lineto,
-            linefrom,
-            freightCharge,
-            verificationIdType,
 
-            verificationDocument: {
-                public_id: uploadResult.public_id,
-                url: uploadResult.secure_url
-            },
+            businessId,
+            referralCode,
+            referredBy,
 
+            photo: req.body.photo,
+            aadhaar: req.body.aadhaar,
+            panCard: req.body.panCard,
+            gumasta: req.body.gumasta,
+            gstCertificate: req.body.gstCertificate,
+
+            acceptedTerms
 
         });
 
         return res.status(201).json({
+
             success: true,
             message: "Business Registered Successfully",
+
             business
+
         });
 
-    } catch (error) {
+    } 
+    
+// get 
+    
+    
+    
+    catch (error) {
+
+        console.log(error);
 
         return res.status(500).json({
+
             success: false,
-            message: error.message
+            message: "Internal Server Error"
+
         });
 
     }
 };
 
+
+
+
+
+//get
+
+
+
+const searchBusiness = async (req, res) => {
+  try {
+    const { category, state, city } = req.query;
+
+    const filter = {};
+
+    if (category) filter.category = category;
+    if (state) filter.currentState = state;
+    if (city) filter.currentCity = city;
+
+    const businesses = await Business.find(filter);
+
+    res.status(200).json({
+      success: true,
+      count: businesses.length,
+      data: businesses
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
+
 module.exports = {
-    registerBusiness
+    createBusiness,
+     searchBusiness
 };

@@ -4,10 +4,12 @@ const express = require("express");
 const cors = require("cors");
 
 //const app = express();
-const businessRoute = require("./routes/businessrout");
+//const businessRoute = require("./routes/businessrout");
 
 
 const app = require("./app");
+const businessRoute = require("./routes/businessrout");
+
 app.use("/api/business", businessRoute);
 /*const paymentRoutes = require("./routes/paymentrout");*/
 

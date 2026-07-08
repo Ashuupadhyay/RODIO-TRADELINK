@@ -2,19 +2,44 @@ const mongoose = require("mongoose");
 
 const businessSchema = new mongoose.Schema({
 
-    businessType: {
-        type: String,
+    // Registered User
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
         required: true
     },
 
-    businessName: {
+    // Category (Dropdown)
+    category: {
         type: String,
-        required: true
+        required: true,
+        enum: [
+            "Transporter",
+            "Broker",
+            "Fleet Owner",
+            "Truck Owner",
+            "Logistics Company",
+            "Warehouse",
+            "Courier",
+            "Packing & Moving",
+            "Commission Agent",
+            "RTO Agent",
+            "Finance Agent",
+            "Others"
+        ]
+    },
+
+    // Basic Details
+    firmName: {
+        type: String,
+    
+        trim: true
     },
 
     ownerName: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
 
     address: {
@@ -22,70 +47,109 @@ const businessSchema = new mongoose.Schema({
         required: true
     },
 
-    phoneNumber: {
+    // Current Working Location
+    currentCity: {
         type: String,
         required: true,
-        unique: true
+        index: true
     },
 
-    landlineNumber: {
+    currentState: {
+        type: String,
+        required: true,
+        index: true
+    },
+
+    pincode: {
+        type: String,
+        required: true
+    },
+
+    phoneNumber: {
+        type: String,
+        required: true
+    },
+
+    alternatePhone: {
         type: String
     },
 
-    gstNumber: {
-        type: String
-    },
+businessId: {
+    type: String,
+    unique: true
+},
+
+referralCode: {
+    type: String,
+    unique: true
+},
+
+referredBy: {
+    type: String,
+    default: null
+}
+
+
+    ,
 
     email: {
         type: String,
-        required: true,
-        unique: true
+        required: true
+    },
+
+    website: {
+        type: String
     },
 
     socialMedia: {
         type: String
     },
 
-    workingArea: {
-        type: String,
-        required: true
+
+    // Firm Photo
+    photo: {
+        public_id: String,
+        url: String
     },
 
-    vehicleType: {
-        type: String,
-        required: true
+    // Documents
+    aadhaar: {
+        public_id: String,
+        url: String
     },
 
-    lineto: {
-        type: String,
-        required: true
-    },
-linefrom: {
-        type: String,
-        required: true
-    },
-    freightCharge: {
-        type: Number,
-        required: true
+    panCard: {
+        public_id: String,
+        url: String
     },
 
-    verificationIdType: {
-        type: String,
-        required: true
+    gumasta: {
+        public_id: String,
+        url: String
     },
 
-   verificationDocument: {
-    public_id: {
-        type: String,
-        required: true
+    gstCertificate: {
+        public_id: String,
+        url: String
     },
-    url: {
-        type: String,
+
+   
+    // Verification Status
+    
+    // Form Checkbox
+    acceptedTerms: {
+        type: Boolean,
         required: true
     }
-}
+
 }, {
     timestamps: true
+});
+
+businessSchema.index({
+    category: 1,
+    currentCity: 1,
+    currentState: 1
 });
 
 module.exports = mongoose.model("Business", businessSchema);
