@@ -1,46 +1,38 @@
 const Business = require("../models/business");
 
+// Search by Line From, Line To & Vehicle Type
 exports.searchBusiness = async (req, res) => {
   try {
-    const { state, city, category } = req.query;
+    const { linefrom, lineto, vehicleType } = req.query;
 
-    console.log("Query Params:", req.query);
+    let filter = {
+      category: "Transporter"
+    };
 
-    let filter = {};
-
-    // State Filter
-    if (state && state.trim() !== "") {
-      filter.state = state;
+    if (linefrom) {
+      filter.linefrom = linefrom;
     }
 
-    // City Filter
-    if (city && city.trim() !== "") {
-      filter.city = city;
+    if (lineto) {
+      filter.lineto = lineto;
     }
 
-    // Category Filter
-    if (category && category.trim() !== "") {
-      filter.category = category;
+    if (vehicleType) {
+      filter.vehicleTypes = vehicleType;
     }
-
-    console.log("Mongo Filter:", filter);
 
     const businesses = await Business.find(filter).sort({ createdAt: -1 });
 
-    console.log("Found Businesses:", businesses.length);
-
     res.status(200).json({
       success: true,
-      count: businesses.length,
-      data: businesses,
+      total: businesses.length,
+      data: businesses
     });
 
   } catch (error) {
-    console.error(error);
-
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message
     });
   }
 };
