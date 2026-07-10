@@ -146,21 +146,34 @@ const createBusiness = async (req, res) => {
 const searchBusiness = async (req, res) => {
   try {
     const { category, state, city } = req.query;
+    console.log("aarha h");
+    console.log(category);
+    console.log(state);
+    console.log(city);
 
     const filter = {};
 
     if (category) filter.category = category;
     if (state) filter.currentState = state;
     if (city) filter.currentCity = city;
-
+  console.log("aarha h2222");
+    console.log(category);
+    console.log(state);
+    console.log(city);
     const businesses = await Business.find(filter);
-
+  console.log("aarha h55555555");
+    console.log(category);
+    console.log(state);
+    console.log(city);
     res.status(200).json({
       success: true,
       count: businesses.length,
       data: businesses
     });
-
+  console.log("aarha h sucesss");
+    console.log(category);
+    console.log(state);
+    console.log(city);
   } catch (error) {
     res.status(500).json({
       success: false,
