@@ -17,17 +17,12 @@ const bookingSchema = new mongoose.Schema(
         required:true
     },
 
-    destination:{
+    loading_point:{
         type:String,
         required:true
     },
 
     pickupDate:{
-        type:String,
-        required:true
-    },
-
-    pickupTime:{
         type:String,
         required:true
     },
@@ -65,4 +60,4 @@ const bookingSchema = new mongoose.Schema(
 );
 
 
-module.exports = mongoose.model("Booking",bookingSchema);
+module.exports = mongoose.model("Booking", bookingSchema);
