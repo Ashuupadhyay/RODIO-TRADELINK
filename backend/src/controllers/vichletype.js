@@ -3,22 +3,20 @@ const Business = require("../models/business");
 // Search by Line From, Line To & Vehicle Type
 exports.searchBusiness = async (req, res) => {
   try {
-    const { linefrom, lineto, vehicleType } = req.query;
+    const { state, city, category } = req.query;
 
-    let filter = {
-      category: "Transporter"
-    };
+    let filter = {};
 
-    if (linefrom) {
-      filter.linefrom = linefrom;
+    if (state) {
+      filter.state = state;
     }
 
-    if (lineto) {
-      filter.lineto = lineto;
+    if (city) {
+      filter.city = city;
     }
 
-    if (vehicleType) {
-      filter.vehicleTypes = vehicleType;
+    if (category) {
+      filter.category = category;
     }
 
     const businesses = await Business.find(filter).sort({ createdAt: -1 });
@@ -26,13 +24,12 @@ exports.searchBusiness = async (req, res) => {
     res.status(200).json({
       success: true,
       total: businesses.length,
-      data: businesses
+      data: businesses,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
