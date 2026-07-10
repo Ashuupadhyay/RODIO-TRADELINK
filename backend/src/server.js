@@ -8,6 +8,13 @@ const cors = require("cors");
 
 
 const app = require("./app");
+const bookingRoutes = require("./routes/bookingRoutes");
+
+
+app.use(
+"/api/booking",
+bookingRoutes
+);
 const businessRoute = require("./routes/businessrout");
 const searchRoutes = require("./routes/vichlesearch");
 
