@@ -87,9 +87,10 @@ if (existingUser) {
 
         await user.save();
         console.log("successfully registered");
-
-       /* await sendEmail(email, "Successfully Registered to Rodio",
-`
+  console.log("chal rha h 1");
+        await sendEmail(email, "Successfully Registered to Rodio",
+            
+`  
 <!DOCTYPE html>
 <html>
 <head>
@@ -238,7 +239,8 @@ Indore, Madhya Pradesh, India
 </body>
 </html>
 `);
-*/
+console.log("chakr ha e 2");
+
         return res.status(201).json({
             success: true,
             message: "User Registered Successfully"
