@@ -11,6 +11,9 @@ const createBusiness = async (req, res) => {
 
         const {
             category,
+            from,
+            to,
+            vehicleTypes,
             firmName,
             ownerName,
             address,
@@ -80,6 +83,10 @@ const createBusiness = async (req, res) => {
             user: req.user.id,
 
             category,
+             category,
+            from,
+            to,
+            vehicleTypes,
             firmName,
             ownerName,
             address,
