@@ -22,6 +22,7 @@ app.use("/api/business", searchRoutes);
 
 app.use("/api/business", businessRoute);
 app.use("/api/contact", contactRoutes);
+app.use("/api/query", require("./routes/ecel"));
 
 
 
