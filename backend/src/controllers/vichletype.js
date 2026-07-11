@@ -3,18 +3,18 @@ const Business = require("../models/business");
 // Search by Line From, Line To & Vehicle Type
 exports.searchBusiness = async (req, res) => {
   try {
-    const { linefrom, lineto, vehicleType } = req.query;
+    const { from, to, vehicleType } = req.query;
 
     let filter = {
       category: "Transporter"
     };
 
-    if (linefrom) {
-      filter.linefrom = linefrom;
+    if (from) {
+      filter.from = from;
     }
 
-    if (lineto) {
-      filter.lineto = lineto;
+    if (to) {
+      filter.to = to;
     }
 
     if (vehicleType) {

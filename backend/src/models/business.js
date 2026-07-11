@@ -28,12 +28,12 @@ const businessSchema = new mongoose.Schema({
             "Others"
         ]
     },
-    lineto: {
+    to: {
   type: String,
     
 
     },
-    linefrom: {
+    from: {
   type: String,
     
 
