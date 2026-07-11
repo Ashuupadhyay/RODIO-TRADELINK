@@ -4,6 +4,10 @@ const Business = require("../models/business");
 exports.searchBusiness = async (req, res) => {
   try {
     const { from, to, vehicleType } = req.query;
+    console.log("aa rrha h ");
+    console.log(from);
+    console.log(to);
+    console.log(vehicleType);
 
     let filter = {
       category: "Transporter"
@@ -29,6 +33,8 @@ exports.searchBusiness = async (req, res) => {
       data: businesses
     });
 
+    console.log("aa rrha h 222222 ");
+    
   } catch (error) {
     res.status(500).json({
       success: false,
