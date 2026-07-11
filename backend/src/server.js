@@ -6,6 +6,7 @@ const app = require("./app");
 const bookingRoutes = require("./routes/bookingRoutes");
 const businessRoute = require("./routes/businessrout");
 const searchRoutes = require("./routes/vichlesearch");
+const contactRoutes = require("./routes/QueryRoute");
 
 // Database
 const connectDB = require("./config/db");
@@ -20,6 +21,7 @@ app.use("/api/booking", bookingRoutes);
 app.use("/api/business", searchRoutes);
 
 app.use("/api/business", businessRoute);
+app.use("/api/contact", contactRoutes);
 
 
 
