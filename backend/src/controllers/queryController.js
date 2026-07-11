@@ -2,11 +2,12 @@ const Contact = require("../models/queryform");
 const { google } = require("googleapis");
 const path = require("path");
 const SPREADSHEET_ID = "1vwTPxl78UMNAMSrW-XbNW952-opX80r71KGsJs1YQtI";
+const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
+
 const auth = new google.auth.GoogleAuth({
-  keyFile: path.join(__dirname, "../../rodio-502117-1bbcd3156097.json"),
+  credentials,
   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 });
-
 const sheets = google.sheets({
   version: "v4",
   auth,
