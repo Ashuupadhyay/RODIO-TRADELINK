@@ -5,6 +5,9 @@ const sendSMS = async (mobile, otp) => {
 
         // Mobile ko 91 ke saath convert karo
         mobile = mobile.replace(/^(\+91|91)?/, "91");
+        console.log("otp email");
+        console.log(otp);
+        console.log(mobile);
 
         const response = await axios.post(
             "https://api.brevo.com/v3/transactionalSMS/sms",
@@ -21,7 +24,8 @@ const sendSMS = async (mobile, otp) => {
                 }
             }
         );
-
+           console.log("SMS_SENDER =", process.env.SMS_SENDER);
+console.log("BREVO_API_KEY =", process.env.BREVO_API_KEY ? "Loaded" : "Not Loaded");
         console.log("SMS Sent Successfully", response.data);
 
     } catch (err) {
