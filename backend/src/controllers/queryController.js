@@ -1,9 +1,16 @@
 const Contact = require("../models/queryform");
 const { google } = require("googleapis");
-const path = require("path");
-const SPREADSHEET_ID = "1vwTPxl78UMNAMSrW-XbNW952-opX80r71KGsJs1YQtI";
-const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
 
+const SPREADSHEET_ID = "1vwTPxl78UMNAMSrW-XbNW952-opX80r71KGsJs1YQtI";
+console.log(process.env.GOOGLE_SERVICE_ACCOUNT);
+/*const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);*/
+let credentials;
+
+if (process.env.GOOGLE_SERVICE_ACCOUNT) {
+    credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
+} else {
+    credentials = require("../../credentials/google-service-account.json");
+}
 const auth = new google.auth.GoogleAuth({
   credentials,
   scopes: ["https://www.googleapis.com/auth/spreadsheets"],

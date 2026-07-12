@@ -1,8 +1,9 @@
-const sendEmail = require("../utills/sendemail");
+//const sendEmail = require("../utills/sendemail");
 const User = require("../models/register");
 const OTP = require("../models/otpmodel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const sendEmail = require("../services/emailService");
 
 // REGISTER
 const register = async (req, res) => {
