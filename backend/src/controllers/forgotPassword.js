@@ -1,8 +1,9 @@
 const User = require("../models/register");
 const OTP = require("../models/otpmodel");
-const sendEmail = require("../utills/sendemail");
-const axios = require("axios");
+const sendEmail = require("../services/emailService");
+const sendSMS = require("../services/smsService");
 
+// Generate 6 Digit OTP
 const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
@@ -10,10 +11,20 @@ const generateOTP = () => {
 const forgotPassword = async (req, res) => {
     try {
 
-        const { email, mobilenum } = req.body;
+        const { email } = req.body;
 
-        // 1. Check user
-        const user = await User.findOne({ email });
+        // Check Email
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Email is required"
+            });
+        }
+
+        // Find User
+        const user = await User.findOne({
+            email: email.toLowerCase()
+        });
 
         if (!user) {
             return res.status(404).json({
@@ -22,35 +33,37 @@ const forgotPassword = async (req, res) => {
             });
         }
 
-        // 2. Delete old OTP if exists
-        await OTP.findOneAndDelete({ email });
+        // Delete Old OTP
+        await OTP.findOneAndDelete({ email: user.email });
 
-        // 3. Generate OTP
+        // Generate OTP
         const otp = generateOTP();
 
-        // 4. Save OTP
+        // Save OTP
         await OTP.create({
-            email,
+            email: user.email,
             otp,
             expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 Minutes
         });
 
-        // 5. Send Email
+        // Send Email
         await sendEmail(
-            email,
+            user.email,
             "Rodio Password Reset OTP",
             `
             <h2>Hello ${user.name}</h2>
 
             <p>We received a request to reset your password.</p>
 
-            <h1 style="letter-spacing:4px;color:#0c30c8;">
+            <p>Please use the OTP below to reset your password.</p>
+
+            <h1 style="letter-spacing:5px;color:#0c30c8;">
                 ${otp}
             </h1>
 
             <p>This OTP is valid for <b>10 Minutes</b>.</p>
 
-            <p>If you didn't request this, please ignore this email.</p>
+            <p>If you didn't request this password reset, please ignore this email.</p>
 
             <br>
 
@@ -59,30 +72,34 @@ const forgotPassword = async (req, res) => {
             `
         );
 
-        // 6. Send Mobile OTP (Optional)
-       const axios = require("axios");
+        // Send SMS (Optional)
+        try {
 
-if (mobilenum) {
-    try {
-        await axios.get(
-            `https://2factor.in/API/V1/${process.env.TWO_FACTOR_API_KEY}/SMS/${mobilenum}/${otp}`
-        );
+            await sendSMS(user.mobile, otp);
 
-        console.log("SMS Sent");
+            console.log("SMS Sent Successfully");
 
-    } catch (err) {
-        console.log("SMS Error:", err.response?.data || err.message);
-    }
-}
+        } catch (smsError) {
+
+            console.log(
+                "SMS Failed:",
+                smsError.response?.data || smsError.message
+            );
+
+            // Email already sent, so continue
+        }
 
         return res.status(200).json({
             success: true,
-            message: "OTP Sent Successfully"
+            message: "OTP sent successfully. Please check your email."
         });
 
     } catch (error) {
 
-        console.log(error);
+        console.log(
+            "Forgot Password Error:",
+            error.response?.data || error.message
+        );
 
         return res.status(500).json({
             success: false,
