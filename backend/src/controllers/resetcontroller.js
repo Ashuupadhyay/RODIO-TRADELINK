@@ -4,6 +4,9 @@ const User = require("../models/register");
 const resetPassword = async (req, res) => {
     try {
         const { password, confirmPassword } = req.body;
+        console.log("reset");
+        console.log(password);
+        console.log(confirmPassword);
 
         if (!password || !confirmPassword) {
             return res.status(400).json({
