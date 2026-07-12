@@ -1,6 +1,10 @@
 const axios = require("axios");
 
 const sendSMS = async (mobile, otp) => {
+    console.log("OTPMOBILE");
+    console.log(mobile);
+    console.log(otp);
+
     try {
         const response = await axios.post(
             "https://api.brevo.com/v3/transactionalSMS/sms",
@@ -8,7 +12,9 @@ const sendSMS = async (mobile, otp) => {
                 sender: process.env.SMS_SENDER,
                 recipient: mobile,
                 content: `Your RODIO OTP is ${otp}. It is valid for 10 minutes.`
-            },
+                
+            }
+            ,
             {
                 headers: {
                     "api-key": process.env.BREVO_API_KEY,
