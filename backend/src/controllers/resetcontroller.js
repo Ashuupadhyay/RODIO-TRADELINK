@@ -3,12 +3,12 @@ const User = require("../models/register");
 
 const resetPassword = async (req, res) => {
     try {
-        const { password, confirmPassword } = req.body;
+        const {  email, confirmPassword } = req.body;
         console.log("reset");
-        console.log(password);
+        console.log(email);
         console.log(confirmPassword);
 
-        if (!password || !confirmPassword) {
+      /*  if (!password || !confirmPassword) {
             return res.status(400).json({
                 success: false,
                 message: "Password and Confirm Password are required"
@@ -21,14 +21,16 @@ const resetPassword = async (req, res) => {
                 message: "Passwords do not match"
             });
         }
-
+*/
         const hashedPassword = await bcrypt.hash(password, 10);
 
         await User.findByIdAndUpdate(
             req.user.id,
+            
             { password: hashedPassword },
             { new: true }
         );
+        console.log(req.user);s
 
         return res.status(200).json({
             success: true,
