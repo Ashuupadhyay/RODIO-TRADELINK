@@ -11,6 +11,7 @@ const contactRoutes = require("./routes/QueryRoute");
 // Database
 const connectDB = require("./config/db");
 
+const profileRoutes = require("./routes/profile");
 
 /*
     API Routes
@@ -23,6 +24,8 @@ app.use("/api/business", searchRoutes);
 app.use("/api/business", businessRoute);
 app.use("/api/contact", contactRoutes);
 app.use("/api/query", require("./routes/ecel"));
+
+app.use("/api/profile", profileRoutes);
 
 
 
