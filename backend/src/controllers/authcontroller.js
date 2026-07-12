@@ -114,7 +114,7 @@ style="background:#ffffff;border-radius:15px;overflow:hidden;box-shadow:0 5px 20
 style="padding:35px;background:linear-gradient(90deg,#0c30c8,#ff5c00);">
 
 <img
-  src="cid:rodioLogo"
+  src="https://res.cloudinary.com/tyt9mt1f/image/upload/v1783834638/WhatsApp_Image_2026-07-03_at_5.58.58_PM_qmgv73.jpg"
   alt="Rodio Logo"
   width="220"
   style="display:block;margin:0 auto;"
