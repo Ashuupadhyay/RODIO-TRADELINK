@@ -28,7 +28,17 @@ const createBusiness = async (req, res) => {
             acceptedTerms,
             referredBy
         } = req.body;
-
+       console.log(category);
+       console.log(from);
+       console.log(to);
+       console.log(vehicleTypes);
+       cnsole.log(firmName);
+       console.log(ownerName);
+       console.log(address);
+       console.log(currentCity);
+       console.log(currentState);
+       console.log(phoneNumber);
+       console.log(email);
         // Validation
         if (
             !category ||
