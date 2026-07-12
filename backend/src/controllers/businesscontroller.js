@@ -32,7 +32,7 @@ const createBusiness = async (req, res) => {
        console.log(from);
        console.log(to);
        console.log(vehicleTypes);
-       cnsole.log(firmName);
+       console.log(firmName);
        console.log(ownerName);
        console.log(address);
        console.log(currentCity);
@@ -93,7 +93,6 @@ const createBusiness = async (req, res) => {
             user: req.user.id,
 
             category,
-             category,
             from,
             to,
             vehicleTypes,
