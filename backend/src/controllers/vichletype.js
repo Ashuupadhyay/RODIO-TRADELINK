@@ -35,7 +35,7 @@ exports.searchBusiness = async (req, res) => {
     }
 
     console.log("Filter =>", filter);
-   conlsole.log("folter",filter);
+   console.log("folter",filter);
     const businesses = await Business.find(filter).sort({
       createdAt: -1,
     });
