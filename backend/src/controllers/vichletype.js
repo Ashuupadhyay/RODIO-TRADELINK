@@ -36,9 +36,9 @@ exports.searchBusiness = async (req, res) => {
 
     console.log("Filter =>", filter);
    console.log("folter",filter);
-    const businesses = await Business.find(filter).sort({
-      createdAt: -1,
-    });
+  const businesses = await Business.find(filter)
+  .collation({ locale: "en", strength: 2 })
+  .sort({ firmName: 1 });
 
     return res.status(200).json({
       success: true,
