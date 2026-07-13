@@ -1,31 +1,45 @@
 const Business = require("../models/business");
 
-// Search by Line From, Line To & Vehicle Type
 exports.searchBusiness = async (req, res) => {
   try {
-    const { from, to, vehicleType } = req.query;
-    console.log("aa rrha h ");
-    console.log(from);
-    console.log(to);
-    console.log(vehicleType);
+
+    let { from, to, vehicleType } = req.query;
 
     let filter = {
       category: "Transporter"
     };
 
+    // Case-insensitive search
     if (from) {
-      filter.from = from;
+      filter.from = {
+        $regex: new RegExp("^" + from.trim() + "$", "i")
+      };
     }
 
     if (to) {
-      filter.to = to;
+      filter.to = {
+        $regex: new RegExp("^" + to.trim() + "$", "i")
+      };
     }
 
+    // Vehicle Types Array Search
     if (vehicleType) {
-      filter.vehicleTypes = vehicleType;
+
+      const vehicles = vehicleType
+        .split(",")
+        .map(v => new RegExp("^" + v.trim() + "$", "i"));
+
+      filter.vehicleTypes = {
+        $in: vehicles
+      };
+
     }
 
-    const businesses = await Business.find(filter).sort({ createdAt: -1 });
+    console.log("FILTER =", JSON.stringify(filter));
+
+    const businesses = await Business.find(filter).sort({
+      createdAt: -1
+    });
 
     res.status(200).json({
       success: true,
@@ -33,12 +47,14 @@ exports.searchBusiness = async (req, res) => {
       data: businesses
     });
 
-    console.log("aa rrha h 222222 ");
-    
   } catch (error) {
+
+    console.log(error);
+
     res.status(500).json({
       success: false,
       message: error.message
     });
+
   }
 };
