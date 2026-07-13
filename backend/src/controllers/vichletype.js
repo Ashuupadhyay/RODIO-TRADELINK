@@ -1,60 +1,43 @@
-const Business = require("../models/business");
-
 exports.searchBusiness = async (req, res) => {
   try {
+    const { from, to, vehicleType } = req.query;
 
-    let { from, to, vehicleType } = req.query;
+    let filter = {};
 
-    let filter = {
-      category: "Transporter"
-    };
-
-    // Case-insensitive search
     if (from) {
       filter.from = {
-        $regex: new RegExp("^" + from.trim() + "$", "i")
+        $regex: new RegExp("^" + from.trim() + "$", "i"),
       };
     }
 
     if (to) {
       filter.to = {
-        $regex: new RegExp("^" + to.trim() + "$", "i")
+        $regex: new RegExp("^" + to.trim() + "$", "i"),
       };
     }
 
-    // Vehicle Types Array Search
     if (vehicleType) {
-
       const vehicles = vehicleType
         .split(",")
         .map(v => new RegExp("^" + v.trim() + "$", "i"));
 
       filter.vehicleTypes = {
-        $in: vehicles
+        $in: vehicles,
       };
-
     }
 
-    console.log("FILTER =", JSON.stringify(filter));
+    const businesses = await Business.find(filter).sort({ createdAt: -1 });
 
-    const businesses = await Business.find(filter).sort({
-      createdAt: -1
-    });
-
-    res.status(200).json({
+    res.json({
       success: true,
       total: businesses.length,
-      data: businesses
+      data: businesses,
     });
 
-  } catch (error) {
-
-    console.log(error);
-
+  } catch (err) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: err.message,
     });
-
   }
 };
