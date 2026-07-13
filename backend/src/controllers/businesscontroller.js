@@ -1,19 +1,21 @@
 const Business = require("../models/business");
 const { customAlphabet } = require("nanoid");
-const streamifier = require("streamifier");
-const cloudinary = require("../config/cloudnary");
 
 const nanoid = customAlphabet(
   "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
   4
 );
 
+// ================= CREATE BUSINESS =================
+
 const createBusiness = async (req, res) => {
   try {
-    const {
+
+    let {
       category,
       from,
       to,
+      vehicleTypes,
       firmName,
       ownerName,
       address,
@@ -26,29 +28,41 @@ const createBusiness = async (req, res) => {
       website,
       socialMedia,
       referredBy,
+      acceptedTerms
     } = req.body;
- console.log("Category:", category);
-    console.log("From:", from);
-    console.log("To:", to);
-    console.log("Firm Name:", firmName);
-    console.log("Owner Name:", ownerName);
-    console.log("Address:", address);
-    console.log("Current City:", currentCity);
-    console.log("Current State:", currentState);
-    console.log("Pincode:", pincode);
-    console.log("Phone Number:", phoneNumber);
-    console.log("Alternate Phone:", alternatePhone);
-    console.log("Email:", email);
-    console.log("Website:", website);
-    let { vehicleTypes, acceptedTerms } = req.body;
 
-    // form-data me boolean string hota hai
-    acceptedTerms = acceptedTerms === "true" || acceptedTerms === true;
+    // Normalize Data
+    category = category?.trim().toLowerCase();
+    from = from?.trim().toLowerCase();
+    to = to?.trim().toLowerCase();
 
-    // vehicleTypes array bana do
+    firmName = firmName?.trim();
+    ownerName = ownerName?.trim();
+    address = address?.trim();
+
+    currentCity = currentCity?.trim().toLowerCase();
+    currentState = currentState?.trim().toLowerCase();
+
+    phoneNumber = phoneNumber?.trim();
+    alternatePhone = alternatePhone?.trim();
+
+    email = email?.trim().toLowerCase();
+
+    website = website?.trim();
+    socialMedia = socialMedia?.trim();
+
+    acceptedTerms =
+      acceptedTerms === true || acceptedTerms === "true";
+
     if (typeof vehicleTypes === "string") {
       vehicleTypes = vehicleTypes.split(",");
     }
+
+    console.log("Category:", category);
+    console.log("From:", from);
+    console.log("To:", to);
+    console.log("City:", currentCity);
+    console.log("State:", currentState);
 
     if (
       !category ||
@@ -63,27 +77,29 @@ const createBusiness = async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message: "Please fill all required fields."
+        message: "Please fill all required fields"
       });
     }
- console.log("dhdhdhdkbdkbkb");
-    const mobileExists = await Business.findOne({ phoneNumber });
+
+    const mobileExists = await Business.findOne({
+      phoneNumber
+    });
 
     if (mobileExists) {
       return res.status(400).json({
         success: false,
-        message: "Phone Number already exists."
+        message: "Phone Number already exists"
       });
     }
 
     const emailExists = await Business.findOne({
-      email: email.toLowerCase()
+      email
     });
 
     if (emailExists) {
       return res.status(400).json({
         success: false,
-        message: "Email already exists."
+        message: "Email already exists"
       });
     }
 
@@ -108,7 +124,7 @@ const createBusiness = async (req, res) => {
       phoneNumber,
       alternatePhone,
 
-      email: email.toLowerCase(),
+      email,
       website,
       socialMedia,
 
@@ -119,35 +135,35 @@ const createBusiness = async (req, res) => {
       photo: req.files?.photo?.[0]
         ? {
             public_id: req.files.photo[0].filename,
-            url: req.files.photo[0].path,
+            url: req.files.photo[0].path
           }
         : {},
 
       aadhaar: req.files?.aadhaar?.[0]
         ? {
             public_id: req.files.aadhaar[0].filename,
-            url: req.files.aadhaar[0].path,
+            url: req.files.aadhaar[0].path
           }
         : {},
 
       panCard: req.files?.panCard?.[0]
         ? {
             public_id: req.files.panCard[0].filename,
-            url: req.files.panCard[0].path,
+            url: req.files.panCard[0].path
           }
         : {},
 
       gumasta: req.files?.gumasta?.[0]
         ? {
             public_id: req.files.gumasta[0].filename,
-            url: req.files.gumasta[0].path,
+            url: req.files.gumasta[0].path
           }
         : {},
 
       gstCertificate: req.files?.gstCertificate?.[0]
         ? {
             public_id: req.files.gstCertificate[0].filename,
-            url: req.files.gstCertificate[0].path,
+            url: req.files.gstCertificate[0].path
           }
         : {},
 
@@ -162,63 +178,105 @@ const createBusiness = async (req, res) => {
     });
 
   } catch (error) {
+
     console.log(error);
 
     return res.status(500).json({
       success: false,
       message: error.message
     });
+
   }
 };
 
 
-
-
-//get
-
-
-
-
-
+// ================= SEARCH BUSINESS =================
 
 const searchBusiness = async (req, res) => {
+
   try {
-    const { from, to, vehicleType } = req.query;
-    console.log("aarha h ");
-    console.log(from);
-    console.log(to);
-    console.log(vehicleType);
+
+    let {
+      category,
+      from,
+      to,
+      currentState,
+      currentCity,
+      vehicleType
+    } = req.query;
 
     let query = {};
 
+    if (category) {
+      query.category = {
+        $regex: `^${category.trim()}$`,
+        $options: "i"
+      };
+    }
+
     if (from) {
-      query.from = from;
+      query.from = {
+        $regex: `^${from.trim()}$`,
+        $options: "i"
+      };
     }
 
     if (to) {
-      query.to = to;
+      query.to = {
+        $regex: `^${to.trim()}$`,
+        $options: "i"
+      };
+    }
+
+    if (currentState) {
+      query.currentState = {
+        $regex: `^${currentState.trim()}$`,
+        $options: "i"
+      };
+    }
+
+    if (currentCity) {
+      query.currentCity = {
+        $regex: `^${currentCity.trim()}$`,
+        $options: "i"
+      };
     }
 
     if (vehicleType) {
-      const vehicles = vehicleType.split(",");
-      query.vehicleTypes = { $in: vehicles };
+
+      const vehicles = vehicleType
+        .split(",")
+        .map(v => new RegExp(`^${v.trim()}$`, "i"));
+
+      query.vehicleTypes = {
+        $in: vehicles
+      };
+
     }
+
+    console.log(query);
 
     const businesses = await Business.find(query);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       total: businesses.length,
-      data: businesses,
+      data: businesses
     });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
+
+    console.log(error);
+
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message
     });
+
   }
+
 };
+
 module.exports = {
   createBusiness,
   searchBusiness
