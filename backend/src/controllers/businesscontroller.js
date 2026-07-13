@@ -1,3 +1,5 @@
+
+
 const Business = require("../models/business");
 const { customAlphabet } = require("nanoid");
 
@@ -6,11 +8,10 @@ const nanoid = customAlphabet(
   4
 );
 
-// ================= CREATE BUSINESS =================
+// ======================= CREATE BUSINESS =======================
 
 const createBusiness = async (req, res) => {
   try {
-
     let {
       category,
       from,
@@ -31,13 +32,16 @@ const createBusiness = async (req, res) => {
       acceptedTerms
     } = req.body;
 
-    // Normalize Data
-    category = category?.trim().toLowerCase();
+    // ---------- Normalize ----------
+
+    category = category?.trim();
+
     from = from?.trim().toLowerCase();
     to = to?.trim().toLowerCase();
 
     firmName = firmName?.trim();
     ownerName = ownerName?.trim();
+
     address = address?.trim();
 
     currentCity = currentCity?.trim().toLowerCase();
@@ -52,17 +56,20 @@ const createBusiness = async (req, res) => {
     socialMedia = socialMedia?.trim();
 
     acceptedTerms =
-      acceptedTerms === true || acceptedTerms === "true";
+      acceptedTerms === true ||
+      acceptedTerms === "true";
+
+    // vehicleTypes array
 
     if (typeof vehicleTypes === "string") {
       vehicleTypes = vehicleTypes.split(",");
     }
 
-    console.log("Category:", category);
-    console.log("From:", from);
-    console.log("To:", to);
-    console.log("City:", currentCity);
-    console.log("State:", currentState);
+    if (Array.isArray(vehicleTypes)) {
+      vehicleTypes = vehicleTypes.map(v => v.trim());
+    }
+
+    // ---------- Validation ----------
 
     if (
       !category ||
@@ -81,9 +88,9 @@ const createBusiness = async (req, res) => {
       });
     }
 
-    const mobileExists = await Business.findOne({
-      phoneNumber
-    });
+    // ---------- Duplicate ----------
+
+    const mobileExists = await Business.findOne({ phoneNumber });
 
     if (mobileExists) {
       return res.status(400).json({
@@ -92,9 +99,7 @@ const createBusiness = async (req, res) => {
       });
     }
 
-    const emailExists = await Business.findOne({
-      email
-    });
+    const emailExists = await Business.findOne({ email });
 
     if (emailExists) {
       return res.status(400).json({
@@ -111,16 +116,20 @@ const createBusiness = async (req, res) => {
       user: req.user.id,
 
       category,
+
       from,
       to,
+
       vehicleTypes,
 
       firmName,
       ownerName,
+
       address,
       currentCity,
       currentState,
       pincode,
+
       phoneNumber,
       alternatePhone,
 
@@ -190,7 +199,7 @@ const createBusiness = async (req, res) => {
 };
 
 
-// ================= SEARCH BUSINESS =================
+// ======================= SEARCH BUSINESS =======================
 
 const searchBusiness = async (req, res) => {
 
@@ -209,36 +218,31 @@ const searchBusiness = async (req, res) => {
 
     if (category) {
       query.category = {
-        $regex: `^${category.trim()}$`,
-        $options: "i"
+        $regex: new RegExp("^" + category.trim() + "$", "i")
       };
     }
 
     if (from) {
       query.from = {
-        $regex: `^${from.trim()}$`,
-        $options: "i"
+        $regex: new RegExp("^" + from.trim() + "$", "i")
       };
     }
 
     if (to) {
       query.to = {
-        $regex: `^${to.trim()}$`,
-        $options: "i"
+        $regex: new RegExp("^" + to.trim() + "$", "i")
       };
     }
 
     if (currentState) {
       query.currentState = {
-        $regex: `^${currentState.trim()}$`,
-        $options: "i"
+        $regex: new RegExp("^" + currentState.trim() + "$", "i")
       };
     }
 
     if (currentCity) {
       query.currentCity = {
-        $regex: `^${currentCity.trim()}$`,
-        $options: "i"
+        $regex: new RegExp("^" + currentCity.trim() + "$", "i")
       };
     }
 
@@ -246,15 +250,13 @@ const searchBusiness = async (req, res) => {
 
       const vehicles = vehicleType
         .split(",")
-        .map(v => new RegExp(`^${v.trim()}$`, "i"));
+        .map(v => new RegExp("^" + v.trim() + "$", "i"));
 
       query.vehicleTypes = {
         $in: vehicles
       };
 
     }
-
-    console.log(query);
 
     const businesses = await Business.find(query);
 
