@@ -2,23 +2,28 @@ const jwt = require("jsonwebtoken");
 
 const auth = (req, res, next) => {
   try {
-    let token = null;
+
+    // Token variable
+    let token;
     console.log("token is",token);
-
-    // 1. Check Authorization header
+    // Authorization Header
     const authHeader = req.headers.authorization;
-    console.log("header",authHeader);
+    console.log("Authorization Header:", authHeader);
 
+    // Header se token nikalo
     if (authHeader && authHeader.startsWith("Bearer ")) {
       token = authHeader.split(" ")[1];
     }
 
-    // 2. If not found, check cookies
+    // Cookie se token nikalo
     if (!token && req.cookies?.token) {
       token = req.cookies.token;
     }
 
-    // 3. No token
+    // Final token print
+    console.log("Final Token:", token);
+
+    // Token nahi mila
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -26,13 +31,20 @@ const auth = (req, res, next) => {
       });
     }
 
-    // 4. Verify token
+    // Verify JWT
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    console.log("Decoded User:", decoded);
+
+    // User ko request me save karo
     req.user = decoded;
 
     next();
+
   } catch (error) {
+
+    console.log("JWT Error:", error.message);
+
     return res.status(401).json({
       success: false,
       message: "Invalid Token",

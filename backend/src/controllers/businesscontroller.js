@@ -66,7 +66,7 @@ const createBusiness = async (req, res) => {
         message: "Please fill all required fields."
       });
     }
- cosole.log("dhdhdhdkbdkbkb");
+ console.log("dhdhdhdkbdkbkb");
     const mobileExists = await Business.findOne({ phoneNumber });
 
     if (mobileExists) {
