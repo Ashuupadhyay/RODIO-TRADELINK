@@ -3,34 +3,39 @@ const Business = require("../models/business");
 exports.searchBusiness = async (req, res) => {
   try {
     const { from, to, vehicleType } = req.query;
+    console.log("from",from);
+    console.log("to",to);
+    console.log("vicheltuoe",vehicleType);
 
     let filter = {};
 
-    // From City
-    if (from && from.trim() !== "") {
+    // FROM
+    if (from && from.trim()) {
       filter.from = {
         $regex: new RegExp("^" + from.trim() + "$", "i"),
       };
     }
 
-    // To City
-    if (to && to.trim() !== "") {
+    // TO
+    if (to && to.trim()) {
       filter.to = {
         $regex: new RegExp("^" + to.trim() + "$", "i"),
       };
     }
 
-    // Vehicle Type
-    if (vehicleType && vehicleType.trim() !== "") {
+    // MULTIPLE VEHICLE TYPES
+    if (vehicleType && vehicleType.trim()) {
+      const vehicles = vehicleType
+        .split(",")
+        .map((v) => new RegExp("^" + v.trim() + "$", "i"));
+
       filter.vehicleTypes = {
-        $in: vehicleType
-          .split(",")
-          .map((item) => new RegExp("^" + item.trim() + "$", "i")),
+        $in: vehicles,
       };
     }
 
-    console.log("Search Filter:", filter);
-
+    console.log("Filter =>", filter);
+   colsole.log("folter",filter);
     const businesses = await Business.find(filter).sort({
       createdAt: -1,
     });
@@ -41,7 +46,7 @@ exports.searchBusiness = async (req, res) => {
       data: businesses,
     });
   } catch (error) {
-    console.error("Search Error:", error);
+    console.log(error);
 
     return res.status(500).json({
       success: false,
