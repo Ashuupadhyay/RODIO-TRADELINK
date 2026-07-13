@@ -6,7 +6,6 @@ const { createBusiness,searchBusiness } = require("../controllers/businesscontro
 
 router.post(
     "/registerbusiness",
-    upload.single("verificationDocument"),
     createBusiness
 );
 router.get("/search", searchBusiness);
