@@ -258,7 +258,9 @@ const searchBusiness = async (req, res) => {
 
     }
 
-    const businesses = await Business.find(query);
+   const businesses = await Business.find(query)
+  .collation({ locale: "en", strength: 2 })
+  .sort({ firmName: 1 });
 
     return res.status(200).json({
       success: true,
