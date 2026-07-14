@@ -20,7 +20,7 @@ const getProfile = async (req, res) => {
 
         // Profile collection
         const profile = await Profile.findOne({ user: userId });
-
+          console.log("profile is",profile)
         if (!profile) {
 
             return res.status(200).json({
@@ -31,9 +31,11 @@ const getProfile = async (req, res) => {
                     email: user.email,
                     mobile: user.mobile,
                     profileImage: ""
-                }
-            });
 
+                }
+        
+            });
+                   console.log("consoledn",profile)
         }
 
         return res.status(200).json({
