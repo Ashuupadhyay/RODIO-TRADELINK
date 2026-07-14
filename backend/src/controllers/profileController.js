@@ -6,10 +6,11 @@ const getProfile = async (req, res) => {
     try {
 
         const userId = req.user.id;
+        console.log("user hehehbhbh",userId);
 
         // Register collection
         const user = await User.findById(userId).select("-password");
-
+           console.log("user2djjdk",user)
         if (!user) {
             return res.status(404).json({
                 success: false,
