@@ -13,6 +13,9 @@ const updateProfile = async (req, res) => {
     const userId = req.user.id;
 
     const { name, email, phoneNumber } = req.body;
+    console.log("name is",name);
+    console.log("email is ",email);;
+    console.log("phonenumber is ",phoneNumber);
 
     // Current User
     const user = await User.findById(userId);
@@ -75,17 +78,22 @@ const updateProfile = async (req, res) => {
 
       const result = await uploadImage();
       imageUrl = result.secure_url;
+      console.log("imageurl",imageUrl);
     }
 
     // Update User Collection
     if (name) user.name = name;
     if (email) user.email = email;
     if (phoneNumber) user.mobile = phoneNumber;
+    console.log("update name",name);
+    console.log("updated email",email);
+    console.log("numberupdated",phoneNumber);
 
     await user.save();
 
     // Find Profile
     let profile = await Profile.findOne({ user: userId });
+    console.log("imageupfayhdbhbc",profile);
 
     // Create Profile if not exists
     if (!profile) {
@@ -117,7 +125,7 @@ const updateProfile = async (req, res) => {
 
   } catch (error) {
     console.log("Update Profile Error:", error);
-
+   console.log("error",error);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",
