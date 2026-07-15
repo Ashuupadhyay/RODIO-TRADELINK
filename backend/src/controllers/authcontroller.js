@@ -308,7 +308,7 @@ let redirectTo = "";
 
 switch (user.role) {
     case "user":
-        redirectTo = "/user-dashboard";
+        redirectTo = "/dashboard";
         break;
 
     case "broker":
