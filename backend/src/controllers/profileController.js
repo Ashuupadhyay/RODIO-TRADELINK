@@ -2,6 +2,7 @@ const Profile = require("../models/profile");
 const User = require("../models/register");
 const cloudinary = require("../config/cloudnary");
 const streamifier = require("streamifier");
+const bcrypt = require("bcrypt");
 
 
 //poat 
@@ -12,7 +13,7 @@ const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const { name, email, phoneNumber } = req.body;
+    const { name, email, phoneNumber, password } = req.body;
     console.log("name is",name);
     console.log("email is ",email);;
     console.log("phonenumber is ",phoneNumber);
@@ -85,6 +86,10 @@ const updateProfile = async (req, res) => {
     if (name) user.name = name;
     if (email) user.email = email;
     if (phoneNumber) user.mobile = phoneNumber;
+    if (password && password.trim() !== "") {
+  const hashedPassword = await bcrypt.hash(password, 10);
+  user.password = hashedPassword;
+}
     console.log("update name",name);
     console.log("updated email",email);
     console.log("numberupdated",phoneNumber);
