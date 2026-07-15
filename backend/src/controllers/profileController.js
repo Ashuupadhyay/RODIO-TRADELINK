@@ -8,14 +8,13 @@ const streamifier = require("streamifier");
 
 
 // UPDATE PROFILE
-
 const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const { name, phoneNumber } = req.body;
+    const { name, email, phoneNumber } = req.body;
 
-    // Registered User
+    // Current User
     const user = await User.findById(userId);
 
     if (!user) {
@@ -25,9 +24,39 @@ const updateProfile = async (req, res) => {
       });
     }
 
+    // Check Duplicate Email
+    if (email && email !== user.email) {
+      const existingEmail = await User.findOne({
+        email,
+        _id: { $ne: userId },
+      });
+
+      if (existingEmail) {
+        return res.status(400).json({
+          success: false,
+          message: "Email already registered",
+        });
+      }
+    }
+
+    // Check Duplicate Mobile
+    if (phoneNumber && phoneNumber !== user.mobile) {
+      const existingMobile = await User.findOne({
+        mobile: phoneNumber,
+        _id: { $ne: userId },
+      });
+
+      if (existingMobile) {
+        return res.status(400).json({
+          success: false,
+          message: "Mobile number already registered",
+        });
+      }
+    }
+
     let imageUrl = "";
 
-    // Image Upload
+    // Upload Image to Cloudinary
     if (req.file) {
       const uploadImage = () =>
         new Promise((resolve, reject) => {
@@ -45,28 +74,37 @@ const updateProfile = async (req, res) => {
         });
 
       const result = await uploadImage();
-
       imageUrl = result.secure_url;
     }
 
-    // Profile Find
+    // Update User Collection
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (phoneNumber) user.mobile = phoneNumber;
+
+    await user.save();
+
+    // Find Profile
     let profile = await Profile.findOne({ user: userId });
 
+    // Create Profile if not exists
     if (!profile) {
       profile = await Profile.create({
         user: userId,
         role: user.role,
-        name: name || user.name,
+        name: user.name,
         email: user.email,
-        phoneNumber: phoneNumber || user.mobile,
+        phoneNumber: user.mobile,
         profileImage: imageUrl,
       });
     } else {
-      if (name) profile.name = name;
+      profile.name = user.name;
+      profile.email = user.email;
+      profile.phoneNumber = user.mobile;
 
-      if (phoneNumber) profile.phoneNumber = phoneNumber;
-
-      if (imageUrl) profile.profileImage = imageUrl;
+      if (imageUrl) {
+        profile.profileImage = imageUrl;
+      }
 
       await profile.save();
     }
@@ -78,7 +116,7 @@ const updateProfile = async (req, res) => {
     });
 
   } catch (error) {
-    console.log(error);
+    console.log("Update Profile Error:", error);
 
     return res.status(500).json({
       success: false,
