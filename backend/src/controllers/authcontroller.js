@@ -304,8 +304,8 @@ const token = jwt.sign(
     }
 );
 // Role wise redirect path
-let redirectTo = "";
-
+let redirectTo = "/dashboard";
+/*
 switch (user.role) {
     case "user":
         redirectTo = "/dashboard";
@@ -321,7 +321,7 @@ switch (user.role) {
 
     default:
         redirectTo = "/";
-}
+}*/
 // Cookie me save (optional)
 res.cookie("token", token, {
     httpOnly: true,
