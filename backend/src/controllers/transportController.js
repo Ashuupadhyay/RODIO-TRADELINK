@@ -4,6 +4,7 @@ const getTransporterById = async (req, res) => {
   try {
 
     const transporter = await Transporter.findById(req.params.id);
+    console.log("transporter",transporter);
 
     if (!transporter) {
       return res.status(404).json({
