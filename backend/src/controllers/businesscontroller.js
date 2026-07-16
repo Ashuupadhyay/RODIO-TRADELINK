@@ -281,7 +281,25 @@ const searchBusiness = async (req, res) => {
 
 };
 
+
+const getAllBusiness = async (req, res) => {
+  try {
+    const businesses = await Business.find();
+
+    res.status(200).json({
+      success: true,
+      data: businesses
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 module.exports = {
   createBusiness,
-  searchBusiness
+  searchBusiness,
+  getAllBusiness
 };

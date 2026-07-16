@@ -7,8 +7,11 @@ const upload = require("../middlewhere/multer");
 
 const {
     createBusiness,
-    searchBusiness
+    searchBusiness,
+    getAllBusiness
 } = require("../controllers/businesscontroller");
+
+router.get("/business", getAllBusiness);
 
 router.post(
     "/registerbusiness",

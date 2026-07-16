@@ -6,6 +6,9 @@ const cookieParser = require("cookie-parser");
 
 const authRoutes = require("./routes/authrout");
 
+
+
+
 const app = express();   // ✅ Pehle app banao
 
 app.use(cors());
