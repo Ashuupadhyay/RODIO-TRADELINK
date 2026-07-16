@@ -312,11 +312,11 @@ switch (user.role) {
         break;
 
     case "broker":
-        redirectTo = "/broker-dashboard";
+        redirectTo = "/brokerdashboard";
         break;
 
     case "transporter":
-        redirectTo = "/transporter-dashboard";
+        redirectTo = "/transporterdashboard";
         break;
 
     default:
