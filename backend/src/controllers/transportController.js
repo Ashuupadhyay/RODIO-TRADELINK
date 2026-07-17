@@ -1,6 +1,6 @@
 const Transporter = require("../models/business");
 const Profile = require("../models/profile");
-
+const Comment = require("../models/comments");
 const getTransporterById = async (req, res) => {
   try {
 
@@ -19,6 +19,21 @@ const getTransporterById = async (req, res) => {
       user: transporter.user,
     }).select("profileImage");
 
+const comments = await Comment.find({
+  transporter: transporter._id,
+}).sort({ createdAt: -1 });
+
+
+
+const totalRating = comments.reduce(
+  (sum, item) => sum + item.rating,
+  0
+);
+const averageRating =
+comments.length > 0
+? totalRating / comments.length
+: 0;
+
 return res.status(200).json({
   success: true,
   data: {
@@ -29,7 +44,11 @@ return res.status(200).json({
 
     // Old + New compatibility
     phone: transporter.phoneNumber || transporter.phone || "",
-    phoneNumber: transporter.phoneNumber || transporter.phone || ""
+    phoneNumber: transporter.phoneNumber || transporter.phone || "",
+    averageRating: Number(averageRating.toFixed(1)),
+   totalReviews: comments.length,
+
+   comments
   }
 });
     

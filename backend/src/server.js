@@ -8,6 +8,9 @@ const businessRoute = require("./routes/businessrout");
 const searchRoutes = require("./routes/vichlesearch");
 const contactRoutes = require("./routes/QueryRoute");
 const transporterRoutes = require("./routes/transporter");
+const commentRoutes = require("./routes/comment");
+
+
 
 // Database
 const connectDB = require("./config/db");
@@ -28,7 +31,7 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/query", require("./routes/ecel"));
 app.use("/api/transporters", transporterRoutes);
 app.use("/api/profile", profileRoutes);
-
+app.use("/api/comment", commentRoutes);
 
 
 const PORT = process.env.PORT || 5000;
