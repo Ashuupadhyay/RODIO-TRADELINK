@@ -3,13 +3,6 @@ const mongoose = require("mongoose");
 const businessSchema = new mongoose.Schema({
 
 
-    comments: [
-  {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Comment",
-  },
-],
-
     // Registered User
     user: {
         type: mongoose.Schema.Types.ObjectId,
@@ -148,6 +141,22 @@ referredBy: {
     socialMedia: {
         type: String
     },
+    comments: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Comment",
+  },
+],
+
+averageRating: {
+  type: Number,
+  default: 0,
+},
+
+totalReviews: {
+  type: Number,
+  default: 0,
+},
 
 
     // Firm Photo
