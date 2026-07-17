@@ -20,15 +20,18 @@ const getTransporterById = async (req, res) => {
     }).select("profileImage");
 
 
-    res.status(200).json({
-      success: true,
-      data: {transporter,
-             profileImage: profile?.profileImage || "",
-              totalVehicles: transporter.vehicleTypes?.length || 0,
+    return res.status(200).json({
+    success: true,
+    data: {
+        ...transporter.toObject(),
 
-      }
-    });
+        // Profile model ki image
+        profileImage: profile?.profileImage || "",
 
+        // Vehicle count
+        totalVehicles: transporter.vehicleTypes?.length || 0
+    }
+});
   } catch (error) {
 
     res.status(500).json({
