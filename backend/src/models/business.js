@@ -143,11 +143,16 @@ referredBy: {
 
 
     // Firm Photo
-    photo: {
-        public_id: String,
-        url: String,
+ photo: {
+    public_id: {
+        type: String,
         required: true
     },
+    url: {
+        type: String,
+        required: true
+    }
+},
 
     // Documents
     aadhaar: {
