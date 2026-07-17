@@ -145,7 +145,8 @@ referredBy: {
     // Firm Photo
     photo: {
         public_id: String,
-        url: String
+        url: String,
+        required: true
     },
 
     // Documents
