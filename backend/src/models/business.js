@@ -2,6 +2,14 @@ const mongoose = require("mongoose");
 
 const businessSchema = new mongoose.Schema({
 
+
+    comments: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Comment",
+  },
+],
+
     // Registered User
     user: {
         type: mongoose.Schema.Types.ObjectId,
