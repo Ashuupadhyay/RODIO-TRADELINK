@@ -1,4 +1,5 @@
 const Transporter = require("../models/business");
+const Profile = require("../models/profile");
 
 const getTransporterById = async (req, res) => {
   try {
@@ -13,9 +14,19 @@ const getTransporterById = async (req, res) => {
       });
     }
 
+    // Profile model se image lao
+    const profile = await Profile.findOne({
+      user: transporter.user,
+    }).select("profileImage");
+
+
     res.status(200).json({
       success: true,
-      data: transporter,
+      data: {transporter,
+             profileImage: profile?.profileImage || "",
+              totalVehicles: transporter.vehicleTypes?.length || 0,
+
+      }
     });
 
   } catch (error) {
