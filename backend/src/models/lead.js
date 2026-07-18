@@ -1,63 +1,42 @@
-const mongoose = require("mongoose");
+exports.createBooking = async (req, res) => {
+    try {
 
-const bookingSchema = new mongoose.Schema(
-{
-    service:{
-        type:String,
-        required:true
-    },
+        const booking = await Booking.create({
+            ...req.body,
+            user: req.user.id
+        });
 
-    vehicleType:{
-        type:String,
-        required:true
-    },
+        res.status(201).json({
+            success: true,
+            message: "Booking Created Successfully",
+            data: booking
+        });
 
-    pickupLocation:{
-        type:String,
-        required:true
-    },
-
-    loading_point:{
-        type:String,
-        required:true
-    },
-
-    pickupDate:{
-        type:String,
-        required:true
-    },
-
-    goodsType:{
-        type:String
-    },
-
-    weight:{
-        type:Number
-    },
-
-    contactPerson:{
-        type:String,
-        required:true
-    },
-
-    contactNumber:{
-        type:String,
-        required:true
-    },
-
-    expectedBudget:{
-        type:Number
-    },
-
-    remarks:{
-        type:String
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
+};
 
-},
-{
-    timestamps:true
-}
-);
+exports.myBookings = async (req, res) => {
+    try {
 
+        const bookings = await Booking.find({
+            user: req.user.id
+        }).sort({ createdAt: -1 });
 
-module.exports = mongoose.model("Booking", bookingSchema);
+        res.status(200).json({
+            success: true,
+            count: bookings.length,
+            data: bookings
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
