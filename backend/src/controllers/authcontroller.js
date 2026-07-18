@@ -277,7 +277,7 @@ const login = async (req, res) => {
                 { mobile: emailOrMobile }
             ]
         });
-
+   console.log("usjfb,bf",user);
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -333,11 +333,14 @@ res.cookie("token", token, {
 
 
 let businessId = null;
+console.log("biudjfj",businessId)
 
 if (user.role === "transporter") {
-    const business = await Business.findOne({ user: user._id });
 
+    const business = await Business.findOne({ user: user._id });
+     cosole.log(business)
     if (business) {
+        
         businessId = business._id;
         console.log(businessId);
     }
