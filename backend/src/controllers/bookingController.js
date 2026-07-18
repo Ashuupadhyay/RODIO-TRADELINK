@@ -3,32 +3,31 @@ const Booking = require("../models/lead");
 
 // CREATE BOOKING
 
-exports.createBooking = async(req,res)=>{
+exports.createBooking = async (req, res) => {
+    try {
 
-try{
+        console.log("req.user =", req.user);
 
-const booking = await Booking.create(req.body);
+        const booking = await Booking.create({
+            ...req.body,
+            user: req.user.id
+        });
 
+        res.status(201).json({
+            success: true,
+            message: "Booking Created Successfully",
+            data: booking
+        });
 
-res.status(201).json({
-    success:true,
-    message:"Booking Created Successfully",
-    data:booking
-});
+    } catch (error) {
+        console.log(error);
 
-
-}
-catch(error){
-
-res.status(500).json({
-    success:false,
-    message:error.message
-});
-
-}
-
-}
-
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 
 exports.myBookings = async (req, res) => {
     try {
