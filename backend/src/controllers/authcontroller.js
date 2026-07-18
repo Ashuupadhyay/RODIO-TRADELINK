@@ -338,7 +338,7 @@ console.log("biudjfj",businessId)
 if (user.role === "transporter") {
 
     const business = await Business.findOne({ user: user._id });
-     cosole.log(business)
+     console.log(business)
     if (business) {
         
         businessId = business._id;
