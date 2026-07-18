@@ -49,3 +49,29 @@ exports.myBookings = async (req, res) => {
         });
     }
 };
+
+
+
+exports.getAllBookings = async (req, res) => {
+    try {
+
+        const bookings = await Booking.find()
+            .populate("user", "name email mobile")
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: bookings.length,
+            data: bookings
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+
+
