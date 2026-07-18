@@ -14,6 +14,7 @@ router.post("/forgot-password", forgotPassword);
 router.post("/verify-otp", verifyOTP);
 router.post("/reset", resetPassword);
 router.post("/logout", logout);
+
 //protected rout 
 router.get("/profile", auth, (req, res) => {
     res.status(200).json({

@@ -4,6 +4,7 @@ const OTP = require("../models/otpmodel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../services/emailService");
+const Business = require("../models/business");
 
 // REGISTER
 const register = async (req, res) => {
@@ -329,15 +330,29 @@ res.cookie("token", token, {
     sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000
 });
+
+
+let businessId = null;
+
+if (user.role === "transporter") {
+    const business = await Business.findOne({ user: user._id });
+
+    if (business) {
+        businessId = business._id;
+        console.log(businessId);
+    }
+}
+
 console.log(login);
 console.log(emailOrMobile);
         console.log(password);
 return res.status(200).json({
-    
     success: true,
     message: "Login Successful",
-   token,
+    token,
     redirectTo,
+    businessId,   // 👈 ye line add karo
+
     user: {
         id: user._id,
         role: user.role,
