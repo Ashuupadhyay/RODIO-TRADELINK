@@ -54,6 +54,42 @@ const addComment = async (req, res) => {
   }
 };
 
+
+
+
+
+
+const getTransporterComments = async (req, res) => {
+  try {
+    const transporter = await Business.findById(req.params.id);
+
+    if (!transporter) {
+      return res.status(404).json({
+        success: false,
+        message: "Transporter not found",
+      });
+    }
+
+    const comments = await Comment.find({
+      transporter: req.params.id,
+    })
+      .populate("user", "name email mobile")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      totalReviews: transporter.totalReviews,
+      averageRating: transporter.averageRating,
+      comments,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 module.exports = {
   addComment,
+  getTransporterComments,
 };
