@@ -76,11 +76,33 @@ const getTransporterComments = async (req, res) => {
       .populate("user", "name email mobile")
       .sort({ createdAt: -1 });
 
+    const commentsWithProfile = await Promise.all(
+      comments.map(async (comment) => {
+        const profile = await Profile.findOne({ user: comment.user._id });
+
+        return {
+          _id: comment._id,
+          rating: comment.rating,
+          comment: comment.comment,
+          createdAt: comment.createdAt,
+          user: {
+            _id: comment.user._id,
+            name: comment.user.name,
+            email: comment.user.email,
+            mobile: comment.user.mobile,
+            profileImage:
+              profile?.profileImage ||
+              "https://res.cloudinary.com/tyt9mt1f/image/upload/v1784103262/DUMMYIMAGE_xuc0xa.jpg",
+          },
+        };
+      })
+    );
+
     res.status(200).json({
       success: true,
       totalReviews: transporter.totalReviews,
       averageRating: transporter.averageRating,
-      comments,
+      comments: commentsWithProfile,
     });
   } catch (error) {
     res.status(500).json({
