@@ -14,7 +14,7 @@ myBookings
 
 
 
-router.post("/create",createBooking);
+router.post("/create",auth,createBooking);
 
 router.get("/my-bookings", auth, myBookings);
 
