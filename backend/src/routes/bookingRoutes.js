@@ -10,7 +10,9 @@ const auth = require("../middlewhere/auth");
 const {
 createBooking,
 myBookings,
-getAllBookings
+getAllBookings,
+myAssignedLeads,
+updateLeadStatus
 } = require("../controllers/bookingController");
 
 
@@ -19,5 +21,14 @@ router.post("/create",auth,createBooking);
 
 router.get("/my-bookings", auth, myBookings);
 router.get("/all", auth, getAllBookings);
-
+router.get(
+    "/assigned-leads",
+    auth,
+    myAssignedLeads
+);
+router.put(
+    "/status/:id",
+    auth,
+    updateLeadStatus
+);
 module.exports = router;

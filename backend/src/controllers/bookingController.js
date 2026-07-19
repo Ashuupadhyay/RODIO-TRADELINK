@@ -2,76 +2,146 @@ const Booking = require("../models/lead");
 
 
 // CREATE BOOKING
-
 exports.createBooking = async (req, res) => {
-    try {
 
-        console.log("req.user =", req.user);
+    const booking = await Booking.create({
 
-        const booking = await Booking.create({
-            ...req.body,
-            user: req.user.id
-        });
+        ...req.body,
 
-        res.status(201).json({
-            success: true,
-            message: "Booking Created Successfully",
-            data: booking
-        });
+        createdBy: req.user.id,
 
-    } catch (error) {
-        console.log(error);
+        creatorRole: req.user.role
+    });
 
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
+    res.status(201).json({
+        success: true,
+        data: booking
+    });
+
 };
-
 exports.myBookings = async (req, res) => {
-    try {
 
-        const bookings = await Booking.find({
-            user: req.user.id
-        }).sort({ createdAt: -1 });
+    const bookings = await Booking.find({
+        createdBy: req.user.id
+    });
 
-        res.status(200).json({
-            success: true,
-            count: bookings.length,
-            data: bookings
-        });
+    res.json({
+        success: true,
+        data: bookings
+    });
 
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
 };
-
 
 
 exports.getAllBookings = async (req, res) => {
+
+    if(req.user.role !== "transporter"){
+        return res.status(403).json({
+            success:false,
+            message:"Only transporter can access."
+        })
+    }
+
+    const bookings = await Booking.find()
+    .populate("createdBy","name email role");
+
+    res.json({
+        success:true,
+        data:bookings
+    });
+}
+
+
+// ==========================
+// My Assigned Leads
+// ==========================
+exports.myAssignedLeads = async (req, res) => {
+
     try {
 
-        const bookings = await Booking.find()
-            .populate("user", "name email mobile")
-            .sort({ createdAt: -1 });
+        const bookings = await Booking.find({
+
+            selectedTransporter: req.user.id
+
+        })
+        .populate("createdBy", "name mobile role")
+        .sort({ createdAt: -1 });
 
         res.status(200).json({
+
             success: true,
-            count: bookings.length,
+
+            total: bookings.length,
+
             data: bookings
+
         });
 
     } catch (error) {
+
         res.status(500).json({
+
             success: false,
+
             message: error.message
+
         });
+
     }
+
 };
+exports.updateLeadStatus = async (req, res) => {
 
+    try {
 
+        const { status } = req.body;
 
+        const booking = await Booking.findById(req.params.id);
+
+        if (!booking) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Lead not found"
+            });
+
+        }
+
+        if (
+            booking.selectedTransporter.toString() !== req.user.id
+        ) {
+
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized"
+            });
+
+        }
+
+        booking.status = status;
+
+        await booking.save();
+
+        res.status(200).json({
+
+            success: true,
+
+            message: "Status Updated",
+
+            data: booking
+
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+
+            success: false,
+
+            message: error.message
+
+        });
+
+    }
+
+};

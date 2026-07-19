@@ -9,6 +9,7 @@ const searchRoutes = require("./routes/vichlesearch");
 const contactRoutes = require("./routes/QueryRoute");
 const transporterRoutes = require("./routes/transporter");
 const commentRoutes = require("./routes/comment");
+const bidRoutes = require("./routes/bidRoutes");
 
 
 
@@ -32,6 +33,7 @@ app.use("/api/query", require("./routes/ecel"));
 app.use("/api/transporters", transporterRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/comment", commentRoutes);
+app.use("/api/bids", bidRoutes);
 
 
 const PORT = process.env.PORT || 5000;
