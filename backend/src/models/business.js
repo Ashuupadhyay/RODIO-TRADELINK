@@ -160,17 +160,10 @@ totalReviews: {
 
 
     // Firm Photo
- photo: {
-    public_id: {
-        type: String,
-        required: true
-    },
-    url: {
-        type: String,
-        required: true
-    }
+photo: {
+  public_id: String,
+  url: String
 },
-
     // Documents
     aadhaar: {
         public_id: String,
