@@ -58,33 +58,30 @@ const addComment = async (req, res) => {
 
 
 
+
 const getTransporterComments = async (req, res) => {
   try {
-
-    // Find business using logged-in user's id
-    const transporter = await Business.findOne({
-      user: req.params.id,
-    });
+    const transporter = await Business.findById(req.params.id);
+    console.log(transporter);
 
     if (!transporter) {
       return res.status(404).json({
         success: false,
-        message: "Business not found",
+        message: "Transporter not found",
       });
     }
 
     const comments = await Comment.find({
-      transporter: transporter._id,
+      transporter: req.params.id,
     })
       .populate("user", "name email mobile")
       .sort({ createdAt: -1 });
+      console.log(comments);
 
     const commentsWithProfile = await Promise.all(
       comments.map(async (comment) => {
-        const profile = await Profile.findOne({
-          user: comment.user._id,
-        });
-
+        const profile = await Profile.findOne({ user: comment.user._id });
+ console.log(commentsWithProfile)
         return {
           _id: comment._id,
           rating: comment.rating,
@@ -109,7 +106,6 @@ const getTransporterComments = async (req, res) => {
       averageRating: transporter.averageRating,
       comments: commentsWithProfile,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
