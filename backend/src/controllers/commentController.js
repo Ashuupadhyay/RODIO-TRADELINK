@@ -56,32 +56,37 @@ const addComment = async (req, res) => {
 
 
 
-
-
-
 const getTransporterComments = async (req, res) => {
   try {
-    const transporter = await Business.findById(req.params.id);
-    console.log(transporter);
+    let business;
 
-    if (!transporter) {
+    // Agar URL me id aayi hai to usse use karo
+    if (req.params.id) {
+      business = await Business.findById(req.params.id);
+    } else {
+      // Agar id nahi aayi to login user ka business nikalo
+      business = await Business.findOne({ user: req.user.id });
+    }
+
+    if (!business) {
       return res.status(404).json({
         success: false,
-        message: "Transporter not found",
+        message: "Business not found",
       });
     }
 
     const comments = await Comment.find({
-      transporter: req.params.id,
+      transporter: business._id,
     })
       .populate("user", "name email mobile")
       .sort({ createdAt: -1 });
-      console.log(comments);
 
     const commentsWithProfile = await Promise.all(
       comments.map(async (comment) => {
-        const profile = await Profile.findOne({ user: comment.user._id });
- console.log(commentsWithProfile)
+        const profile = await Profile.findOne({
+          user: comment.user._id,
+        });
+
         return {
           _id: comment._id,
           rating: comment.rating,
@@ -102,8 +107,8 @@ const getTransporterComments = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      totalReviews: transporter.totalReviews,
-      averageRating: transporter.averageRating,
+      totalReviews: business.totalReviews,
+      averageRating: business.averageRating,
       comments: commentsWithProfile,
     });
   } catch (error) {
@@ -113,6 +118,10 @@ const getTransporterComments = async (req, res) => {
     });
   }
 };
+
+
+
+
 module.exports = {
   addComment,
   getTransporterComments,
