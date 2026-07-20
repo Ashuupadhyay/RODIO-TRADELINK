@@ -332,29 +332,22 @@ res.cookie("token", token, {
 });
 
 
-
 let businessId = null;
 console.log("biudjfj",businessId)
 
 
 
-
 if (user.role === "Broker" || user.role === "Transporter") {
-
-    console.log("Logged User ID:", user._id);
-
     const business = await Business.findOne({
-        user: user._id
+        user: user._id,
     });
-
-    console.log("Business Found:", business);
-
+   console.log("business",business);
     if (business) {
         businessId = business._id;
     }
-
-    console.log("Business ID:", businessId);
+    console.log(businessId);
 }
+
 
 console.log(login);
 console.log(emailOrMobile);
