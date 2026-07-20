@@ -330,7 +330,10 @@ res.cookie("token", token, {
     sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000
 });
+const businesses = await Business.find().select("_id user category ownerName");
 
+console.log("All Businesses");
+console.log(businesses);
 
 let businessId = null;
 console.log("biudjfj",businessId)
