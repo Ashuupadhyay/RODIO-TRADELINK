@@ -335,17 +335,18 @@ res.cookie("token", token, {
 let businessId = null;
 console.log("biudjfj",businessId)
 
-if (user.role === "transporter") {
 
-    const business = await Business.findOne({ user: user._id });
-     console.log(business)
+
+if (user.role === "broker" || user.role === "transporter") {
+    const business = await Business.findOne({
+        user: user._id,
+    });
+
     if (business) {
-        
         businessId = business._id;
-        console.log(businessId);
     }
+    console.log(businessId);
 }
-
 console.log(login);
 console.log(emailOrMobile);
         console.log(password);
