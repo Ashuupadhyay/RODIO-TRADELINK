@@ -337,16 +337,24 @@ console.log("biudjfj",businessId)
 
 
 
+
 if (user.role === "broker" || user.role === "transporter") {
+
+    console.log("Logged User ID:", user._id);
+
     const business = await Business.findOne({
-        user: user._id,
+        user: user._id
     });
+
+    console.log("Business Found:", business);
 
     if (business) {
         businessId = business._id;
     }
-    console.log(businessId);
+
+    console.log("Business ID:", businessId);
 }
+
 console.log(login);
 console.log(emailOrMobile);
         console.log(password);
