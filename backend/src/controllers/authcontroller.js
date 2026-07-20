@@ -244,9 +244,18 @@ Indore, Madhya Pradesh, India
 console.log("chakr ha e 2");
 
         return res.status(201).json({
-            success: true,
-            message: "User Registered Successfully"
-        });
+    success: true,
+    message: "Registration Successful",
+    token,
+    redirectTo: "/dashboard",
+    user: {
+        id: user._id,
+        role: user.role,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile
+    }
+});
 
     } catch (error) {
         console.log(error);
