@@ -341,7 +341,7 @@ console.log("biudjfj",businessId)
 
 
 
-if (user.role === "broker" || user.role === "transporter") {
+if (user.role === "Broker" || user.role === "Transporter") {
 
     console.log("Logged User ID:", user._id);
 
