@@ -241,6 +241,26 @@ Indore, Madhya Pradesh, India
 </body>
 </html>
 `);
+
+
+
+const token = jwt.sign(
+  {
+    id: user._id,
+    role: user.role,
+  },
+  process.env.JWT_SECRET,
+  {
+    expiresIn: process.env.JWT_EXPIRE,
+  }
+);
+
+res.cookie("token", token, {
+  httpOnly: true,
+  secure: false,
+  sameSite: "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+});
 console.log("chakr ha e 2");
 
         return res.status(201).json({
