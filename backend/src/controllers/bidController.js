@@ -7,13 +7,12 @@ const Booking = require("../models/lead");
 exports.createBid = async (req, res) => {
     try {
 
-        // Sirf transporter bid laga sakta hai
-        if (req.user.role !== "transporter") {
-            return res.status(403).json({
-                success: false,
-                message: "Only transporter can place a bid."
-            });
-        }
+      if (!["transporter", "broker"].includes(req.user.role)) {
+    return res.status(403).json({
+        success: false,
+        message: "Only transporter or broker can place a bid."
+    });
+}
 
         const { bookingId } = req.params;
         const { amount, message } = req.body;
