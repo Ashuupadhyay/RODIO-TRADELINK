@@ -34,6 +34,26 @@ enum: ["user", "transporter", "broker"],
       required: [true, "Password is required"],
       minlength: 4,
     },
+
+    subscription: {
+  status: {
+    type: String,
+    enum: ["inactive", "active", "expired"],
+    default: "inactive",
+  },
+  plan: {
+    type: String,
+    default: "Monthly",
+  },
+  startDate: {
+    type: Date,
+    default: null,
+  },
+  endDate: {
+    type: Date,
+    default: null,
+  },
+},
   },
   {
     timestamps: true,

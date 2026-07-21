@@ -10,6 +10,7 @@ const contactRoutes = require("./routes/QueryRoute");
 const transporterRoutes = require("./routes/transporter");
 const commentRoutes = require("./routes/comment");
 const bidRoutes = require("./routes/bidRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 
 
@@ -34,6 +35,7 @@ app.use("/api/transporters", transporterRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/comment", commentRoutes);
 app.use("/api/bids", bidRoutes);
+app.use("/api/payment", paymentRoutes);
 
 
 const PORT = process.env.PORT || 5000;
