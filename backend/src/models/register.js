@@ -54,6 +54,28 @@ enum: ["user", "transporter", "broker"],
     default: null,
   },
 },
+referralCode: {
+  type: String,
+  unique: true,
+  sparse: true,
+    default: null,
+},
+
+referredBy: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  default: null,
+},
+
+referralCount: {
+  type: Number,
+  default: 0,
+},
+
+referralEarning: {
+  type: Number,
+  default: 0,
+},
   },
   {
     timestamps: true,

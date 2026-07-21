@@ -54,6 +54,16 @@ const paymentSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    referralCode: {
+  type: String,
+  default: null,
+},
+
+referredBy: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  default: null,
+},
   },
   {
     timestamps: true,
