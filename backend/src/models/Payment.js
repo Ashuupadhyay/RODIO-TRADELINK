@@ -64,6 +64,11 @@ referredBy: {
   ref: "User",
   default: null,
 },
+receiptNumber: {
+  type: String,
+  unique: true,
+  sparse: true,
+},
   },
   {
     timestamps: true,

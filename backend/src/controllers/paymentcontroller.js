@@ -13,10 +13,19 @@ const generateReferralCode = require("../utills/generateReferralCode");
 
 exports.createOrder = async (req, res) => {
   try {
-    const { referralCode } = req.body;
+   
+    const { amount,referralCode } = req.body;
+    console.log(amount);
+    console.log(referralCode)
 
     // Future me Plan collection se amount aayega
-    const amount = 999;
+    amount = 999;
+    if (!amount) {
+  return res.status(400).json({
+    success: false,
+    message: "Amount is required",
+  });
+}
 
     const options = {
       amount: amount * 100,
@@ -33,7 +42,7 @@ exports.createOrder = async (req, res) => {
       referralCode,
       status: "created",
     });
-
+ console.log("paymentorder",order);
     return res.status(201).json({
       success: true,
       message: "Order created successfully",
