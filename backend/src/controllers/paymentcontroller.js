@@ -38,12 +38,15 @@ const amount = 999;
     const order = await razorpay.orders.create(options);
 
     await Payment.create({
-      user: req.user._id,
+      user: req.user.id,
       orderId: order.id,
       amount,
       referralCode,
       status: "created",
     });
+    console.log("req.user =", req.user);
+console.log("req.user.id =", req.user.id);
+console.log("req.user._id =", req.user._id);
  console.log("paymentorder",order);
     return res.status(201).json({
       success: true,
