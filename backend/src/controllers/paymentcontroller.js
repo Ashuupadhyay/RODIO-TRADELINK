@@ -203,7 +203,11 @@ if (payment.referralCode) {
  // Update Payment
     payment.paymentId = razorpay_payment_id;
     payment.signature = razorpay_signature;
-    payment.method = method || null;
+    const paymentDetails = await razorpay.payments.fetch(
+  razorpay_payment_id
+);
+
+payment.method = paymentDetails.method;
     payment.status = "success";
   if (!payment.receiptNumber) {
   payment.receiptNumber = generateReceiptNumber();
@@ -288,12 +292,14 @@ if (payment.referralCode) {
   console.error("Refund Error:", err);
 }
 }
+console.log("Payment Mongo ID:", payment._id);
     return res.status(200).json({
   success: true,
   message: "Payment verified successfully",
   subscription: user.subscription,
   referralCode: user.referralCode,
   receiptNumber: payment.receiptNumber,
+   paymentId: payment._id,
 });
   } catch (error) {
     return res.status(500).json({
@@ -365,6 +371,7 @@ exports.getReceipt = async (req, res) => {
 
     return res.status(500).json({
       success: false,
+
       message: error.message,
     });
 
