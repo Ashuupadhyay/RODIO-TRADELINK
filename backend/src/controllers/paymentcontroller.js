@@ -190,7 +190,24 @@ if (payment.referralCode) {
       message: "You cannot use your own referral code.",
     });
   }
+// Referral owner's subscription should be active
+if (referralUser.subscription.status !== "active") {
+  return res.status(400).json({
+    success: false,
+    message: "Referral code is inactive.",
+  });
+}
 
+// Referral owner's subscription should not be expired
+if (
+  referralUser.subscription.endDate &&
+  referralUser.subscription.endDate < new Date()
+) {
+  return res.status(400).json({
+    success: false,
+    message: "Referral code has expired.",
+  });
+}
 
   if (user.referredBy) {
   return res.status(400).json({

@@ -58,7 +58,7 @@ referralCode: {
   type: String,
   unique: true,
   sparse: true,
-    default: null,
+    
 },
 
 referredBy: {
