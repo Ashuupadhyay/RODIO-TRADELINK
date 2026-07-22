@@ -4,6 +4,7 @@ const razorpay = require("../config/razorpay");
 
 const Payment = require("../models/Payment");
 const User = require("../models/register");
+const generateReceiptNumber = require("../utills/generateReceiptNumber");
 
 const generateReferralCode = require("../utills/generateReferralCode");
 
@@ -93,13 +94,13 @@ exports.verifyPayment = async (req, res) => {
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(body)
       .digest("hex");
-/*
+
     if (expectedSignature !== razorpay_signature) {
       return res.status(400).json({
         success: false,
         message: "Invalid payment signature",
       });
-    }*/
+    }
 
     // Find Payment
     const payment = await Payment.findOne({
@@ -204,7 +205,14 @@ if (payment.referralCode) {
     payment.signature = razorpay_signature;
     payment.method = method || null;
     payment.status = "success";
+  if (!payment.receiptNumber) {
+  payment.receiptNumber = generateReceiptNumber();
+}
 
+
+
+    // refund 
+   
     const startDate = new Date();
 
     const endDate = new Date(startDate);
@@ -233,7 +241,7 @@ if (payment.referralCode) {
   user.referredBy = referralUser._id;
 
   referralUser.referralCount += 1;
-  referralUser.referralEarning += 100;
+   referralUser.referralEarning += 1;
 
 
 
@@ -247,7 +255,7 @@ if (!existingReferral) {
     referredUser: user._id,
     referralCode: payment.referralCode,
     payment: payment._id,
-    reward: 100,
+    reward: 1,
     status: "completed",
   });
 }
@@ -256,16 +264,109 @@ if (!existingReferral) {
 }
 await payment.save();
 await user.save();
+
+// Refund only if referral code was used
+if (payment.referralCode) {
+  try{
+
+
+  const refund = await razorpay.payments.refund(
+    razorpay_payment_id,
+    {
+      amount: 100, // ₹1 = 100 paise
+      speed: "normal"
+    }
+  );
+ payment.refundId = refund.id;
+    payment.refundStatus = refund.status;
+    payment.refundAmount = 1;
+
+    await payment.save();
+  console.log("Refund Success:", refund);
+
+}catch(err){
+  console.error("Refund Error:", err);
+}
+}
     return res.status(200).json({
-      success: true,
-      message: "Payment verified successfully",
-      subscription: user.subscription,
-      referralCode: user.referralCode,
-    });
+  success: true,
+  message: "Payment verified successfully",
+  subscription: user.subscription,
+  referralCode: user.referralCode,
+  receiptNumber: payment.receiptNumber,
+});
   } catch (error) {
     return res.status(500).json({
       success: false,
       message: error.message,
     });
+  }
+};
+
+
+// ======================================
+// GET RECEIPT
+// ======================================
+
+exports.getReceipt = async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+
+    const payment = await Payment.findById(paymentId)
+      .populate("user", "name email mobile role");
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Receipt not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      receipt: {
+        receiptNumber: payment.receiptNumber,
+
+        paymentStatus: payment.status,
+
+        orderId: payment.orderId,
+
+        paymentId: payment.paymentId,
+
+        paymentMethod: payment.method,
+
+        amount: payment.amount,
+
+        currency: payment.currency,
+
+        refundAmount: payment.refundAmount || 0,
+
+        refundStatus: payment.refundStatus || null,
+
+        subscriptionStart: payment.subscriptionStart,
+
+        subscriptionEnd: payment.subscriptionEnd,
+
+        paymentDate: payment.createdAt,
+
+        referralCode: payment.referralCode || null,
+
+        customer: {
+          id: payment.user._id,
+          name: payment.user.name,
+          email: payment.user.email,
+          mobile: payment.user.mobile,
+          role: payment.user.role,
+        },
+      },
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
   }
 };

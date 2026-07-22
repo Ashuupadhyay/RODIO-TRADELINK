@@ -69,6 +69,20 @@ receiptNumber: {
   unique: true,
   sparse: true,
 },
+refundId: {
+  type: String,
+  default: null,
+},
+
+refundStatus: {
+  type: String,
+  default: null,
+},
+
+refundAmount: {
+  type: Number,
+  default: 0,
+},
   },
   {
     timestamps: true,
