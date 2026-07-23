@@ -62,9 +62,9 @@ if (workingAreas && typeof workingAreas === "string") {
 if (Array.isArray(workingAreas)) {
   workingAreas = workingAreas.map((area) => ({
     state: area.state?.trim().toLowerCase(),
-    cities: area.cities.map((city) =>
-      city.trim().toLowerCase()
-    ) || [],
+    cities: Array.isArray(area.cities)
+  ? area.cities.map(city => city.trim().toLowerCase())
+  : [],
   }));
 }
 
@@ -237,12 +237,12 @@ const searchBusiness = async (req, res) => {
   try {
 
     let {
-      category,
-      from,
-      to,
-      currentState,
-      currentCity,
-      vehicleType
+     category,
+  state,
+  city,
+  currentState,
+  currentCity,
+  vehicleType
     } = req.query;
 
     let query = {};
@@ -252,7 +252,7 @@ const searchBusiness = async (req, res) => {
         $regex: new RegExp("^" + category.trim() + "$", "i")
       };
     }
-
+/*
     if (from) {
       query.from = {
         $regex: new RegExp("^" + from.trim() + "$", "i")
@@ -263,7 +263,7 @@ const searchBusiness = async (req, res) => {
       query.to = {
         $regex: new RegExp("^" + to.trim() + "$", "i")
       };
-    }
+    }*/
 
     if (currentState) {
       query.currentState = {
@@ -276,6 +276,17 @@ const searchBusiness = async (req, res) => {
         $regex: new RegExp("^" + currentCity.trim() + "$", "i")
       };
     }
+    if (state) {
+  query["workingAreas.state"] = {
+    $regex: new RegExp("^" + state.trim() + "$", "i"),
+  };
+}
+
+if (city) {
+  query["workingAreas.cities"] = {
+    $regex: new RegExp("^" + city.trim() + "$", "i"),
+  };
+}
 
     if (vehicleType) {
 
@@ -332,7 +343,7 @@ const getAllBusiness = async (req, res) => {
 
 
 // ======================= SAVE / UPDATE DRAFT =======================
-
+/*
 
 const saveDraft = async (req, res) => {
   try {
@@ -496,13 +507,13 @@ const activateBusiness = async (req, res) => {
     });
 
   }
-};
+};*/
 module.exports = {
   createBusiness,
   searchBusiness,
-  getAllBusiness,
+  getAllBusiness/*
     saveDraft,
   getDraft,
   deleteDraft,
-   activateBusiness,
+   activateBusiness,*/
 };

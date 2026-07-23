@@ -29,19 +29,22 @@ const businessSchema = new mongoose.Schema({
             "Others"
         ]
     },
-   workingAreas: [
+workingAreas: [
   {
     state: {
       type: String,
-      required: true
+      required: true,
+      trim: true,
+      lowercase: true,
     },
-
     cities: [
       {
-        type: String
-      }
-    ]
-  }
+        type: String,
+        trim: true,
+        lowercase: true,
+      },
+    ],
+  },
 ],
 
     // Basic Details
