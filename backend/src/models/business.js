@@ -29,16 +29,20 @@ const businessSchema = new mongoose.Schema({
             "Others"
         ]
     },
-    to: {
-  type: String,
-    
-
+   workingAreas: [
+  {
+    state: {
+      type: String,
+      required: true
     },
-    from: {
-  type: String,
-    
 
-    },
+    cities: [
+      {
+        type: String
+      }
+    ]
+  }
+],
 
     // Basic Details
     firmName: {
@@ -119,6 +123,10 @@ vehicleTypes: [{
 businessId: {
     type: String,
     unique: true
+},
+profileCompleted: {
+  type: Boolean,
+  default: false,
 },
 
 referralCode: {

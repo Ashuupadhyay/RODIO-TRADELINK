@@ -11,6 +11,7 @@ const transporterRoutes = require("./routes/transporter");
 const commentRoutes = require("./routes/comment");
 const bidRoutes = require("./routes/bidRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const dashboardRoutes = require("./routes/dashboard");
 
 
 
@@ -36,6 +37,7 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/comment", commentRoutes);
 app.use("/api/bids", bidRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api", dashboardRoutes);
 
 
 const PORT = process.env.PORT || 5000;
