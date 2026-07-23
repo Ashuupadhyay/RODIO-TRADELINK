@@ -17,7 +17,7 @@ exports.createOrder = async (req, res) => {
    
     const { referralCode } = req.body;
 
-const amount = 1001;
+const amount = 1;
     console.log(amount);
     console.log(referralCode)
 
