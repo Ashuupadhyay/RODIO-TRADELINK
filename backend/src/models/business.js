@@ -197,6 +197,11 @@ photo: {
         public_id: String,
         url: String
     },
+    status: {
+    type: String,
+    enum: ["Draft", "Active"],
+    default: "Draft",
+},
 
    
     // Verification Status

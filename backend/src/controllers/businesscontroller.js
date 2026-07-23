@@ -11,11 +11,10 @@ const nanoid = customAlphabet(
 // ======================= CREATE BUSINESS =======================
 
 const createBusiness = async (req, res) => {
-  try {
+  try {/*
     let {
       category,
-      from,
-      to,
+     
       vehicleTypes,
       firmName,
       ownerName,
@@ -30,14 +29,44 @@ const createBusiness = async (req, res) => {
       socialMedia,
       referredBy,
       acceptedTerms
-    } = req.body;
+    } = req.body;*/
+     let {
+  category,
+  workingAreas,
+  vehicleTypes,
+  firmName,
+  ownerName,
+  address,
+  currentCity,
+  currentState,
+  pincode,
+  phoneNumber,
+  alternatePhone,
+  email,
+  website,
+  socialMedia,
+  referredBy,
+  acceptedTerms
+} = req.body;
 
     // ---------- Normalize ----------
 
     category = category?.trim();
-
+/*
     from = from?.trim().toLowerCase();
-    to = to?.trim().toLowerCase();
+    to = to?.trim().toLowerCase();*/
+if (workingAreas && typeof workingAreas === "string") {
+  workingAreas = JSON.parse(workingAreas);
+}
+
+if (Array.isArray(workingAreas)) {
+  workingAreas = workingAreas.map((area) => ({
+    state: area.state?.trim().toLowerCase(),
+    cities: area.cities.map((city) =>
+      city.trim().toLowerCase()
+    ) || [],
+  }));
+}
 
     firmName = firmName?.trim();
     ownerName = ownerName?.trim();
@@ -80,13 +109,16 @@ const createBusiness = async (req, res) => {
       !pincode ||
       !phoneNumber ||
       !email ||
-      !acceptedTerms
+      !acceptedTerms ||
+      !workingAreas ||
+workingAreas.length === 0
     ) {
       return res.status(400).json({
         success: false,
         message: "Please fill all required fields"
       });
     }
+
 
     // ---------- Duplicate ----------
 
@@ -117,8 +149,7 @@ const createBusiness = async (req, res) => {
 
       category,
 
-      from,
-      to,
+     workingAreas,
 
       vehicleTypes,
 
@@ -298,8 +329,180 @@ const getAllBusiness = async (req, res) => {
     });
   }
 };
+
+
+// ======================= SAVE / UPDATE DRAFT =======================
+
+
+const saveDraft = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const formData = req.body;
+
+    let draft = await Business.findOne({
+      user: userId,
+      status: "Draft",
+    });
+
+    if (draft) {
+      Object.assign(draft, formData);
+      draft.status = "Draft";
+
+      await draft.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Draft Updated Successfully",
+        business: draft,
+      });
+    }
+
+    draft = await Business.create({
+      ...formData,
+      user: userId,
+      status: "Draft",
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Draft Saved Successfully",
+      business: draft,
+    });
+
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ======================= GET DRAFT =======================
+
+const getDraft = async (req, res) => {
+  try {
+
+    const draft = await Business.findOne({
+      user: req.user.id,
+      status: "Draft",
+    });
+
+    return res.status(200).json({
+      success: true,
+      business: draft,
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+
+// ======================= DELETE DRAFT =======================
+
+const deleteDraft = async (req, res) => {
+  try {
+
+    await Business.findOneAndDelete({
+      user: req.user.id,
+      status: "Draft",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Draft Deleted Successfully",
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+const activateBusiness = async (req, res) => {
+  try {
+
+    const business = await Business.findOne({
+      user: req.user.id,
+      status: "Draft",
+    });
+
+    if (!business) {
+      return res.status(404).json({
+        success: false,
+        message: "Draft Business Not Found",
+      });
+    }
+
+    // Duplicate Check
+    const mobileExists = await Business.findOne({
+      phoneNumber: business.phoneNumber,
+      status: "Active",
+      _id: { $ne: business._id },
+    });
+
+    if (mobileExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone Number Already Registered",
+      });
+    }
+
+    const emailExists = await Business.findOne({
+      email: business.email,
+      status: "Active",
+      _id: { $ne: business._id },
+    });
+
+    if (emailExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Email Already Registered",
+      });
+    }
+
+    // Generate IDs
+    business.businessId = "RDL" + Date.now();
+    business.referralCode = nanoid();
+
+    business.profileCompleted = true;
+    business.status = "Active";
+
+    await business.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Business Activated Successfully",
+      business,
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
 module.exports = {
   createBusiness,
   searchBusiness,
-  getAllBusiness
+  getAllBusiness,
+    saveDraft,
+  getDraft,
+  deleteDraft,
+   activateBusiness,
 };
