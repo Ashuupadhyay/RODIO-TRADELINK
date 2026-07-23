@@ -1,13 +1,3 @@
-const Business = require("../models/business");
-const { customAlphabet } = require("nanoid");
-
-const nanoid = customAlphabet(
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-  4
-);
-
-// ======================= CREATE BUSINESS =======================
-
 const createBusiness = async (req, res) => {
   try {
     let {
@@ -45,7 +35,7 @@ const createBusiness = async (req, res) => {
     website = website?.trim();
     socialMedia = socialMedia?.trim();
 
-    // Parse workingAreas if received as stringified JSON from FormData
+    // Parse workingAreas if stringified JSON
     if (workingAreas && typeof workingAreas === "string") {
       try {
         workingAreas = JSON.parse(workingAreas);
@@ -54,27 +44,32 @@ const createBusiness = async (req, res) => {
       }
     }
 
+    // Process & Filter workingAreas to prevent empty state error
     if (Array.isArray(workingAreas)) {
-      workingAreas = workingAreas.map((area) => ({
-        state: area.state?.trim().toLowerCase() || "",
-        cities: Array.isArray(area.cities)
-          ? area.cities.map((city) => city.trim().toLowerCase())
-          : [],
-      }));
+      workingAreas = workingAreas
+        .map((area) => {
+          const state = area.state ? area.state.trim().toLowerCase() : undefined;
+          const cities = Array.isArray(area.cities)
+            ? area.cities
+                .map((city) => (typeof city === "string" ? city.trim().toLowerCase() : ""))
+                .filter((city) => city !== "")
+            : [];
+
+          return { state, cities };
+        })
+        .filter((area) => Boolean(area.state)); // Remove empty state entries
     } else {
       workingAreas = [];
     }
 
-    // Convert acceptedTerms boolean or string to boolean
-    acceptedTerms =
-      acceptedTerms === true ||
-      acceptedTerms === "true";
+    // Convert acceptedTerms to boolean
+    acceptedTerms = acceptedTerms === true || acceptedTerms === "true";
 
     // Normalize vehicleTypes array
     if (typeof vehicleTypes === "string") {
-      vehicleTypes = vehicleTypes.split(",").map((v) => v.trim());
+      vehicleTypes = vehicleTypes.split(",").map((v) => v.trim()).filter(Boolean);
     } else if (Array.isArray(vehicleTypes)) {
-      vehicleTypes = vehicleTypes.map((v) => (typeof v === "string" ? v.trim() : v));
+      vehicleTypes = vehicleTypes.map((v) => (typeof v === "string" ? v.trim() : v)).filter(Boolean);
     } else {
       vehicleTypes = [];
     }
@@ -96,7 +91,7 @@ const createBusiness = async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message: "Please fill all required fields",
+        message: "Please fill all required fields (including valid working areas)",
       });
     }
 
@@ -118,7 +113,7 @@ const createBusiness = async (req, res) => {
       });
     }
 
-    // Generate Business Identifiers
+    // Generate Identifiers
     const businessId = "RDL" + Date.now();
     const referralCode = nanoid();
 
@@ -196,102 +191,4 @@ const createBusiness = async (req, res) => {
       message: error.message || "Internal Server Error",
     });
   }
-};
-
-// ======================= SEARCH BUSINESS =======================
-
-const searchBusiness = async (req, res) => {
-  try {
-    const {
-      category,
-      state,
-      city,
-      currentState,
-      currentCity,
-      vehicleType,
-    } = req.query;
-
-    const query = {};
-
-    if (category) {
-      query.category = {
-        $regex: new RegExp("^" + category.trim() + "$", "i"),
-      };
-    }
-
-    if (currentState) {
-      query.currentState = {
-        $regex: new RegExp("^" + currentState.trim() + "$", "i"),
-      };
-    }
-
-    if (currentCity) {
-      query.currentCity = {
-        $regex: new RegExp("^" + currentCity.trim() + "$", "i"),
-      };
-    }
-
-    if (state) {
-      query["workingAreas.state"] = {
-        $regex: new RegExp("^" + state.trim() + "$", "i"),
-      };
-    }
-
-    if (city) {
-      query["workingAreas.cities"] = {
-        $regex: new RegExp("^" + city.trim() + "$", "i"),
-      };
-    }
-
-    if (vehicleType) {
-      const vehicles = vehicleType
-        .split(",")
-        .map((v) => new RegExp("^" + v.trim() + "$", "i"));
-
-      query.vehicleTypes = {
-        $in: vehicles,
-      };
-    }
-
-    const businesses = await Business.find(query)
-      .collation({ locale: "en", strength: 2 })
-      .sort({ firmName: 1 });
-
-    return res.status(200).json({
-      success: true,
-      total: businesses.length,
-      data: businesses,
-    });
-  } catch (error) {
-    console.error("Search Business Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Internal Server Error",
-    });
-  }
-};
-
-// ======================= GET ALL BUSINESSES =======================
-
-const getAllBusiness = async (req, res) => {
-  try {
-    const businesses = await Business.find();
-
-    return res.status(200).json({
-      success: true,
-      data: businesses,
-    });
-  } catch (error) {
-    console.error("Get All Business Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Internal Server Error",
-    });
-  }
-};
-
-module.exports = {
-  createBusiness,
-  searchBusiness,
-  getAllBusiness,
 };
