@@ -34,6 +34,30 @@ const createBusiness = async (req, res) => {
     } = req.body;
 
     // ---------- Normalize & Data Parsing ----------
+        console.log("========== CREATE BUSINESS REQUEST ==========");
+    console.log("category:", category);
+    console.log("workingAreas:", workingAreas);
+    console.log("vehicleTypes:", vehicleTypes);
+    console.log("firmName:", firmName);
+    console.log("ownerName:", ownerName);
+    console.log("address:", address);
+    console.log("currentCity:", currentCity);
+    console.log("currentState:", currentState);
+    console.log("pincode:", pincode);
+    console.log("phoneNumber:", phoneNumber);
+    console.log("alternatePhone:", alternatePhone);
+    console.log("email:", email);
+    console.log("website:", website);
+    console.log("socialMedia:", socialMedia);
+    console.log("referredBy:", referredBy);
+    console.log("acceptedTerms:", acceptedTerms);
+    console.log("paymentId:", paymentId);
+    console.log("orderId:", orderId);
+
+    // Agar poora body dekhna ho
+    console.log("req.body:", req.body);
+    console.log("============================================");
+
 
     category = category?.trim();
     firmName = firmName?.trim();
@@ -100,7 +124,24 @@ const createBusiness = async (req, res) => {
       !acceptedTerms ||
       !workingAreas ||
       workingAreas.length === 0
-    ) {
+    )
+    console.log("========== VALIDATION DEBUG ==========");
+console.log("category:", category, "=>", !category);
+console.log("ownerName:", ownerName, "=>", !ownerName);
+console.log("address:", address, "=>", !address);
+console.log("currentCity:", currentCity, "=>", !currentCity);
+console.log("currentState:", currentState, "=>", !currentState);
+console.log("pincode:", pincode, "=>", !pincode);
+console.log("phoneNumber:", phoneNumber, "=>", !phoneNumber);
+console.log("email:", email, "=>", !email);
+console.log("acceptedTerms:", acceptedTerms, "=>", !acceptedTerms);
+console.log("workingAreas:", workingAreas);
+console.log("workingAreas isArray:", Array.isArray(workingAreas));
+console.log("workingAreas length:", workingAreas?.length);
+console.log("workingAreas invalid:", !workingAreas || workingAreas.length === 0);
+console.log("======================================");
+    
+    {
       return res.status(400).json({
         success: false,
         message: "Please fill all required fields (including valid working areas)",
