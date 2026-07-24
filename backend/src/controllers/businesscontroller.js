@@ -1,5 +1,3 @@
-
-
 const Business = require("../models/business");
 const { customAlphabet } = require("nanoid");
 
@@ -34,9 +32,9 @@ const createBusiness = async (req, res) => {
     } = req.body;
 
     // ---------- Normalize & Data Parsing ----------
-        console.log("========== CREATE BUSINESS REQUEST ==========");
+    console.log("========== CREATE BUSINESS REQUEST ==========");
     console.log("category:", category);
-    console.log("workingAreas:", workingAreas);
+    console.log("workingAreas raw:", workingAreas);
     console.log("vehicleTypes:", vehicleTypes);
     console.log("firmName:", firmName);
     console.log("ownerName:", ownerName);
@@ -53,11 +51,8 @@ const createBusiness = async (req, res) => {
     console.log("acceptedTerms:", acceptedTerms);
     console.log("paymentId:", paymentId);
     console.log("orderId:", orderId);
-
-    // Agar poora body dekhna ho
     console.log("req.body:", req.body);
     console.log("============================================");
-
 
     category = category?.trim();
     firmName = firmName?.trim();
@@ -71,21 +66,38 @@ const createBusiness = async (req, res) => {
     website = website?.trim();
     socialMedia = socialMedia?.trim();
 
-    // Parse workingAreas if stringified JSON
-    if (workingAreas && typeof workingAreas === "string") {
-      try {
-        workingAreas = JSON.parse(workingAreas);
-      } catch (err) {
-        workingAreas = [];
+    // ---------- UPDATED WORKING AREAS PARSING LOGIC ----------
+    let parsedWorkingAreas = [];
+
+    if (workingAreas) {
+      if (Array.isArray(workingAreas)) {
+        // Agar array hai jisme JSON strings hain, unko parse karo
+        parsedWorkingAreas = workingAreas.map((item) => {
+          if (typeof item === "string") {
+            try {
+              return JSON.parse(item);
+            } catch (e) {
+              return null;
+            }
+          }
+          return item;
+        }).filter(Boolean);
+      } else if (typeof workingAreas === "string") {
+        try {
+          const parsed = JSON.parse(workingAreas);
+          parsedWorkingAreas = Array.isArray(parsed) ? parsed : [parsed];
+        } catch (err) {
+          parsedWorkingAreas = [];
+        }
       }
     }
 
     // Process & Filter workingAreas to prevent empty state error
-    if (Array.isArray(workingAreas)) {
-      workingAreas = workingAreas
+    if (Array.isArray(parsedWorkingAreas)) {
+      workingAreas = parsedWorkingAreas
         .map((area) => {
-          const state = area.state ? area.state.trim().toLowerCase() : undefined;
-          const cities = Array.isArray(area.cities)
+          const state = area && area.state ? String(area.state).trim().toLowerCase() : undefined;
+          const cities = Array.isArray(area?.cities)
             ? area.cities
                 .map((city) => (typeof city === "string" ? city.trim().toLowerCase() : ""))
                 .filter((city) => city !== "")
@@ -124,24 +136,23 @@ const createBusiness = async (req, res) => {
       !acceptedTerms ||
       !workingAreas ||
       workingAreas.length === 0
-    ){
-    console.log("========== VALIDATION DEBUG ==========");
-console.log("category:", category, "=>", !category);
-console.log("ownerName:", ownerName, "=>", !ownerName);
-console.log("address:", address, "=>", !address);
-console.log("currentCity:", currentCity, "=>", !currentCity);
-console.log("currentState:", currentState, "=>", !currentState);
-console.log("pincode:", pincode, "=>", !pincode);
-console.log("phoneNumber:", phoneNumber, "=>", !phoneNumber);
-console.log("email:", email, "=>", !email);
-console.log("acceptedTerms:", acceptedTerms, "=>", !acceptedTerms);
-console.log("workingAreas:", workingAreas);
-console.log("workingAreas isArray:", Array.isArray(workingAreas));
-console.log("workingAreas length:", workingAreas?.length);
-console.log("workingAreas invalid:", !workingAreas || workingAreas.length === 0);
-console.log("======================================");
-    
-    
+    ) {
+      console.log("========== VALIDATION DEBUG ==========");
+      console.log("category:", category, "=>", !category);
+      console.log("ownerName:", ownerName, "=>", !ownerName);
+      console.log("address:", address, "=>", !address);
+      console.log("currentCity:", currentCity, "=>", !currentCity);
+      console.log("currentState:", currentState, "=>", !currentState);
+      console.log("pincode:", pincode, "=>", !pincode);
+      console.log("phoneNumber:", phoneNumber, "=>", !phoneNumber);
+      console.log("email:", email, "=>", !email);
+      console.log("acceptedTerms:", acceptedTerms, "=>", !acceptedTerms);
+      console.log("workingAreas:", workingAreas);
+      console.log("workingAreas isArray:", Array.isArray(workingAreas));
+      console.log("workingAreas length:", workingAreas?.length);
+      console.log("workingAreas invalid:", !workingAreas || workingAreas.length === 0);
+      console.log("======================================");
+
       return res.status(400).json({
         success: false,
         message: "Please fill all required fields (including valid working areas)",
@@ -249,16 +260,14 @@ console.log("======================================");
 // ======================= SEARCH BUSINESS =======================
 
 const searchBusiness = async (req, res) => {
-
   try {
-
     let {
-     category,
-  state,
-  city,
-  currentState,
-  currentCity,
-  vehicleType
+      category,
+      state,
+      city,
+      currentState,
+      currentCity,
+      vehicleType
     } = req.query;
 
     let query = {};
@@ -268,18 +277,6 @@ const searchBusiness = async (req, res) => {
         $regex: new RegExp("^" + category.trim() + "$", "i")
       };
     }
-/*
-    if (from) {
-      query.from = {
-        $regex: new RegExp("^" + from.trim() + "$", "i")
-      };
-    }
-
-    if (to) {
-      query.to = {
-        $regex: new RegExp("^" + to.trim() + "$", "i")
-      };
-    }*/
 
     if (currentState) {
       query.currentState = {
@@ -292,20 +289,20 @@ const searchBusiness = async (req, res) => {
         $regex: new RegExp("^" + currentCity.trim() + "$", "i")
       };
     }
-    if (state) {
-  query["workingAreas.state"] = {
-    $regex: new RegExp("^" + state.trim() + "$", "i"),
-  };
-}
 
-if (city) {
-  query["workingAreas.cities"] = {
-    $regex: new RegExp("^" + city.trim() + "$", "i"),
-  };
-}
+    if (state) {
+      query["workingAreas.state"] = {
+        $regex: new RegExp("^" + state.trim() + "$", "i"),
+      };
+    }
+
+    if (city) {
+      query["workingAreas.cities"] = {
+        $regex: new RegExp("^" + city.trim() + "$", "i"),
+      };
+    }
 
     if (vehicleType) {
-
       const vehicles = vehicleType
         .split(",")
         .map(v => new RegExp("^" + v.trim() + "$", "i"));
@@ -313,12 +310,11 @@ if (city) {
       query.vehicleTypes = {
         $in: vehicles
       };
-
     }
 
-   const businesses = await Business.find(query)
-  .collation({ locale: "en", strength: 2 })
-  .sort({ firmName: 1 });
+    const businesses = await Business.find(query)
+      .collation({ locale: "en", strength: 2 })
+      .sort({ firmName: 1 });
 
     return res.status(200).json({
       success: true,
@@ -327,18 +323,15 @@ if (city) {
     });
 
   } catch (error) {
-
     console.log(error);
-
     return res.status(500).json({
       success: false,
       message: error.message
     });
-
   }
-
 };
 
+// ======================= GET ALL BUSINESS =======================
 
 const getAllBusiness = async (req, res) => {
   try {
@@ -357,179 +350,8 @@ const getAllBusiness = async (req, res) => {
   }
 };
 
-
-// ======================= SAVE / UPDATE DRAFT =======================
-/*
-
-const saveDraft = async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const formData = req.body;
-
-    let draft = await Business.findOne({
-      user: userId,
-      status: "Draft",
-    });
-
-    if (draft) {
-      Object.assign(draft, formData);
-      draft.status = "Draft";
-
-      await draft.save();
-
-      return res.status(200).json({
-        success: true,
-        message: "Draft Updated Successfully",
-        business: draft,
-      });
-    }
-
-    draft = await Business.create({
-      ...formData,
-      user: userId,
-      status: "Draft",
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: "Draft Saved Successfully",
-      business: draft,
-    });
-
-  } catch (error) {
-    console.log(error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// ======================= GET DRAFT =======================
-
-const getDraft = async (req, res) => {
-  try {
-
-    const draft = await Business.findOne({
-      user: req.user.id,
-      status: "Draft",
-    });
-
-    return res.status(200).json({
-      success: true,
-      business: draft,
-    });
-
-  } catch (error) {
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
-  }
-};
-
-// ======================= DELETE DRAFT =======================
-
-const deleteDraft = async (req, res) => {
-  try {
-
-    await Business.findOneAndDelete({
-      user: req.user.id,
-      status: "Draft",
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Draft Deleted Successfully",
-    });
-
-  } catch (error) {
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
-  }
-};
-const activateBusiness = async (req, res) => {
-  try {
-
-    const business = await Business.findOne({
-      user: req.user.id,
-      status: "Draft",
-    });
-
-    if (!business) {
-      return res.status(404).json({
-        success: false,
-        message: "Draft Business Not Found",
-      });
-    }
-
-    // Duplicate Check
-    const mobileExists = await Business.findOne({
-      phoneNumber: business.phoneNumber,
-      status: "Active",
-      _id: { $ne: business._id },
-    });
-
-    if (mobileExists) {
-      return res.status(400).json({
-        success: false,
-        message: "Phone Number Already Registered",
-      });
-    }
-
-    const emailExists = await Business.findOne({
-      email: business.email,
-      status: "Active",
-      _id: { $ne: business._id },
-    });
-
-    if (emailExists) {
-      return res.status(400).json({
-        success: false,
-        message: "Email Already Registered",
-      });
-    }
-
-    // Generate IDs
-    business.businessId = "RDL" + Date.now();
-    business.referralCode = nanoid();
-
-    business.profileCompleted = true;
-    business.status = "Active";
-
-    await business.save();
-
-    return res.status(200).json({
-      success: true,
-      message: "Business Activated Successfully",
-      business,
-    });
-
-  } catch (error) {
-
-    console.log(error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
-  }
-};*/
 module.exports = {
   createBusiness,
   searchBusiness,
-  getAllBusiness/*
-    saveDraft,
-  getDraft,
-  deleteDraft,
-   activateBusiness,*/
+  getAllBusiness
 };
