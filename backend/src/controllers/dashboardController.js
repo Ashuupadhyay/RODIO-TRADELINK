@@ -8,7 +8,7 @@ const getDashboard = async (req, res) => {
       user: userId,
     }).populate(
       "user",
-      "name email mobile role subscription"
+      "name email mobile role subscription referralCode"
     );
 
     if (!business) {
@@ -17,6 +17,20 @@ const getDashboard = async (req, res) => {
         message: "Business profile not found",
       });
     }
+
+    // ============================
+    // SUBSCRIPTION STATUS
+    // ============================
+
+    const subscriptionStatus =
+      business.user?.subscription?.status || "inactive";
+
+    // ============================
+    // REFERRAL
+    // ============================
+
+    const hasActiveSubscription =
+      subscriptionStatus === "active";
 
     return res.status(200).json({
       success: true,
@@ -35,9 +49,7 @@ const getDashboard = async (req, res) => {
 
         // Subscription
         subscription: {
-          status:
-            business.user?.subscription?.status ||
-            "inactive",
+          status: subscriptionStatus,
 
           plan:
             business.user?.subscription?.plan ||
@@ -50,6 +62,17 @@ const getDashboard = async (req, res) => {
           endDate:
             business.user?.subscription?.endDate ||
             null,
+        },
+
+        // Referral
+        referral: {
+          referralCode: hasActiveSubscription
+            ? business.user?.referralCode || null
+            : null,
+
+          message: hasActiveSubscription
+            ? null
+            : "You don't have a referral code. First add a service.",
         },
       },
     });
