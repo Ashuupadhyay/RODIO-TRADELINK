@@ -1,6 +1,6 @@
 const Booking = require("../models/lead");
 
-
+const Bid = require("../models/bid");
 // CREATE BOOKING
 exports.createBooking = async (req, res) => {
 
@@ -31,25 +31,89 @@ exports.myBookings = async (req, res) => {
     });
 
 };
-
-
 exports.getAllBookings = async (req, res) => {
+    try {
 
-if (!["transporter", "broker"].includes(req.user.role)) {
-    return res.status(403).json({
-        success: false,
-        message: "Only transporter or broker can access."
-    });
-}
+        if (!["transporter", "broker"].includes(req.user.role)) {
+            return res.status(403).json({
+                success: false,
+                message: "Only transporter or broker can access."
+            });
+        }
 
-    const bookings = await Booking.find()
-    .populate("createdBy","name email role");
+        // All leads - latest first
+        const bookings = await Booking.find()
+            .populate("createdBy", "name email role")
+            .sort({ createdAt: -1 })
+            .lean();
 
-    res.json({
-        success:true,
-        data:bookings
-    });
-}
+        // Har lead ka bid count nikalo
+        const bookingsWithBidCount = await Promise.all(
+            bookings.map(async (booking) => {
+
+                const bidCount = await Bid.countDocuments({
+                    booking: booking._id
+                });
+
+                // Available tabhi hai jab:
+                // status Open ho AND bids 10 se kam ho
+                const isAvailable =
+                    booking.status === "Open" &&
+                    bidCount < 10;
+
+                let availabilityReason = null;
+
+                if (booking.status !== "Open") {
+                    availabilityReason = "No longer available";
+                } else if (bidCount >= 10) {
+                    availabilityReason = "Bid limit reached";
+                }
+
+                return {
+                    ...booking,
+                    bidCount,
+                    isAvailable,
+                    availabilityReason
+                };
+            })
+        );
+
+        // =====================================
+        // Available leads TOP
+        // Unavailable leads BOTTOM
+        // Latest first inside both groups
+        // =====================================
+        bookingsWithBidCount.sort((a, b) => {
+
+            // Available ko upar rakho
+            if (a.isAvailable && !b.isAvailable) {
+                return -1;
+            }
+
+            if (!a.isAvailable && b.isAvailable) {
+                return 1;
+            }
+
+            // Same group me latest first
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+
+        res.status(200).json({
+            success: true,
+            total: bookingsWithBidCount.length,
+            data: bookingsWithBidCount
+        });
+
+    } catch (error) {
+
+        console.error("Get All Bookings Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 
 
 // ==========================
