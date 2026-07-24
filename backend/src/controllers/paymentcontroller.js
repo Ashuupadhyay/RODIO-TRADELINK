@@ -3,7 +3,7 @@ const Referral = require("../models/Referral");
 const razorpay = require("../config/razorpay");
 const Payment = require("../models/Payment");
 const User = require("../models/register");
-const Business = require("../models/Business"); // Import Business Model
+const Business = require("../models/business"); // Import Business Model
 const generateReceiptNumber = require("../utills/generateReceiptNumber");
 const generateReferralCode = require("../utills/generateReferralCode");
 
