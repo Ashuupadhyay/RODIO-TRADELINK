@@ -2,7 +2,14 @@ const Business = require("../models/business");
 
 const getDashboard = async (req, res) => {
   try {
-    const business = await Business.findOne({ user: req.user.id });
+    const userId = req.user.id;
+
+    const business = await Business.findOne({
+      user: userId,
+    }).populate(
+      "user",
+      "name email mobile role subscription"
+    );
 
     if (!business) {
       return res.status(404).json({
@@ -11,40 +18,48 @@ const getDashboard = async (req, res) => {
       });
     }
 
-    const today = new Date();
-
-    let subscriptionStatus = "Free";
-
-    if (business.subscription?.expiryDate) {
-      subscriptionStatus =
-        business.subscription.expiryDate >= today
-          ? "Active"
-          : "Expired";
-    }
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-
       data: {
-        firmName: business.firmName,
-        ownerName: business.ownerName,
+        // User
+        name: business.user?.name || "",
+        role: business.user?.role || "",
+        email: business.user?.email || "",
+        mobile: business.user?.mobile || "",
 
-        referralCode: business.referralCode,
+        // Business
+        firmName: business.firmName || "",
+        ownerName: business.ownerName || "",
+        profileCompleted:
+          business.profileCompleted || false,
 
-        expiryDate: business.subscription?.expiryDate,
+        // Subscription
+        subscription: {
+          status:
+            business.user?.subscription?.status ||
+            "inactive",
 
-        renewalStatus:
-          business.subscription?.renewalStatus || "Pending",
+          plan:
+            business.user?.subscription?.plan ||
+            "Monthly",
 
-        subscriptionStatus,
+          startDate:
+            business.user?.subscription?.startDate ||
+            null,
 
-        profileCompleted: business.profileCompleted,
+          endDate:
+            business.user?.subscription?.endDate ||
+            null,
+        },
       },
     });
   } catch (error) {
-    res.status(500).json({
+    console.error("Dashboard Error:", error);
+
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Failed to load dashboard",
+      error: error.message,
     });
   }
 };
