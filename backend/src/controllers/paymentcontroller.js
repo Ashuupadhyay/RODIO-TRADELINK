@@ -13,7 +13,7 @@ const generateReferralCode = require("../utills/generateReferralCode");
 exports.createOrder = async (req, res) => {
   try {
     const { referralCode } = req.body;
-    const amount = 1; // Future me Plan collection se amount aayega
+    const amount = 101; // Future me Plan collection se amount aayega
 
     if (!amount) {
       return res.status(400).json({
