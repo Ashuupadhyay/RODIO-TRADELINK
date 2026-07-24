@@ -124,7 +124,7 @@ const createBusiness = async (req, res) => {
       !acceptedTerms ||
       !workingAreas ||
       workingAreas.length === 0
-    )
+    ){
     console.log("========== VALIDATION DEBUG ==========");
 console.log("category:", category, "=>", !category);
 console.log("ownerName:", ownerName, "=>", !ownerName);
@@ -141,7 +141,7 @@ console.log("workingAreas length:", workingAreas?.length);
 console.log("workingAreas invalid:", !workingAreas || workingAreas.length === 0);
 console.log("======================================");
     
-    {
+    
       return res.status(400).json({
         success: false,
         message: "Please fill all required fields (including valid working areas)",
