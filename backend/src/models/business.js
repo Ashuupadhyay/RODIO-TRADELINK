@@ -225,4 +225,9 @@ businessSchema.index({
     currentState: 1
 });
 
-module.exports = mongoose.model("Business", businessSchema);
+//module.exports = mongoose.model("Business", businessSchema);
+// ❌ Old Code
+// module.exports = mongoose.model("Business", businessSchema);
+
+// ✅ Updated Code (Safe Mongoose Model Export)
+module.exports = mongoose.models.Business || mongoose.model("Business", businessSchema);
