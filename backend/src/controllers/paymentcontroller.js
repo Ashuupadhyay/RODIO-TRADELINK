@@ -7,7 +7,7 @@ const generateReceiptNumber = require("../utills/generateReceiptNumber");
 const generateReferralCode = require("../utills/generateReferralCode");
 
 // ================================
-// CREATE ORDER
+// CREATE ORDER (Pre-Payment Referral Check)
 // ================================
 
 exports.createOrder = async (req, res) => {
@@ -24,9 +24,12 @@ exports.createOrder = async (req, res) => {
 
     let referralUser = null;
 
-    // Referral Validation (Before Payment / Order Creation)
-    if (referralCode) {
-      referralUser = await User.findOne({ referralCode });
+    // ===============================
+    // Referral Validation (Before Payment)
+    // ===============================
+    if (referralCode && referralCode.trim() !== "") {
+      // Find the user who owns this referral code
+      referralUser = await User.findOne({ referralCode: referralCode.trim() });
 
       if (!referralUser) {
         return res.status(400).json({
@@ -54,7 +57,7 @@ exports.createOrder = async (req, res) => {
       // Referral owner's subscription should not be expired
       if (
         referralUser.subscription.endDate &&
-        referralUser.subscription.endDate < new Date()
+        new Date(referralUser.subscription.endDate) < new Date()
       ) {
         return res.status(400).json({
           success: false,
@@ -85,7 +88,7 @@ exports.createOrder = async (req, res) => {
       user: req.user.id,
       orderId: order.id,
       amount,
-      referralCode: referralCode || null,
+      referralCode: referralCode ? referralCode.trim() : null,
       status: "created",
     });
 
