@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const {updateProfile} = require("../controllers/updateProfile");
+const {updateProfile} = require("../controllers/updateprofile");
 const auth  = require("../middlewhere/auth");
 const upload = require("../middlewhere/multer");
 
