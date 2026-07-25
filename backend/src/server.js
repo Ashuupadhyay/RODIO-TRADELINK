@@ -12,6 +12,9 @@ const commentRoutes = require("./routes/comment");
 const bidRoutes = require("./routes/bidRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const dashboardRoutes = require("./routes/dashboard");
+const updateProfileRoutes = require("./routes/updateProfileRoutes");
+
+
 
 
 
@@ -38,6 +41,7 @@ app.use("/api/comment", commentRoutes);
 app.use("/api/bids", bidRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api", dashboardRoutes);
+app.use("/api/update-profile", updateProfileRoutes);
 
 
 const PORT = process.env.PORT || 5000;
