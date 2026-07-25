@@ -2,16 +2,20 @@ const Business = require("../models/business");
 
 exports.updateProfile = async (req, res) => {
   try {
-    const business = await Business.findOne({ user: req.user.id });
+    const userId = req.user.id;
 
+    console.log("Logged in User ID:", userId);
+
+    // Current user ka business find karo
+    let business = await Business.findOne({ user: userId });
+
+    // Agar business nahi hai to create karo
     if (!business) {
-      return res.status(404).json({
-        success: false,
-        message: "Business profile not found",
+      business = new Business({
+        user: userId,
       });
     }
 
-    // Allowed fields only
     const allowedFields = [
       "category",
       "workingAreas",
@@ -32,6 +36,7 @@ exports.updateProfile = async (req, res) => {
       "referredBy",
     ];
 
+    // Sirf request me aaye fields update honge
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) {
         business[field] = req.body[field];
@@ -53,8 +58,9 @@ exports.updateProfile = async (req, res) => {
       message: "Profile updated successfully",
       data: business,
     });
+
   } catch (error) {
-    console.log(error);
+    console.error("Update Profile Error:", error);
 
     return res.status(500).json({
       success: false,
