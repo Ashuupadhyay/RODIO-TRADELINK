@@ -17,6 +17,7 @@ const updateProfileRoutes = require("./routes/updateProfileRoutes");
 const businessRoutes = require("./routes/businessroute");
 const vehicleRoutes = require("./routes/vechlerout");
 const routeRoutes = require("./routes/ruteroute");
+const locationRoutes = require("./routes/locationRoutes");
 //const paymentRoutes = require("./routes/paymentRoutes");
 
 
@@ -53,6 +54,7 @@ app.use("/api/business", businessRoutes);
 app.use("/api/vehicles", vehicleRoutes);
 
 app.use("/api/routes", routeRoutes);
+app.use("/location", locationRoutes);
 
 //app.use("/api/payment", paymentRoutes);
 
