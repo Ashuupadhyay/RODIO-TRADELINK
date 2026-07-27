@@ -58,91 +58,80 @@ exports.createOrder = async (req, res) => {
       }
     }
 
-    let referralUser = null;
+
+
 
     // ===============================================
-    // 2. Referral Validation (Business Model Lookup)
-    // ===============================================
+// 2. Referral Validation
+// ===============================================
 
-    if (referralCode && referralCode.trim() !== "") {
-      const code = referralCode.trim();
+let referralUser = null;
 
-      // Search Referral Code in Business Collection
-      const referralBusiness = await Business.findOne({
-        referralCode: code,
-      });
+if (referralCode && referralCode.trim() !== "") {
+  const code = referralCode.trim();
 
-      if (!referralBusiness) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid referral code",
-        });
-      }
+  // Referral code User collection me stored hai
+  referralUser = await User.findOne({
+    referralCode: code,
+  });
 
-      const referrerUserId = referralBusiness.user;
+  // Invalid referral code
+  if (!referralUser) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid referral code",
+    });
+  }
 
-      // Self Referral Check
-      if (
-        referrerUserId.toString() ===
-        req.user.id.toString()
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "You cannot use your own referral code.",
-        });
-      }
+  // Self Referral Check
+  if (
+    referralUser._id.toString() ===
+    req.user.id.toString()
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "You cannot use your own referral code.",
+    });
+  }
 
-      // Find Referrer's User Account
-      referralUser =
-        await User.findById(referrerUserId);
+  // Referral owner's subscription active check
+  if (
+    referralUser.subscription?.status !==
+    "active"
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Referral code is inactive.",
+    });
+  }
 
-      if (!referralUser) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Referrer user account not found.",
-        });
-      }
+  // Subscription expiry check
+  if (
+    referralUser.subscription?.endDate &&
+    new Date(referralUser.subscription.endDate) <
+      new Date()
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Referral code has expired.",
+    });
+  }
 
-      // Referral owner's subscription active check
-      if (
-        referralUser.subscription?.status !==
-        "active"
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: "Referral code is inactive.",
-        });
-      }
+  // Already used referral check
+  const currentUser = await User.findById(
+    req.user.id
+  );
 
-      // Subscription expiry check
-      if (
-        referralUser.subscription.endDate &&
-        new Date(
-          referralUser.subscription.endDate
-        ) < new Date()
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: "Referral code has expired.",
-        });
-      }
-
-      // Already used referral check
-      const currentUser =
-        await User.findById(req.user.id);
-
-      if (
-        currentUser &&
-        currentUser.referredBy
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: "Referral already used.",
-        });
-      }
-    }
+  if (
+    currentUser &&
+    currentUser.referredBy
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Referral already used.",
+    });
+  }
+}
 
     // ===============================================
     // 3. CREATE RAZORPAY ORDER
@@ -267,23 +256,13 @@ exports.verifyPayment = async (req, res) => {
     // ================================================
     // FIND REFERRER
     // ================================================
+let referralUser = null;
 
-    let referralUser = null;
-
-    if (payment.referralCode) {
-      const referralBusiness =
-        await Business.findOne({
-          referralCode:
-            payment.referralCode,
-        });
-
-      if (referralBusiness) {
-        referralUser =
-          await User.findById(
-            referralBusiness.user
-          );
-      }
-    }
+if (payment.referralCode) {
+  referralUser = await User.findOne({
+    referralCode: payment.referralCode,
+  });
+}
 
     // ================================================
     // UPDATE PAYMENT DETAILS
