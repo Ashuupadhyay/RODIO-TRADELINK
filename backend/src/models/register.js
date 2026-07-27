@@ -7,6 +7,7 @@ type: String,
 enum: ["user", "transporter", "broker"],
   required:true,
     },
+  /*
     name: {
       type: String,
       required: [true, "Name is required"],
@@ -21,7 +22,7 @@ enum: ["user", "transporter", "broker"],
       unique: true,
       lowercase: true,
       trim: true,
-    },
+    },*/
    mobile: {
       type: String,
       required: [true, "Mobile number is required"],
