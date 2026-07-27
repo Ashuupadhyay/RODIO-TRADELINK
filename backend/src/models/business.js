@@ -1,233 +1,85 @@
 const mongoose = require("mongoose");
 
-const businessSchema = new mongoose.Schema({
-
-
-    // Registered User
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true
-    },
-
-    // Category (Dropdown)
-    category: {
-        type: String,
-        required: true,
-        enum: [
-            "Transporter",
-            "Broker",
-            "Fleet Owner",
-            "Truck Owner",
-            "Logistics Company",
-            "Warehouse",
-            "Courier",
-            "Packing & Moving",
-            "Commission Agent",
-            "RTO Agent",
-            "Finance Agent",
-            "Others"
-        ]
-    },
-workingAreas: [
+const businessSchema = new mongoose.Schema(
   {
-    state: {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+      index: true,
+    },
+
+    firmName: {
       type: String,
       required: true,
       trim: true,
-      lowercase: true,
-    },
-    cities: [
-      {
-        type: String,
-        trim: true,
-        lowercase: true,
-      },
-    ],
-  },
-],
-
-    // Basic Details
-    firmName: {
-        type: String,
-    
-        trim: true
-    },
-    // Vehicle Types
-vehicleTypes: [{
-    type: String,
-    enum: [
-        "Mini Truck",
-      "Pickup",
-      "Tata Ace",
-      "Bolero Pickup",
-      "Mahindra Jeeto",
-      "Ashok Leyland Dost",
-      "Tempo",
-      "Canter",
-      "Eicher",
-      "Truck",
-      "LCV",
-      "HCV",
-      "14 Feet Truck",
-      "17 Feet Truck",
-      "19 Feet Truck",
-      "22 Feet Truck",
-      "32 Feet Truck",
-      "Open Body Truck",
-      "Closed Body Truck",
-      "Container",
-      "Trailer",
-      "Tipper",
-      "Tanker",
-      "Refrigerated Truck",
-      "Tractor Trolley",
-    ]
-}],
-
-    ownerName: {
-        type: String,
-        required: true,
-        trim: true
     },
 
     address: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
+      trim: true,
     },
 
-    // Current Working Location
     currentCity: {
-        type: String,
-        required: true,
-        index: true
+      type: String,
+      required: true,
+      trim: true,
+      index: true,
     },
 
     currentState: {
-        type: String,
-        required: true,
-        index: true
+      type: String,
+      required: true,
+      trim: true,
+      index: true,
     },
 
     pincode: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
+      trim: true,
     },
 
-    phoneNumber: {
-        type: String,
-        required: true
+    subscriptionStatus: {
+      type: String,
+      enum: ["pending", "active", "expired", "cancelled"],
+      default: "pending",
+      index: true,
     },
 
-    alternatePhone: {
-        type: String
+    profileUnlocked: {
+      type: Boolean,
+      default: false,
     },
 
-businessId: {
-    type: String,
-    unique: true
-},
-profileCompleted: {
-  type: Boolean,
-  default: false,
-},
+    workingAreas: [
+      {
+        state: {
+          type: String,
+          trim: true,
+        },
 
-referralCode: {
-    type: String,
-    unique: true
-},
+        cities: [
+          {
+            type: String,
+            trim: true,
+          },
+        ],
+      },
+    ],
 
-referredBy: {
-    type: String,
-    default: null
-}
-
-
-    ,
-
-    email: {
-        type: String,
-        required: true
+    isActive: {
+      type: Boolean,
+      default: true,
     },
-
-    website: {
-        type: String
-    },
-
-    socialMedia: {
-        type: String
-    },
-    comments: [
-  {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Comment",
   },
-],
+  {
+    timestamps: true,
+  }
+);
 
-averageRating: {
-  type: Number,
-  default: 0,
-},
-
-totalReviews: {
-  type: Number,
-  default: 0,
-},
-
-
-    // Firm Photo
-photo: {
-  public_id: String,
-  url: String
-},
-    // Documents
-    aadhaar: {
-        public_id: String,
-        url: String
-    },
-
-    panCard: {
-        public_id: String,
-        url: String
-    },
-
-    gumasta: {
-        public_id: String,
-        url: String
-    },
-
-    gstCertificate: {
-        public_id: String,
-        url: String
-    },
-    status: {
-    type: String,
-    enum: ["Draft", "Active"],
-    default: "Draft",
-},
-
-   
-    // Verification Status
-    
-    // Form Checkbox
-    acceptedTerms: {
-        type: Boolean,
-        required: true
-    }
-
-}, {
-    timestamps: true
-});
-
-businessSchema.index({
-    category: 1,
-    currentCity: 1,
-    currentState: 1
-});
-
-//module.exports = mongoose.model("Business", businessSchema);
-// ❌ Old Code
-// module.exports = mongoose.model("Business", businessSchema);
-
-// ✅ Updated Code (Safe Mongoose Model Export)
-module.exports = mongoose.models.Business || mongoose.model("Business", businessSchema);
+module.exports =
+  mongoose.models.Business ||
+  mongoose.model("Business", businessSchema);

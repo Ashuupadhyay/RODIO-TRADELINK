@@ -4,7 +4,7 @@ const app = require("./app");
 
 // Routes
 const bookingRoutes = require("./routes/bookingRoutes");
-const businessRoute = require("./routes/businessrout");
+const businessRoute = require("./routes/businessroutold");
 const searchRoutes = require("./routes/vichlesearch");
 const contactRoutes = require("./routes/QueryRoute");
 const transporterRoutes = require("./routes/transporter");
@@ -14,6 +14,10 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const dashboardRoutes = require("./routes/dashboard");
 const updateProfileRoutes = require("./routes/updateProfileRoutes");
 
+const businessRoutes = require("./routes/businessroute");
+const vehicleRoutes = require("./routes/vechlerout");
+const routeRoutes = require("./routes/ruteroute");
+//const paymentRoutes = require("./routes/paymentRoutes");
 
 
 
@@ -42,6 +46,15 @@ app.use("/api/bids", bidRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api", dashboardRoutes);
 app.use("/api/update-profile", updateProfileRoutes);
+
+
+app.use("/api/business", businessRoutes);
+
+app.use("/api/vehicles", vehicleRoutes);
+
+app.use("/api/routes", routeRoutes);
+
+//app.use("/api/payment", paymentRoutes);
 
 
 const PORT = process.env.PORT || 5000;
