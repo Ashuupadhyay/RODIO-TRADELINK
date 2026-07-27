@@ -1,9 +1,8 @@
 const express = require("express");
-
 const router = express.Router();
 
 const {
-  saveBusiness,
+  saveBusinessDraft,
   getMyBusiness,
   getDashboard,
   getPublicBusiness,
@@ -16,13 +15,13 @@ const authMiddleware = require("../middlewhere/auth");
 router.post(
   "/create",
   authMiddleware,
-  saveBusiness
+  saveBusinessDraft
 );
 
 router.patch(
   "/update",
   authMiddleware,
-  saveBusiness
+  saveBusinessDraft
 );
 
 router.get(
