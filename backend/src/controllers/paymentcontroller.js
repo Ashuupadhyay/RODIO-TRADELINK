@@ -49,7 +49,7 @@ exports.createOrder = async (req, res) => {
       if (existingMobileUser) {
         return res.status(400).json({
           success: false,
-          message: "Yeh Mobile Number pehle se kisi aur account me registered hai!",
+          message: "your email or mobile number is already exixts !",
         });
       }
     }
