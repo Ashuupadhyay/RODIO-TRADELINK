@@ -8,12 +8,12 @@ const generateReceiptNumber = require("../utills/generateReceiptNumber");
 const generateReferralCode = require("../utills/generateReferralCode");
 
 // ================================================
-// CREATE ORDER (Pre-Payment Referral Check)
+// CREATE ORDER (Pre-Payment Checks & Validations)
 // ================================================
 
 exports.createOrder = async (req, res) => {
   try {
-    const { referralCode } = req.body;
+    const { referralCode, email, mobile } = req.body; // Form se email aur mobile receive kar rahe hain
     const amount = 101; // Future me Plan collection se amount aayega
 
     if (!amount) {
@@ -23,10 +23,41 @@ exports.createOrder = async (req, res) => {
       });
     }
 
+    // ===============================================
+    // 1. UNIQUE EMAIL & MOBILE VALIDATION (CRITICAL FIX)
+    // ===============================================
+    if (email) {
+      const existingEmailUser = await User.findOne({
+        email: email.trim().toLowerCase(),
+        _id: { $ne: req.user.id } // Apne hi current account ko ignore karke dusron me check karega
+      });
+
+      if (existingEmailUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Yeh Email ID pehle se kisi aur account me registered hai!",
+        });
+      }
+    }
+
+    if (mobile) {
+      const existingMobileUser = await User.findOne({
+        mobile: mobile.trim(),
+        _id: { $ne: req.user.id }
+      });
+
+      if (existingMobileUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Yeh Mobile Number pehle se kisi aur account me registered hai!",
+        });
+      }
+    }
+
     let referralUser = null;
 
     // ===============================================
-    // Referral Validation (Business Model Lookup)
+    // 2. Referral Validation (Business Model Lookup)
     // ===============================================
     if (referralCode && referralCode.trim() !== "") {
       const code = referralCode.trim();
@@ -90,7 +121,9 @@ exports.createOrder = async (req, res) => {
       }
     }
 
-    // Create Razorpay Order
+    // ===============================================
+    // 3. Create Razorpay Order & Save Payment Record
+    // ===============================================
     const options = {
       amount: amount * 100, // Paise me convert karne ke liye
       currency: "INR",
