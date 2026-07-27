@@ -1,4 +1,5 @@
 const Business = require("../models/business");
+const User = require("../models/register");
 const Vehicle = require("../models/vehicle");
 const Route = require("../models/route");
 const Subscription = require("../models/suscription");
@@ -12,6 +13,26 @@ exports.saveBusinessDraft = async (req, res) => {
   try {
     const userId = req.user.id;
 
+    // ==================================================
+    // REGISTERED USER FETCH
+    // Email + Mobile yahin se lenge
+    // ==================================================
+
+    const user = await User.findById(userId).select(
+      "name email mobile role"
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // ==================================================
+    // BUSINESS FORM DATA
+    // ==================================================
+
     const {
       firmName,
       address,
@@ -20,9 +41,9 @@ exports.saveBusinessDraft = async (req, res) => {
       pincode,
     } = req.body;
 
-    // --------------------------------------
-    // Validation
-    // --------------------------------------
+    // ==================================================
+    // VALIDATION
+    // ==================================================
 
     if (
       !firmName?.trim() ||
@@ -44,17 +65,17 @@ exports.saveBusinessDraft = async (req, res) => {
       });
     }
 
-    // --------------------------------------
-    // Check existing business
-    // --------------------------------------
+    // ==================================================
+    // CHECK EXISTING BUSINESS
+    // ==================================================
 
     let business = await Business.findOne({
       user: userId,
     });
 
-    // --------------------------------------
-    // Already completed business
-    // --------------------------------------
+    // ==================================================
+    // ALREADY COMPLETED
+    // ==================================================
 
     if (
       business &&
@@ -67,12 +88,17 @@ exports.saveBusinessDraft = async (req, res) => {
       });
     }
 
-    // --------------------------------------
-    // Existing draft -> update
-    // --------------------------------------
+    // ==================================================
+    // EXISTING DRAFT -> UPDATE
+    // ==================================================
 
     if (business) {
       business.firmName = firmName.trim();
+
+      // Registered User se automatically
+      business.phoneNumber = user.mobile || "";
+      business.email = user.email || "";
+
       business.address = address.trim();
       business.currentCity = currentCity.trim();
       business.currentState = currentState.trim();
@@ -85,15 +111,20 @@ exports.saveBusinessDraft = async (req, res) => {
       await business.save();
     }
 
-    // --------------------------------------
-    // New draft -> create
-    // --------------------------------------
+    // ==================================================
+    // NEW DRAFT -> CREATE
+    // ==================================================
 
     else {
       business = await Business.create({
         user: userId,
 
         firmName: firmName.trim(),
+
+        // Registered User se automatically
+        phoneNumber: user.mobile || "",
+        email: user.email || "",
+
         address: address.trim(),
         currentCity: currentCity.trim(),
         currentState: currentState.trim(),
@@ -105,6 +136,10 @@ exports.saveBusinessDraft = async (req, res) => {
       });
     }
 
+    // ==================================================
+    // RESPONSE
+    // ==================================================
+
     return res.status(200).json({
       success: true,
 
@@ -113,16 +148,24 @@ exports.saveBusinessDraft = async (req, res) => {
 
       data: {
         businessId: business._id,
+
+        // Registered account information
+        name: user.name || "",
+        email: business.email || "",
+        phoneNumber: business.phoneNumber || "",
+        role: user.role || "",
+
+        // Business information
         firmName: business.firmName,
+        address: business.address,
+        currentCity: business.currentCity,
+        currentState: business.currentState,
+        pincode: business.pincode,
 
-        registrationStatus:
-          business.registrationStatus,
-
-        subscriptionStatus:
-          business.subscriptionStatus,
-
-        profileUnlocked:
-          business.profileUnlocked,
+        // Status
+        registrationStatus: business.registrationStatus,
+        subscriptionStatus: business.subscriptionStatus,
+        profileUnlocked: business.profileUnlocked,
       },
     });
   } catch (error) {
@@ -130,14 +173,14 @@ exports.saveBusinessDraft = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Unable to save business details",
+      message:
+        error.message || "Unable to save business details",
     });
   }
 };
 
 // ======================================================
 // GET MY BUSINESS
-// Draft bhi return karega
 // AddServices autofill ke liye
 // ======================================================
 
@@ -164,7 +207,10 @@ exports.getMyBusiness = async (req, res) => {
       data: business,
     });
   } catch (error) {
-    console.error("GET MY BUSINESS ERROR:", error);
+    console.error(
+      "GET MY BUSINESS ERROR:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
@@ -196,10 +242,7 @@ exports.getDashboard = async (req, res) => {
       });
     }
 
-    // --------------------------------------
     // Latest paid subscription
-    // --------------------------------------
-
     const subscription =
       await Subscription.findOne({
         business: business._id,
@@ -210,10 +253,7 @@ exports.getDashboard = async (req, res) => {
         })
         .lean();
 
-    // --------------------------------------
-    // Permission
-    // --------------------------------------
-
+    // Payment successful hai ya nahi
     const unlocked =
       business.registrationStatus === "completed" &&
       business.subscriptionStatus === "active" &&
@@ -245,7 +285,10 @@ exports.getDashboard = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("GET DASHBOARD ERROR:", error);
+    console.error(
+      "GET DASHBOARD ERROR:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
@@ -319,14 +362,27 @@ exports.getPublicBusiness = async (req, res) => {
           business.user?.role || "",
 
         firmName:
-          business.firmName,
+          business.firmName || "",
+
+        // Business me saved registered details
+        email:
+          business.email || "",
+
+        phoneNumber:
+          business.phoneNumber || "",
+
+        address:
+          business.address || "",
+
+        pincode:
+          business.pincode || "",
 
         location: {
           city:
-            business.currentCity,
+            business.currentCity || "",
 
           state:
-            business.currentState,
+            business.currentState || "",
         },
 
         workingAreas:
