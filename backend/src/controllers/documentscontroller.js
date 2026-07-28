@@ -1,4 +1,4 @@
-const cloudinary = require("../config/cloudinary");
+const cloudinary = require("../config/cloudnary");
 const streamifier = require("streamifier");
 
 const BusinessDocument =
@@ -10,7 +10,7 @@ const Business =
 // ======
 
 
-const BusinessDocument = require("../models/documents");
+
 
 
 exports.uploadDocument = async (req, res) => {
