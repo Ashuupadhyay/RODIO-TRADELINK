@@ -56,7 +56,7 @@ app.use("/api/business", businessRoutes);
 app.use("/api/vehicles", vehicleRoutes);
 
 app.use("/api/routes", routeRoutes);
-app.use("/location", locationRoutes);
+app.use("/api/location", locationRoutes);
 
 app.use(
   "/api/documents",
