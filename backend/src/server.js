@@ -20,6 +20,7 @@ const routeRoutes = require("./routes/ruteroute");
 const locationRoutes = require("./routes/locationRoutes");
 const directoryRoutes = require("./routes/DIRECTORY.JS");
 const workingAreaRoutes = require("./routes/workingAreaRoutes");
+const receiptRoutes = require("./routes/reciptrout");
 
 
 
@@ -62,6 +63,7 @@ app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/routes", routeRoutes);
 app.use("/api/location", locationRoutes);
 app.use("/api/business", workingAreaRoutes);
+app.use("/api/receipt", receiptRoutes);
 
 app.use(
   "/api/documents",
