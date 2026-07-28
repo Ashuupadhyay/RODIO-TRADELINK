@@ -18,7 +18,10 @@ const businessRoutes = require("./routes/businessroute");
 const vehicleRoutes = require("./routes/vechlerout");
 const routeRoutes = require("./routes/ruteroute");
 const locationRoutes = require("./routes/locationRoutes");
-//const paymentRoutes = require("./routes/paymentRoutes");
+const directoryRoutes = require("./routes/DIRECTORY.JS");
+
+
+
 const businessDocumentRoutes =
   require("./routes/document.js");
 
@@ -62,7 +65,8 @@ app.use(
   "/api/documents",
   businessDocumentRoutes
 );
-
+app.use("/api/directory", directoryRoutes);
+//const paymentRoutes = require("./routes/paymentRoutes")
 //app.use("/api/payment", paymentRoutes);
 
 
