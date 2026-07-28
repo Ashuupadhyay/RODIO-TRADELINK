@@ -1,54 +1,39 @@
 const multer = require("multer");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const cloudinary = require("cloudinary").v2;
 
-// Cloudinary Config
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// Memory Storage
+const storage = multer.memoryStorage();
 
-// Storage
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: async (req, file) => ({
-    folder: "rodio-documents",
-    resource_type: "auto",
-    allowed_formats: [
-      "jpg",
-      "jpeg",
-      "png",
-      "pdf",
-      "webp",
-      "doc",
-      "docx",
-    ],
-    public_id: `${Date.now()}-${file.originalname.split(".")[0]}`,
-  }),
-});
+// Allowed MIME Types
+const allowedMimeTypes = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+
+  "application/pdf",
+
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+
+const fileFilter = (req, file, cb) => {
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(
+      new Error(
+        "Only JPG, PNG, WEBP, PDF, DOC and DOCX files are allowed."
+      ),
+      false
+    );
+  }
+};
 
 const upload = multer({
   storage,
+  fileFilter,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10 MB
-  },
-  fileFilter: (req, file, cb) => {
-    const allowed = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/webp",
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ];
-
-    if (allowed.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error("Invalid file type"));
-    }
   },
 });
 
