@@ -4,21 +4,18 @@ const cloudinary = require("../config/cloudnary");
 const streamifier = require("streamifier");
 const bcrypt = require("bcrypt");
 
+const DEFAULT_PROFILE_IMAGE =
+  "https://res.cloudinary.com/tyt9mt1f/image/upload/v1784103262/DUMMYIMAGE_xuc0xa.jpg";
 
-//poat 
-
-
-// UPDATE PROFILE
 const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
 
     const { name, email, phoneNumber, password } = req.body;
-    console.log("name is",name);
-    console.log("email is ",email);;
-    console.log("phonenumber is ",phoneNumber);
 
-    // Current User
+    // ===========================
+    // Find User
+    // ===========================
     const user = await User.findById(userId);
 
     if (!user) {
@@ -28,39 +25,45 @@ const updateProfile = async (req, res) => {
       });
     }
 
-    // Check Duplicate Email
+    // ===========================
+    // Duplicate Email Check
+    // ===========================
     if (email && email !== user.email) {
-      const existingEmail = await User.findOne({
+      const emailExist = await User.findOne({
         email,
         _id: { $ne: userId },
       });
 
-      if (existingEmail) {
+      if (emailExist) {
         return res.status(400).json({
           success: false,
-          message: "Email already registered",
+          message: "Email already exists",
         });
       }
     }
 
-    // Check Duplicate Mobile
+    // ===========================
+    // Duplicate Mobile Check
+    // ===========================
     if (phoneNumber && phoneNumber !== user.mobile) {
-      const existingMobile = await User.findOne({
+      const mobileExist = await User.findOne({
         mobile: phoneNumber,
         _id: { $ne: userId },
       });
 
-      if (existingMobile) {
+      if (mobileExist) {
         return res.status(400).json({
           success: false,
-          message: "Mobile number already registered",
+          message: "Mobile number already exists",
         });
       }
     }
 
+    // ===========================
+    // Upload Image
+    // ===========================
     let imageUrl = "";
 
-    // Upload Image to Cloudinary
     if (req.file) {
       const uploadImage = () =>
         new Promise((resolve, reject) => {
@@ -79,123 +82,74 @@ const updateProfile = async (req, res) => {
 
       const result = await uploadImage();
       imageUrl = result.secure_url;
-      console.log("imageurl",imageUrl);
     }
 
-    // Update User Collection
+    // ===========================
+    // Update User
+    // ===========================
     if (name) user.name = name;
+
     if (email) user.email = email;
+
     if (phoneNumber) user.mobile = phoneNumber;
+
     if (password && password.trim() !== "") {
-  const hashedPassword = await bcrypt.hash(password, 10);
-  user.password = hashedPassword;
-}
-    console.log("update name",name);
-    console.log("updated email",email);
-    console.log("numberupdated",phoneNumber);
+      user.password = await bcrypt.hash(password, 10);
+    }
 
     await user.save();
 
+    // ===========================
     // Find Profile
+    // ===========================
     let profile = await Profile.findOne({ user: userId });
-    console.log("imageupfayhdbhbc",profile);
 
-    // Create Profile if not exists
+    // ===========================
+    // Create Profile
+    // ===========================
     if (!profile) {
-      profile = await Profile.create({
+      profile = new Profile({
         user: userId,
         role: user.role,
         name: user.name,
         email: user.email,
         phoneNumber: user.mobile,
-        profileImage: imageUrl,
+        profileImage: imageUrl || DEFAULT_PROFILE_IMAGE,
       });
-    } else {
-      profile.name = user.name;
-      profile.email = user.email;
-      profile.phoneNumber = user.mobile;
 
-      if (imageUrl) {
-        profile.profileImage = imageUrl;
-      }
+      await profile.save();
+    }
+
+    // ===========================
+    // Update Existing Profile
+    // ===========================
+    else {
+      if (name) profile.name = user.name;
+
+      if (email) profile.email = user.email;
+
+      if (phoneNumber) profile.phoneNumber = user.mobile;
+
+      if (imageUrl) profile.profileImage = imageUrl;
 
       await profile.save();
     }
 
     return res.status(200).json({
       success: true,
-      message: "Profile Updated Successfully",
+      message: "Profile updated successfully",
       profile,
     });
-
   } catch (error) {
-    console.log("Update Profile Error:", error);
-   console.log("error",error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-    });
-  }
-};
-// GET API
-// Default Profile Image
-const DEFAULT_PROFILE_IMAGE =
-  "https://res.cloudinary.com/tyt9mt1f/image/upload/v1784103262/DUMMYIMAGE_xuc0xa.jpg";
-
-// GET PROFILE
-const getProfile = async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    // Get user from Register collection
-    const user = await User.findById(userId).select("-password");
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    // Find profile
-    const profile = await Profile.findOne({ user: userId });
-
-    // If profile does not exist
-    if (!profile) {
-      return res.status(200).json({
-        success: true,
-        profile: {
-          role: user.role,
-          name: user.name,
-          email: user.email,
-          mobile: user.mobile,
-          profileImage: DEFAULT_PROFILE_IMAGE,
-        },
-      });
-    }
-
-    // If profile exists
-    return res.status(200).json({
-      success: true,
-      profile: {
-        ...profile.toObject(),
-        profileImage:
-          profile.profileImage || DEFAULT_PROFILE_IMAGE,
-      },
-    });
-
-  } catch (error) {
-    console.error("Get Profile Error:", error);
+    console.error("Update Profile Error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: error.message,
     });
   }
 };
 
 module.exports = {
-  getProfile,
   updateProfile,
-
 };
