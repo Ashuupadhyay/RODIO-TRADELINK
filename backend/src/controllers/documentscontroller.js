@@ -1,20 +1,21 @@
+const cloudinary = require("../config/cloudinary");
+const streamifier = require("streamifier");
+
 const BusinessDocument =
   require("../models/documents.js");
 
 const Business =
   require("../models/business");
 
-// ======================================================
-// UPLOAD DOCUMENT
-// ======================================================
+// ======
+
+
+const BusinessDocument = require("../models/documents");
+
 
 exports.uploadDocument = async (req, res) => {
   try {
     const userId = req.user.id;
-
-    // --------------------------------------
-    // Find Business
-    // --------------------------------------
 
     const business = await Business.findOne({
       user: userId,
@@ -27,29 +28,17 @@ exports.uploadDocument = async (req, res) => {
       });
     }
 
-    // --------------------------------------
-    // Check Subscription
-    // --------------------------------------
-
     if (
       business.subscriptionStatus !== "active" ||
       business.profileUnlocked !== true
     ) {
       return res.status(403).json({
         success: false,
-        message:
-          "Complete payment to upload documents",
+        message: "Complete payment to upload documents",
       });
     }
 
-    // --------------------------------------
-    // Get Data
-    // --------------------------------------
-
-    const {
-      documentType,
-      documentName,
-    } = req.body;
+    const { documentType, documentName } = req.body;
 
     if (!documentType) {
       return res.status(400).json({
@@ -58,10 +47,6 @@ exports.uploadDocument = async (req, res) => {
       });
     }
 
-    // --------------------------------------
-    // Check File
-    // --------------------------------------
-
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -69,70 +54,56 @@ exports.uploadDocument = async (req, res) => {
       });
     }
 
-    // Cloudinary + Multer
-    const documentUrl =
-      req.file.path ||
-      req.file.secure_url;
+    console.log("========== FILE ==========");
+    console.log(req.file);
+    console.log("==========================");
 
-    const publicId =
-      req.file.filename ||
-      req.file.public_id ||
-      "";
+    // Upload buffer to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: "business-documents",
+          resource_type: "auto",
+        },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        }
+      );
 
-    if (!documentUrl) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Document upload URL not found",
-      });
-    }
+      streamifier.createReadStream(req.file.buffer).pipe(stream);
+    });
 
-    // --------------------------------------
-    // Save Document
-    // --------------------------------------
+    console.log("Cloudinary Result:", uploadResult);
 
-    const document =
-      await BusinessDocument.create({
-        business: business._id,
-        user: userId,
+    const document = await BusinessDocument.create({
+      business: business._id,
+      user: userId,
 
-        documentType,
+      documentType,
+      documentName: documentName || documentType,
 
-        documentName:
-          documentName ||
-          documentType,
+      documentUrl: uploadResult.secure_url,
+      publicId: uploadResult.public_id,
 
-        documentUrl,
-
-        publicId,
-
-        verificationStatus:
-          "pending",
-
-        isActive: true,
-      });
+      verificationStatus: "pending",
+      isActive: true,
+    });
 
     return res.status(201).json({
       success: true,
-      message:
-        "Document uploaded successfully",
+      message: "Document uploaded successfully",
       data: document,
     });
   } catch (error) {
-    console.error(
-      "UPLOAD DOCUMENT ERROR:",
-      error
-    );
+    console.error("UPLOAD DOCUMENT ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        error.message ||
-        "Unable to upload document",
+      message: error.message,
     });
   }
 };
-
 // ======================================================
 // GET MY DOCUMENTS
 // ======================================================
