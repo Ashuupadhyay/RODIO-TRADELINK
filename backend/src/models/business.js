@@ -17,7 +17,24 @@ const businessSchema = new mongoose.Schema(
     // ==========================================
     // BASIC BUSINESS DETAILS
     // ==========================================
-
+category: {
+        type: String,
+        required: true,
+        enum: [
+            "Transporter",
+            "Broker",
+            "Fleet Owner",
+            "Truck Owner",
+            "Logistics Company",
+            "Warehouse",
+            "Courier",
+            "Packers & Movers",
+            "Commission Agent",
+            "RTO Agent",
+            "Finance Agent",
+            "Others"
+        ]
+    },
     firmName: {
       type: String,
       required: true,
