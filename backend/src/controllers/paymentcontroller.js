@@ -15,7 +15,7 @@ exports.createOrder = async (req, res) => {
   try {
     const { referralCode, email, mobile } = req.body;
 
-    const amount = 1;
+    const amount = 999;
 
     if (!amount) {
       return res.status(400).json({
@@ -298,9 +298,9 @@ if (payment.referralCode) {
     const endDate =
       new Date(startDate);
 
-    endDate.setDate(
-      endDate.getDate() + 30
-    );
+    endDate.setMonth(
+  endDate.getMonth() + 6
+);
 
     payment.subscriptionStart =
       startDate;
@@ -314,7 +314,7 @@ if (payment.referralCode) {
 
     user.subscription = {
       status: "active",
-      plan: "Monthly",
+      plan: "6 Months",
       startDate,
       endDate,
     };
@@ -359,7 +359,7 @@ if (payment.referralCode) {
           payment:
             payment._id,
 
-          reward: 1,
+          reward: 100,
 
           status: "completed",
         });
@@ -428,7 +428,7 @@ if (payment.referralCode) {
           await razorpay.payments.refund(
             razorpay_payment_id,
             {
-              amount: 100,
+              amount: 100*100,
               speed: "normal",
             }
           );
@@ -439,7 +439,7 @@ if (payment.referralCode) {
         payment.refundStatus =
           refund.status;
 
-        payment.refundAmount = 1;
+        payment.refundAmount = 100;
 
         await payment.save();
       } catch (err) {
