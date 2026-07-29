@@ -5,7 +5,7 @@ const app = require("./app");
 // Routes
 const bookingRoutes = require("./routes/bookingRoutes");
 const businessRoute = require("./routes/businessroutold");
-const searchRoutes = require("./routes/vichlesearch");
+/*const searchRoutes = require("./routes/vichlesearch");*/
 const contactRoutes = require("./routes/QueryRoute");
 const transporterRoutes = require("./routes/transporter");
 const commentRoutes = require("./routes/comment");
