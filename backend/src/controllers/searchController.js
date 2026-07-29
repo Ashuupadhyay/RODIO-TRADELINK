@@ -1,4 +1,4 @@
-const Business = require("../models/Business");
+const Business = require("../models/business");
 
 /**
  * @desc    Search businesses by State, City (Working Area), and Category
