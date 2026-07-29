@@ -58,7 +58,7 @@ app.use("/api/update-profile", updateProfileRoutes);
 
 
 app.use("/api/business", businessRoutes);
-app.use("/api/v1/businesses", searchRoutes);
+app.use("/api/businesses", searchRoutes);
 
 app.use("/api/vehicles", vehicleRoutes);
 
