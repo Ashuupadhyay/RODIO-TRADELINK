@@ -5,7 +5,7 @@ const app = require("./app");
 // Routes
 const bookingRoutes = require("./routes/bookingRoutes");
 const businessRoute = require("./routes/businessroutold");
-/*const searchRoutes = require("./routes/vichlesearch");*/
+/*const searchRoutes = require("./routes/vichlesearch");*/ // Fixed: Duplicate const declaration hataya
 const contactRoutes = require("./routes/QueryRoute");
 const transporterRoutes = require("./routes/transporter");
 const commentRoutes = require("./routes/comment");
@@ -24,13 +24,7 @@ const receiptRoutes = require("./routes/reciptrout");
 const searchRoutes = require("./routes/searchRoutes");
 const vehicleSearchRoutes = require("./routes/vehicleSearchRoutes");
 
-
-
-const businessDocumentRoutes =
-  require("./routes/document.js");
-
-
-
+const businessDocumentRoutes = require("./routes/document.js");
 
 // Database
 const connectDB = require("./config/db");
@@ -45,7 +39,6 @@ app.use("/api/booking", bookingRoutes);
 
 app.use("/api/business", searchRoutes);
 
-
 app.use("/api/business", businessRoute);
 app.use("/api/contact", contactRoutes);
 app.use("/api/query", require("./routes/ecel"));
@@ -57,48 +50,34 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api", dashboardRoutes);
 app.use("/api/update-profile", updateProfileRoutes);
 
-
 app.use("/api/business", businessRoutes);
 app.use("/api/businesses", searchRoutes);
 
+// Vehicle routes in correct sequence
+app.use("/api/vehicles", vehicleSearchRoutes);
 app.use("/api/vehicles", vehicleRoutes);
 
 app.use("/api/routes", routeRoutes);
 app.use("/api/location", locationRoutes);
 app.use("/api/business", workingAreaRoutes);
 app.use("/api/receipt", receiptRoutes);
-app.use("/api/vehicles", vehicleSearchRoutes);
+// Fixed: Niche se extra duplicate vehicleSearchRoutes hata diya
 
-app.use(
-  "/api/documents",
-  businessDocumentRoutes
-);
+app.use("/api/documents", businessDocumentRoutes);
 app.use("/api/directory", directoryRoutes);
-//const paymentRoutes = require("./routes/paymentRoutes")
-//app.use("/api/payment", paymentRoutes);
-
 
 const PORT = process.env.PORT || 5000;
 
-
 const startServer = async () => {
-
     try {
-
         await connectDB();
 
         app.listen(PORT, "0.0.0.0", () => {
             console.log(`Server Running on ${PORT}`);
         });
-
-
     } catch (error) {
-
         console.log(error);
-
     }
-
 };
-
 
 startServer();
