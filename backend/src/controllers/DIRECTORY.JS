@@ -118,16 +118,16 @@ exports.getDirectory = async (req, res) => {
     // Pin "Vandana Motors" to Top
     // ---------------------------------------
     result.sort((a, b) => {
-      const isAFeatured = 
-        (a.firmName && a.firmName.toLowerCase() === "vandana motors") || 
-        a.phoneNumber === "8319501708";
+      const nameA = String(a.firmName || "").toLowerCase().trim();
+      const nameB = String(b.firmName || "").toLowerCase().trim();
+      const phoneA = String(a.phoneNumber || "").trim();
+      const phoneB = String(b.phoneNumber || "").trim();
 
-      const isBFeatured = 
-        (b.firmName && b.firmName.toLowerCase() === "vandana motors") || 
-        b.phoneNumber === "8319501708";
+      const isAFeatured = nameA.includes("vandana") || nameA.includes("vandma") || phoneA.includes("8319501708");
+      const isBFeatured = nameB.includes("vandana") || nameB.includes("vandma") || phoneB.includes("8319501708");
 
-      if (isAFeatured && !isBFeatured) return -1;
-      if (!isAFeatured && isBFeatured) return 1;
+      if (isAFeatured) return -1;
+      if (isBFeatured) return 1;
       return 0;
     });
 
