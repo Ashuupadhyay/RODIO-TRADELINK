@@ -1,5 +1,5 @@
-const Vehicle = require("../models/vehicle"); // Path check kar lein
-const Business = require("../models/business"); // 1. FIX: Business Model import kar diya hai
+const Vehicle = require("../models/vehicle");
+const Business = require("../models/business");
 
 /**
  * @desc    Search Vehicles by Origin (From), Destination (To) & Vehicle Type
@@ -14,74 +14,81 @@ exports.searchVehicles = async (req, res) => {
     const limitNum = parseInt(limit, 10) || 10;
     const skip = (pageNum - 1) * limitNum;
 
-    // 1. Initial Match Condition for Available Vehicles
+    // 1. Initial Vehicle Match Filter
     const vehicleMatch = { status: "available" };
+
     if (vehicleType && vehicleType !== "All Vehicles") {
       vehicleMatch.vehicleType = new RegExp(`^${vehicleType.trim()}$`, "i");
     }
 
-    // 2. Build Pipeline
+    // 2. Build Aggregation Pipeline
     const pipeline = [
       { $match: vehicleMatch },
 
-      // Join with Business Collection
+      // Join with MongoDB 'businesses' collection
       {
         $lookup: {
-          // 2. FIX: MongoDB collection name lowercase + plural hota hai ('businesses')
-          from: "businesses", 
+          from: "businesses", // Exact collection name from MongoDB Compass
           localField: "business",
           foreignField: "_id",
           as: "businessDetails",
         },
       },
 
-      // Convert array result from lookup to an object
+      // Unwind array to single object
       { $unwind: "$businessDetails" },
-
-      // Filter active & completed business profiles
-      {
-        $match: {
-          "businessDetails.isActive": true,
-          "businessDetails.profileUnlocked": true,
-          "businessDetails.registrationStatus": "completed",
-        },
-      },
     ];
 
-    // 3. FROM & TO Location Filtering on Working Area
+    // 3. Working Area (From & To Location Search)
     if (from || to) {
       const locationConditions = [];
 
       if (from) {
         locationConditions.push({
-          "businessDetails.workingAreas": {
-            $elemMatch: {
-              $or: [
-                { state: new RegExp(from.trim(), "i") },
-                { cities: { $in: [new RegExp(from.trim(), "i")] } },
-              ],
+          $or: [
+            // Pehle check workingAreas me
+            {
+              "businessDetails.workingAreas": {
+                $elemMatch: {
+                  $or: [
+                    { state: new RegExp(from.trim(), "i") },
+                    { cities: { $in: [new RegExp(from.trim(), "i")] } },
+                  ],
+                },
+              },
             },
-          },
+            // Fallback: Direct from / currentCity / currentState check
+            { "businessDetails.from": new RegExp(from.trim(), "i") },
+            { "businessDetails.currentCity": new RegExp(from.trim(), "i") },
+            { "businessDetails.currentState": new RegExp(from.trim(), "i") },
+          ],
         });
       }
 
       if (to) {
         locationConditions.push({
-          "businessDetails.workingAreas": {
-            $elemMatch: {
-              $or: [
-                { state: new RegExp(to.trim(), "i") },
-                { cities: { $in: [new RegExp(to.trim(), "i")] } },
-              ],
+          $or: [
+            // Pehle check workingAreas me
+            {
+              "businessDetails.workingAreas": {
+                $elemMatch: {
+                  $or: [
+                    { state: new RegExp(to.trim(), "i") },
+                    { cities: { $in: [new RegExp(to.trim(), "i")] } },
+                  ],
+                },
+              },
             },
-          },
+            // Fallback: Direct to check
+            { "businessDetails.to": new RegExp(to.trim(), "i") },
+          ],
         });
       }
 
       pipeline.push({ $match: { $and: locationConditions } });
     }
 
-    // 4. Facet for Data Pagination & Total Count in single database hit
+    // 4. Facet Pagination & Project Output
     pipeline.push({
       $facet: {
         data: [
@@ -90,6 +97,7 @@ exports.searchVehicles = async (req, res) => {
           { $limit: limitNum },
           {
             $project: {
+              _id: 1,
               vehicleType: 1,
               vehicleNumber: 1,
               capacity: 1,
@@ -99,11 +107,15 @@ exports.searchVehicles = async (req, res) => {
               business: {
                 _id: "$businessDetails._id",
                 firmName: "$businessDetails.firmName",
+                ownerName: "$businessDetails.ownerName",
                 category: "$businessDetails.category",
                 phoneNumber: "$businessDetails.phoneNumber",
                 email: "$businessDetails.email",
                 currentCity: "$businessDetails.currentCity",
                 currentState: "$businessDetails.currentState",
+                from: "$businessDetails.from",
+                to: "$businessDetails.to",
+                workingAreas: "$businessDetails.workingAreas",
                 averageRating: "$businessDetails.averageRating",
                 totalReviews: "$businessDetails.totalReviews",
               },
@@ -130,7 +142,7 @@ exports.searchVehicles = async (req, res) => {
       data: vehicles,
     });
   } catch (error) {
-    console.error("Vehicle Search Aggregation Error:", error);
+    console.error("Vehicle Search Error:", error);
     return res.status(500).json({
       success: false,
       message: "Server error while searching vehicles",
