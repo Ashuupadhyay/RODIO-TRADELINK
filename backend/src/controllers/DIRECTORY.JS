@@ -43,7 +43,7 @@ exports.getDirectory = async (req, res) => {
     }
 
     // ---------------------------------------
-    // Get Businesses
+    // Get Businesses (LIFO Order: Latest created first)
     // ---------------------------------------
 
     let businesses = await Business.find(businessFilter)
@@ -64,7 +64,7 @@ exports.getDirectory = async (req, res) => {
     }
 
     // ---------------------------------------
-    // Vehicle Type Filter
+    // Vehicle Type Filter & Mapping
     // ---------------------------------------
 
     const result = [];
@@ -111,25 +111,33 @@ exports.getDirectory = async (req, res) => {
         vehicleTypes,
 
         totalVehicles: vehicles.length,
+
+        createdAt: business.createdAt,
       });
     }
 
     // ---------------------------------------
-    // Pin "Vandana Motors" to Top
+    // Separate Vandana Motors & Put On Top
     // ---------------------------------------
-    result.sort((a, b) => {
-      const nameA = String(a.firmName || "").toLowerCase().trim();
-      const nameB = String(b.firmName || "").toLowerCase().trim();
-      const phoneA = String(a.phoneNumber || "").trim();
-      const phoneB = String(b.phoneNumber || "").trim();
+    const featuredCard = [];
+    const otherCards = [];
 
-      const isAFeatured = nameA.includes("vandana") || nameA.includes("vandma") || phoneA.includes("8319501708");
-      const isBFeatured = nameB.includes("vandana") || nameB.includes("vandma") || phoneB.includes("8319501708");
+    const targetPhone = "8319501708";
+    const targetName = "vandana motors";
 
-      if (isAFeatured) return -1;
-      if (isBFeatured) return 1;
-      return 0;
-    });
+    for (const item of result) {
+      const name = String(item.firmName || "").toLowerCase().trim();
+      const phone = String(item.phoneNumber || "").trim();
+
+      if (phone === targetPhone || name === targetName) {
+        featuredCard.push(item);
+      } else {
+        otherCards.push(item);
+      }
+    }
+
+    // Combine: Featured Card sabse upar, baaki LIFO order me
+    const finalData = [...featuredCard, ...otherCards];
 
     // ---------------------------------------
     // Pagination
@@ -138,17 +146,17 @@ exports.getDirectory = async (req, res) => {
     const start = (page - 1) * limit;
     const end = start + Number(limit);
 
-    const paginated = result.slice(start, end);
+    const paginated = finalData.slice(start, end);
 
     return res.status(200).json({
       success: true,
 
-      total: result.length,
+      total: finalData.length,
 
       currentPage: Number(page),
 
       totalPages: Math.ceil(
-        result.length / Number(limit)
+        finalData.length / Number(limit)
       ),
 
       data: paginated,
