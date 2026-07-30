@@ -15,20 +15,23 @@ const profileSchema = new mongoose.Schema({
         enum: ["user", "transporter", "broker"]
     },
 
-    name: {
-        type: String,
-        required: true
-    },
+   name: {
+  type: String,
+  trim: true,
+  default: "",
+},
 
-    email: {
-        type: String,
-        required: true
-    },
+email: {
+  type: String,
+  trim: true,
+  lowercase: true,
+  default: "",
+},
 
-    phoneNumber: {
-        type: String,
-        required: true
-    },
+phoneNumber: {
+  type: String,
+  default: "",
+},
 
     profileImage: {
         type: String,
