@@ -7,7 +7,7 @@ const Business = require("../models/business");
 const generateReceiptNumber = require("../utills/generateReceiptNumber");
 const generateReferralCode = require("../utills/generateReferralCode");
 
-// Static Referral Codes Setup (Added TO50 for 299)
+// Static Referral Codes Setup
 const STATIC_REFERRAL_CODES = {
   FREE100: 0,       // ₹0 Payment
   TO50: 299,        // ₹299 Payment
@@ -17,7 +17,6 @@ const STATIC_REFERRAL_CODES = {
 // ================================================
 // CREATE ORDER (Pre-Payment Checks & Validations)
 // ================================================
-
 exports.createOrder = async (req, res) => {
   try {
     const { referralCode, email, mobile } = req.body;
@@ -36,10 +35,7 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // ===============================================
     // 1. UNIQUE EMAIL & MOBILE VALIDATION
-    // ===============================================
-
     if (email) {
       const existingEmailUser = await User.findOne({
         email: email.trim().toLowerCase(),
@@ -49,8 +45,7 @@ exports.createOrder = async (req, res) => {
       if (existingEmailUser) {
         return res.status(400).json({
           success: false,
-          message:
-            "Yeh Email ID pehle se kisi aur account me registered hai!",
+          message: "Yeh Email ID pehle se kisi aur account me registered hai!",
         });
       }
     }
@@ -64,16 +59,12 @@ exports.createOrder = async (req, res) => {
       if (existingMobileUser) {
         return res.status(400).json({
           success: false,
-          message:
-            "your email or mobile number is already exixts !",
+          message: "Yeh mobile number pehle se registered hai!",
         });
       }
     }
 
-    // ===============================================
-    // 2. Referral Validation
-    // ===============================================
-
+    // 2. REFERRAL VALIDATION
     let referralUser = null;
     const isStaticReferral = referralCode && STATIC_REFERRAL_CODES.hasOwnProperty(referralCode.trim().toUpperCase());
 
@@ -92,20 +83,14 @@ exports.createOrder = async (req, res) => {
           });
         }
 
-        if (
-          referralUser._id.toString() ===
-          req.user.id.toString()
-        ) {
+        if (referralUser._id.toString() === req.user.id.toString()) {
           return res.status(400).json({
             success: false,
             message: "You cannot use your own referral code.",
           });
         }
 
-        if (
-          referralUser.subscription?.status !==
-          "active"
-        ) {
+        if (referralUser.subscription?.status !== "active") {
           return res.status(400).json({
             success: false,
             message: "Referral code is inactive.",
@@ -114,8 +99,7 @@ exports.createOrder = async (req, res) => {
 
         if (
           referralUser.subscription?.endDate &&
-          new Date(referralUser.subscription.endDate) <
-            new Date()
+          new Date(referralUser.subscription.endDate) < new Date()
         ) {
           return res.status(400).json({
             success: false,
@@ -125,7 +109,6 @@ exports.createOrder = async (req, res) => {
       }
 
       const currentUser = await User.findById(req.user.id);
-
       if (currentUser && currentUser.referredBy) {
         return res.status(400).json({
           success: false,
@@ -134,17 +117,13 @@ exports.createOrder = async (req, res) => {
       }
     }
 
-    // ===============================================
     // 3. CREATE ORDER / DIRECT ACTIVATION FOR ₹0
-    // ===============================================
-
-    // DIRECT ACTIVATION FOR FREE (₹0) ORDER
     if (amount === 0) {
       const startDate = new Date();
       const endDate = new Date(startDate);
       endDate.setMonth(endDate.getMonth() + 6);
 
-      // 1. Create Payment Record
+      // Create Payment Record
       const freePayment = await Payment.create({
         user: req.user.id,
         orderId: `free_order_${Date.now()}`,
@@ -158,7 +137,7 @@ exports.createOrder = async (req, res) => {
         subscriptionEnd: endDate
       });
 
-      // 2. Activate User Subscription
+      // Activate User Subscription
       const user = await User.findById(req.user.id);
       user.subscription = {
         status: "active",
@@ -172,7 +151,7 @@ exports.createOrder = async (req, res) => {
       }
       await user.save();
 
-      // 3. Activate Business Profile & Hidden Features
+      // Activate Business Profile
       const business = await Business.findOne({ user: user._id });
       if (business) {
         business.registrationStatus = "completed";
@@ -192,7 +171,7 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // Normal Paid Order Creation for ₹299, ₹599 & ₹999 (Razorpay)
+    // Normal Paid Order Creation (Razorpay)
     const options = {
       amount: amount * 100,
       currency: "INR",
@@ -223,9 +202,8 @@ exports.createOrder = async (req, res) => {
 };
 
 // ================================================
-// VERIFY PAYMENT
+// VERIFY PAYMENT & REWARD LOGIC
 // ================================================
-
 exports.verifyPayment = async (req, res) => {
   try {
     const {
@@ -234,50 +212,29 @@ exports.verifyPayment = async (req, res) => {
       razorpay_signature,
     } = req.body;
 
-    if (
-      !razorpay_order_id ||
-      !razorpay_payment_id ||
-      !razorpay_signature
-    ) {
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({
         success: false,
-        message:
-          "Payment details are required",
+        message: "Payment details are required",
       });
     }
 
-    // ================================================
-    // VERIFY RAZORPAY SIGNATURE
-    // ================================================
-
-    const body =
-      `${razorpay_order_id}|${razorpay_payment_id}`;
-
+    // 1. VERIFY RAZORPAY SIGNATURE
+    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
     const expectedSignature = crypto
-      .createHmac(
-        "sha256",
-        process.env.RAZORPAY_KEY_SECRET
-      )
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(body)
       .digest("hex");
 
-    if (
-      expectedSignature !== razorpay_signature
-    ) {
+    if (expectedSignature !== razorpay_signature) {
       return res.status(400).json({
         success: false,
         message: "Invalid payment signature",
       });
     }
 
-    // ================================================
-    // FIND PAYMENT
-    // ================================================
-
-    const payment = await Payment.findOne({
-      orderId: razorpay_order_id,
-    });
-
+    // 2. FIND PAYMENT RECORD
+    const payment = await Payment.findOne({ orderId: razorpay_order_id });
     if (!payment) {
       return res.status(404).json({
         success: false,
@@ -292,13 +249,8 @@ exports.verifyPayment = async (req, res) => {
       });
     }
 
-    // ================================================
-    // FIND USER
-    // ================================================
-
-    const user =
-      await User.findById(payment.user);
-
+    // 3. FIND USER B (JISNE PAYMENT KI HAI)
+    const user = await User.findById(payment.user);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -306,21 +258,15 @@ exports.verifyPayment = async (req, res) => {
       });
     }
 
-    // ================================================
-    // FIND REFERRER
-    // ================================================
+    // 4. FIND USER A (REFERRER - JISKA CODE USE HUA HAI)
     let referralUser = null;
-
     if (payment.referralCode && !STATIC_REFERRAL_CODES.hasOwnProperty(payment.referralCode.trim().toUpperCase())) {
       referralUser = await User.findOne({
         referralCode: payment.referralCode,
       });
     }
 
-    // ================================================
-    // UPDATE PAYMENT DETAILS
-    // ================================================
-
+    // 5. UPDATE PAYMENT DETAILS
     payment.paymentId = razorpay_payment_id;
     payment.signature = razorpay_signature;
 
@@ -332,10 +278,6 @@ exports.verifyPayment = async (req, res) => {
       payment.receiptNumber = generateReceiptNumber();
     }
 
-    // ================================================
-    // SUBSCRIPTION DATES
-    // ================================================
-
     const startDate = new Date();
     const endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + 6);
@@ -343,10 +285,7 @@ exports.verifyPayment = async (req, res) => {
     payment.subscriptionStart = startDate;
     payment.subscriptionEnd = endDate;
 
-    // ================================================
-    // ACTIVATE USER SUBSCRIPTION
-    // ================================================
-
+    // 6. ACTIVATE SUBSCRIPTION FOR USER B
     user.subscription = {
       status: "active",
       plan: "6 Months",
@@ -358,54 +297,38 @@ exports.verifyPayment = async (req, res) => {
       user.referralCode = generateReferralCode();
     }
 
-    // ================================================
-    // REFERRAL
-    // ================================================
-
+    // 7.🎯 REWARD/EARNING LOGIC FOR USER A (REFERRER)
     if (referralUser) {
-      user.referredBy = referralUser._id;
-      referralUser.referralCount = (referralUser.referralCount || 0) + 1;
-      referralUser.referralEarning = (referralUser.referralEarning || 0) + 1;
-
       const existingReferral = await Referral.findOne({
         payment: payment._id,
       });
 
       if (!existingReferral) {
+        // Mark User B as referred by User A
+        user.referredBy = referralUser._id;
+
+        // Add Earnings & Count to USER A (Code Owner)
+        referralUser.referralCount = (referralUser.referralCount || 0) + 1;
+        referralUser.referralEarning = (referralUser.referralEarning || 0) + 100;
+
+        // Create Referral Entry Log
         await Referral.create({
-          referrer: referralUser._id,
-          referredUser: user._id,
+          referrer: referralUser._id, // User A (Earning lene wala)
+          referredUser: user._id,     // User B (Naya user)
           referralCode: payment.referralCode,
           payment: payment._id,
           reward: 100,
           status: "completed",
         });
-      }
 
-      await referralUser.save();
+        // Save User A Updates
+        await referralUser.save();
+      }
     }
 
-    // ================================================
-    // SAVE PAYMENT + USER
-    // ================================================
-
-    await payment.save();
-    await user.save();
-
-    // ================================================
-    // ACTIVATE BUSINESS & UNLOCK HIDDEN FEATURES
-    // ================================================
-
-    const business = await Business.findOne({
-      user: user._id,
-    });
-
+    // 8. ACTIVATE BUSINESS PROFILE
+    const business = await Business.findOne({ user: user._id });
     if (!business) {
-      console.error(
-        "BUSINESS DRAFT NOT FOUND FOR USER:",
-        user._id
-      );
-
       return res.status(404).json({
         success: false,
         message: "Business draft not found",
@@ -416,35 +339,11 @@ exports.verifyPayment = async (req, res) => {
     business.subscriptionStatus = "active";
     business.profileUnlocked = true;
     business.isActive = true;
-
     await business.save();
 
-    console.log("BUSINESS ACTIVATED:", business._id);
-
-    // ================================================
-    // PROCESS REFUND (Only if Dynamic Referrer Exists)
-    // ================================================
-
-    if (payment.referralCode && referralUser) {
-      try {
-        const refund = await razorpay.payments.refund(razorpay_payment_id, {
-          amount: 100 * 100,
-          speed: "normal",
-        });
-
-        payment.refundId = refund.id;
-        payment.refundStatus = refund.status;
-        payment.refundAmount = 100;
-
-        await payment.save();
-      } catch (err) {
-        console.error("Refund Error:", err);
-      }
-    }
-
-    // ================================================
-    // RESPONSE
-    // ================================================
+    // Save Payment & User B Updates
+    await payment.save();
+    await user.save();
 
     return res.status(200).json({
       success: true,
@@ -456,7 +355,6 @@ exports.verifyPayment = async (req, res) => {
     });
   } catch (error) {
     console.error("VERIFY PAYMENT ERROR:", error);
-
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -467,7 +365,6 @@ exports.verifyPayment = async (req, res) => {
 // ================================================
 // GET RECEIPT
 // ================================================
-
 exports.getReceipt = async (req, res) => {
   try {
     const { paymentId } = req.params;
