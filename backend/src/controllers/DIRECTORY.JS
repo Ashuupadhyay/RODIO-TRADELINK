@@ -115,6 +115,23 @@ exports.getDirectory = async (req, res) => {
     }
 
     // ---------------------------------------
+    // Pin "Vandana Motors" to Top
+    // ---------------------------------------
+    result.sort((a, b) => {
+      const isAFeatured = 
+        (a.firmName && a.firmName.toLowerCase() === "vandana motors") || 
+        a.phoneNumber === "8319501708";
+
+      const isBFeatured = 
+        (b.firmName && b.firmName.toLowerCase() === "vandana motors") || 
+        b.phoneNumber === "8319501708";
+
+      if (isAFeatured && !isBFeatured) return -1;
+      if (!isAFeatured && isBFeatured) return 1;
+      return 0;
+    });
+
+    // ---------------------------------------
     // Pagination
     // ---------------------------------------
 
