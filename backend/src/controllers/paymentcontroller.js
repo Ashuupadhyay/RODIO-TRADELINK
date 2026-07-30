@@ -7,6 +7,12 @@ const Business = require("../models/business");
 const generateReceiptNumber = require("../utills/generateReceiptNumber");
 const generateReferralCode = require("../utills/generateReferralCode");
 
+// Static Referral Codes Setup
+const STATIC_REFERRAL_CODES = {
+  FREE100: 0,      // ₹0 Payment
+  DISCOUNT599: 599 // ₹599 Payment
+};
+
 // ================================================
 // CREATE ORDER (Pre-Payment Checks & Validations)
 // ================================================
@@ -15,9 +21,14 @@ exports.createOrder = async (req, res) => {
   try {
     const { referralCode, email, mobile } = req.body;
 
-    const amount = 999;
+    let amount = 999; // Default Amount
 
-    if (!amount) {
+    // Static referral code check and amount override
+    if (referralCode && STATIC_REFERRAL_CODES.hasOwnProperty(referralCode.trim().toUpperCase())) {
+      amount = STATIC_REFERRAL_CODES[referralCode.trim().toUpperCase()];
+    }
+
+    if (amount === undefined || amount === null) {
       return res.status(400).json({
         success: false,
         message: "Amount is required",
@@ -58,84 +69,103 @@ exports.createOrder = async (req, res) => {
       }
     }
 
+    // ===============================================
+    // 2. Referral Validation
+    // ===============================================
 
+    let referralUser = null;
+    const isStaticReferral = referralCode && STATIC_REFERRAL_CODES.hasOwnProperty(referralCode.trim().toUpperCase());
 
+    if (referralCode && referralCode.trim() !== "") {
+      const code = referralCode.trim();
+
+      // Skip dynamic database user check for static referral codes
+      if (!isStaticReferral) {
+        // Referral code User collection me stored hai
+        referralUser = await User.findOne({
+          referralCode: code,
+        });
+
+        // Invalid referral code
+        if (!referralUser) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid referral code",
+          });
+        }
+
+        // Self Referral Check
+        if (
+          referralUser._id.toString() ===
+          req.user.id.toString()
+        ) {
+          return res.status(400).json({
+            success: false,
+            message: "You cannot use your own referral code.",
+          });
+        }
+
+        // Referral owner's subscription active check
+        if (
+          referralUser.subscription?.status !==
+          "active"
+        ) {
+          return res.status(400).json({
+            success: false,
+            message: "Referral code is inactive.",
+          });
+        }
+
+        // Subscription expiry check
+        if (
+          referralUser.subscription?.endDate &&
+          new Date(referralUser.subscription.endDate) <
+            new Date()
+        ) {
+          return res.status(400).json({
+            success: false,
+            message: "Referral code has expired.",
+          });
+        }
+      }
+
+      // Already used referral check (common for both dynamic and static)
+      const currentUser = await User.findById(
+        req.user.id
+      );
+
+      if (
+        currentUser &&
+        currentUser.referredBy
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Referral already used.",
+        });
+      }
+    }
 
     // ===============================================
-// 2. Referral Validation
-// ===============================================
-
-let referralUser = null;
-
-if (referralCode && referralCode.trim() !== "") {
-  const code = referralCode.trim();
-
-  // Referral code User collection me stored hai
-  referralUser = await User.findOne({
-    referralCode: code,
-  });
-
-  // Invalid referral code
-  if (!referralUser) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid referral code",
-    });
-  }
-
-  // Self Referral Check
-  if (
-    referralUser._id.toString() ===
-    req.user.id.toString()
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: "You cannot use your own referral code.",
-    });
-  }
-
-  // Referral owner's subscription active check
-  if (
-    referralUser.subscription?.status !==
-    "active"
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: "Referral code is inactive.",
-    });
-  }
-
-  // Subscription expiry check
-  if (
-    referralUser.subscription?.endDate &&
-    new Date(referralUser.subscription.endDate) <
-      new Date()
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: "Referral code has expired.",
-    });
-  }
-
-  // Already used referral check
-  const currentUser = await User.findById(
-    req.user.id
-  );
-
-  if (
-    currentUser &&
-    currentUser.referredBy
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: "Referral already used.",
-    });
-  }
-}
-
+    // 3. CREATE RAZORPAY ORDER / FREE BYPASS
     // ===============================================
-    // 3. CREATE RAZORPAY ORDER
-    // ===============================================
+
+    // Direct Bypass for ₹0 Order
+    if (amount === 0) {
+      const freePayment = await Payment.create({
+        user: req.user.id,
+        orderId: `free_order_${Date.now()}`,
+        amount: 0,
+        referralCode: referralCode ? referralCode.trim() : null,
+        status: "success",
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: "Free Order processed successfully",
+        isFree: true,
+        paymentId: freePayment._id,
+      });
+    }
 
     const options = {
       amount: amount * 100,
@@ -179,51 +209,59 @@ exports.verifyPayment = async (req, res) => {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
+      paymentId, // Free payment process karne ke liye optional field
     } = req.body;
 
-    if (
-      !razorpay_order_id ||
-      !razorpay_payment_id ||
-      !razorpay_signature
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Payment details are required",
-      });
-    }
+    let payment;
 
-    // ================================================
-    // VERIFY RAZORPAY SIGNATURE
-    // ================================================
+    // Direct handles Free (₹0) payments
+    if (paymentId) {
+      payment = await Payment.findById(paymentId);
+    } else {
+      if (
+        !razorpay_order_id ||
+        !razorpay_payment_id ||
+        !razorpay_signature
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Payment details are required",
+        });
+      }
 
-    const body =
-      `${razorpay_order_id}|${razorpay_payment_id}`;
+      // ================================================
+      // VERIFY RAZORPAY SIGNATURE (Only for Paid Transactions)
+      // ================================================
 
-    const expectedSignature = crypto
-      .createHmac(
-        "sha256",
-        process.env.RAZORPAY_KEY_SECRET
-      )
-      .update(body)
-      .digest("hex");
+      const body =
+        `${razorpay_order_id}|${razorpay_payment_id}`;
 
-    if (
-      expectedSignature !== razorpay_signature
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid payment signature",
+      const expectedSignature = crypto
+        .createHmac(
+          "sha256",
+          process.env.RAZORPAY_KEY_SECRET
+        )
+        .update(body)
+        .digest("hex");
+
+      if (
+        expectedSignature !== razorpay_signature
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid payment signature",
+        });
+      }
+
+      payment = await Payment.findOne({
+        orderId: razorpay_order_id,
       });
     }
 
     // ================================================
     // FIND PAYMENT
     // ================================================
-
-    const payment = await Payment.findOne({
-      orderId: razorpay_order_id,
-    });
 
     if (!payment) {
       return res.status(404).json({
@@ -232,7 +270,7 @@ exports.verifyPayment = async (req, res) => {
       });
     }
 
-    if (payment.status === "success") {
+    if (payment.status === "success" && payment.amount !== 0) {
       return res.status(400).json({
         success: false,
         message: "Payment already verified",
@@ -256,31 +294,28 @@ exports.verifyPayment = async (req, res) => {
     // ================================================
     // FIND REFERRER
     // ================================================
-let referralUser = null;
+    let referralUser = null;
 
-if (payment.referralCode) {
-  referralUser = await User.findOne({
-    referralCode: payment.referralCode,
-  });
-}
+    if (payment.referralCode && !STATIC_REFERRAL_CODES.hasOwnProperty(payment.referralCode.trim().toUpperCase())) {
+      referralUser = await User.findOne({
+        referralCode: payment.referralCode,
+      });
+    }
 
     // ================================================
     // UPDATE PAYMENT DETAILS
     // ================================================
 
-    payment.paymentId =
-      razorpay_payment_id;
+    if (payment.amount > 0) {
+      payment.paymentId = razorpay_payment_id;
+      payment.signature = razorpay_signature;
 
-    payment.signature =
-      razorpay_signature;
-
-    const paymentDetails =
-      await razorpay.payments.fetch(
-        razorpay_payment_id
-      );
-
-    payment.method =
-      paymentDetails.method;
+      const paymentDetails = await razorpay.payments.fetch(razorpay_payment_id);
+      payment.method = paymentDetails.method;
+    } else {
+      payment.paymentId = `FREE_PAY_${Date.now()}`;
+      payment.method = "REFERRAL_FREE";
+    }
 
     payment.status = "success";
 
@@ -299,8 +334,8 @@ if (payment.referralCode) {
       new Date(startDate);
 
     endDate.setMonth(
-  endDate.getMonth() + 6
-);
+      endDate.getMonth() + 6
+    );
 
     payment.subscriptionStart =
       startDate;
@@ -416,19 +451,20 @@ if (payment.referralCode) {
     );
 
     // ================================================
-    // PROCESS REFUND
+    // PROCESS REFUND (Only for paid transactions)
     // ================================================
 
     if (
       payment.referralCode &&
-      referralUser
+      referralUser &&
+      payment.amount > 0
     ) {
       try {
         const refund =
           await razorpay.payments.refund(
             razorpay_payment_id,
             {
-              amount: 100*100,
+              amount: 100 * 100,
               speed: "normal",
             }
           );
