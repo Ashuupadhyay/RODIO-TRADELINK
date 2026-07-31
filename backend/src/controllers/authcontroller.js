@@ -54,7 +54,7 @@ const existingUser = await User.findOne({
         // User save (Name & Email removed)
         const user = new User({
             role,
-           
+           mobile,
             password: hashedPassword
         });
 
