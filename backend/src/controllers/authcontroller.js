@@ -69,6 +69,7 @@ const register = async (req, res) => {
                 expiresIn: process.env.JWT_EXPIRE,
             }
         );
+        console.log(token);
 
         res.cookie("token", token, {
             httpOnly: true,
