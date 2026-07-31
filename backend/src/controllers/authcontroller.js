@@ -171,7 +171,7 @@ const login = async (req, res) => {
             }
         );
 
-        let redirectTo = "/dashboard";
+        let redirectTo = "/home";
 
         // Cookie save
         res.cookie("token", token, {
