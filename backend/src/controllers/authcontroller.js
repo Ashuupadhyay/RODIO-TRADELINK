@@ -25,7 +25,7 @@ const register = async (req, res) => {
         }
 
         // Indian Mobile Validation
-        const mobileRegex = /^(?:\+91|91)?[6-9]\d{9}$/;
+        const mobileRegex = /^[6-9]\d{9}$/;
 
         if (!mobileRegex.test(mobile)) {
             return res.status(400).json({
@@ -91,7 +91,7 @@ const register = async (req, res) => {
 
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ success: false, message: "Internal Server Error" });
+        return res.status(500).json({ success: false, message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team." });
     }
 };
 
@@ -186,7 +186,7 @@ const login = async (req, res) => {
         console.log(error);
         return res.status(500).json({
             success: false,
-            message: "Internal Server Error"
+            message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
         });
     }
 };
