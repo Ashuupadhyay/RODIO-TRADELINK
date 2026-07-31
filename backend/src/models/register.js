@@ -6,7 +6,6 @@ const userSchema = new mongoose.Schema(
 type: String,
 enum: ["user",
     "transporter",
-    "broker",
     "fleet_owner",
     "cha_agent",
     "courier",

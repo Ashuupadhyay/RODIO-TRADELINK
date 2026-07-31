@@ -17,7 +17,6 @@ const register = async (req, res) => {
         const allowedRoles = [
     "user",
     "transporter",
-    "broker",
     "fleet_owner",
     "cha_agent",
     "courier",
@@ -186,7 +185,6 @@ const login = async (req, res) => {
 
         const businessRoles = [
     "transporter",
-    "broker",
     "fleet_owner",
     "cha_agent",
     "courier",
