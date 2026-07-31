@@ -35,10 +35,10 @@ const register = async (req, res) => {
         }
 
         // Duplicate Check (Only for Mobile)
-        const existingUser = await User.findOne({
+       /* const existingUser = await User.findOne({
             mobile: mobile.replace(/^(\+91|91)/, "")
         });
-
+*/
         if (existingUser) {
             return res.status(400).json({
                 success: false,
