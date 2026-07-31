@@ -35,10 +35,13 @@ const register = async (req, res) => {
         }
 
         // Duplicate Check (Only for Mobile)
-       /* const existingUser = await User.findOne({
+       /*const existingUser = await User.findOne({
             mobile: mobile.replace(/^(\+91|91)/, "")
         });
 */
+const existingUser = await User.findOne({
+    mobile
+});
         if (existingUser) {
             return res.status(400).json({
                 success: false,
@@ -51,7 +54,7 @@ const register = async (req, res) => {
         // User save (Name & Email removed)
         const user = new User({
             role,
-            mobile: mobile.replace(/^(\+91|91)/, ""),
+           
             password: hashedPassword
         });
 
