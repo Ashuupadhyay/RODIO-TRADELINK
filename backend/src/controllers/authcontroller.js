@@ -14,6 +14,26 @@ const register = async (req, res) => {
         console.log(mobile);
         console.log(password);
         console.log(confirmPassword);
+        const allowedRoles = [
+    "user",
+    "transporter",
+    "broker",
+    "fleet_owner",
+    "cha_agent",
+    "courier",
+    "bus_service",
+    "travel_taxi",
+    "truck_body_builder",
+    "rto_agent",
+    "finance_company",
+];
+
+if (!allowedRoles.includes(role)) {
+    return res.status(400).json({
+        success: false,
+        message: "Invalid role",
+    });
+}
 
         // Required fields check (Name & Email removed)
         if (!role || !mobile || !password || !confirmPassword) {
@@ -164,6 +184,30 @@ const login = async (req, res) => {
 
         let businessId = null;
 
+        const businessRoles = [
+    "transporter",
+    "broker",
+    "fleet_owner",
+    "cha_agent",
+    "courier",
+    "bus_service",
+    "travel_taxi",
+    "truck_body_builder",
+    "rto_agent",
+    "finance_company",
+];
+
+if (businessRoles.includes(user.role)) {
+    const business = await Business.findOne({
+        user: user._id,
+    });
+
+    if (business) {
+        businessId = business._id;
+    }
+}
+
+/*
         if (user.role === "broker" || user.role === "transporter") {
             const business = await Business.findOne({
                 user: user._id,
@@ -172,7 +216,7 @@ const login = async (req, res) => {
                 businessId = business._id;
             }
         }
-
+*/
         return res.status(200).json({
             success: true,
             message: "Login Successful",

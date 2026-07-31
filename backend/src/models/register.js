@@ -4,7 +4,17 @@ const userSchema = new mongoose.Schema(
   {
     role: {
 type: String,
-enum: ["user", "transporter", "broker"],
+enum: ["user",
+    "transporter",
+    "broker",
+    "fleet_owner",
+    "cha_agent",
+    "courier",
+    "bus_service",
+    "travel_taxi",
+    "truck_body_builder",
+    "rto_agent",
+    "finance_company"],
   required:true,
     },
   /*
