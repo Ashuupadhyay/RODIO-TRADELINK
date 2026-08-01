@@ -28,6 +28,7 @@ const register = async (req, res) => {
     "finance_agent",
 "packers and movers",
 "insurance_company",
+ "car_carrier",
 ];
 
 if (!allowedRoles.includes(role)) {
@@ -199,6 +200,9 @@ const login = async (req, res) => {
     "finance_agent",
 "packers and movers",
 "insurance_company",
+"car_carrier",
+
+
 ];
 
 if (businessRoles.includes(user.role)) {
