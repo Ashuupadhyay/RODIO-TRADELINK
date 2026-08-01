@@ -426,7 +426,7 @@ exports.getDashboard = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: error.message || "Server error",
+      message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
     });
   }
 };
@@ -534,7 +534,7 @@ category: business.category,
 
     return res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Server We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team.",
     });
   }
 };

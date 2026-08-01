@@ -25,6 +25,7 @@ const searchRoutes = require("./routes/searchRoutes");
 const vehicleSearchRoutes = require("./routes/vehicleSearchRoutes");
 
 const businessDocumentRoutes = require("./routes/document.js");
+const postRoutes = require("./routes/postRoutes");
 
 // Database
 const connectDB = require("./config/db");
@@ -65,6 +66,7 @@ app.use("/api/receipt", receiptRoutes);
 
 app.use("/api/documents", businessDocumentRoutes);
 app.use("/api/directory", directoryRoutes);
+app.use("/api/posts", postRoutes);
 
 const PORT = process.env.PORT || 5000;
 

@@ -78,7 +78,7 @@ exports.createBid = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: error.message
+            message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
         });
 
     }
@@ -134,7 +134,7 @@ exports.getLeadBids = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: error.message
+            message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
         });
 
     }
@@ -224,7 +224,7 @@ exports.acceptBid = async (req, res) => {
 
             success: false,
 
-            message: error.message
+            message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
 
         });
 
@@ -269,7 +269,7 @@ exports.myBids = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: error.message
+            message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
         });
 
     }
