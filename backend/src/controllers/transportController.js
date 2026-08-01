@@ -102,6 +102,7 @@ const User = require("../models/register");
 const Profile = require("../models/profile");
 const Vehicle = require("../models/vehicle");
 const Comment = require("../models/comments");
+const Post = require("../models/Post");
 
 const getTransporterById = async (req, res) => {
   try {
@@ -151,6 +152,10 @@ const getTransporterById = async (req, res) => {
       "vehicleType vehicleNumber capacity bodyType status"
     );
 
+
+    const posts = await Post.find({ user: business.user })
+      .select("imageUrl caption likeCount createdAt")
+      .sort({ createdAt: -1 });
     // =====================================================
     // COMMENTS
     // =====================================================
@@ -245,8 +250,12 @@ const getTransporterById = async (req, res) => {
           vehicles.length,
 
         vehicles,
+        totalUploadedImages: posts.length,
+        gallery: posts,
 
         averageRating,
+
+       
 
         totalReviews,
 
