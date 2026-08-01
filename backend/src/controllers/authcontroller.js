@@ -26,7 +26,7 @@ const register = async (req, res) => {
     "rto_agent",
     "finance_company",
     "finance_agent",
-"packers and movers",
+"packers_movers",
 "insurance_company",
  "car_carrier",
 ];
