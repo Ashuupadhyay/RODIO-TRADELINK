@@ -5,6 +5,8 @@ const auth = require("../middlewhere/auth");
 
 const {
   addWorkingAreas,
+  getMyWorkingAreas,
+  deleteWorkingArea,
 } = require("../controllers/workingAreaController");
 
 router.put(
@@ -12,5 +14,22 @@ router.put(
   auth,
   addWorkingAreas
 );
+
+router.get(
+  "/working-areas",
+  auth,
+  addWorkingAreas
+);
+
+router.delete(
+  "/working-areas",
+  auth,
+  addWorkingAreas
+);
+
+
+
+
+
 
 module.exports = router;

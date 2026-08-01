@@ -130,3 +130,72 @@ exports.deleteVehicle = async (req, res) => {
     });
   }
 };
+
+exports.getMyWorkingAreas = async (req, res) => {
+  try {
+    const business = await Business.findOne({ user: req.user.id }).select(
+      "workingAreas"
+    );
+
+    if (!business) {
+      return res.status(404).json({
+        success: false,
+        message: "Business profile not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Working areas fetched successfully",
+      data: business.workingAreas,
+    });
+  } catch (err) {
+    console.error("Get Working Areas Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+// 3. DELETE SPECIFIC WORKING AREA BY STATE OR ITEM ID
+exports.deleteWorkingArea = async (req, res) => {
+  try {
+    const { areaId, state } = req.body;
+
+    if (!areaId && !state) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide either areaId or state to delete",
+      });
+    }
+
+    // Direct ObjectId se remove karega agar areaId passing ho, warna state name se
+    const pullCondition = areaId ? { _id: areaId } : { state: state };
+
+    const business = await Business.findOneAndUpdate(
+      { user: req.user.id },
+      { $pull: { workingAreas: pullCondition } },
+      { new: true }
+    );
+
+    if (!business) {
+      return res.status(404).json({
+        success: false,
+        message: "Business profile not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Working area removed successfully",
+      data: business.workingAreas,
+    });
+  } catch (err) {
+    console.error("Delete Working Area Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
