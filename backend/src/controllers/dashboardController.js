@@ -1,9 +1,10 @@
 const Business = require("../models/business");
-
+const Post = require("../models/Post"); // 👈 Yeh line add karein
 const getDashboard = async (req, res) => {
   try {
     const userId = req.user.id;
-
+// Uploaded posts/images fetch karne ke liye
+const userPosts = await Post.find({ user: userId }).sort({ createdAt: -1 });
     const business = await Business.findOne({
       user: userId,
     }).populate(
@@ -74,6 +75,11 @@ const getDashboard = async (req, res) => {
             ? null
             : "You don't have a referral code. First add a service.",
         },
+        uploadedImages: {
+  totalUploaded: userPosts.length,
+  remainingSlots: 10 - userPosts.length,
+  posts: userPosts,
+},
       },
     });
   } catch (error) {

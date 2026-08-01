@@ -2,6 +2,7 @@ const Post = require("../models/Post");
 const User = require("../models/register");
 const cloudinary = require("../config/cloudnary");
 
+
 // Cloudinary Buffer Upload Helper Function
 const uploadToCloudinary = (fileBuffer) => {
   return new Promise((resolve, reject) => {
@@ -42,16 +43,18 @@ exports.createPost = async (req, res) => {
     console.log("userid",userId)
     const user = await User.findById(userId);
     console.log("userimage",user);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return res.status(404).json({ message: "User not exixting" });
 
     if (user.role === "user") {
-      return res.status(403).json({ message: "Normal users images upload nahi kar sakte." });
+      return res.status(403).json({ message: "Use" });
     }
 
     // 4. Max 10 Limit Check
     const postCount = await Post.countDocuments({ user: userId });
     if (postCount >= 10) {
-      return res.status(400).json({ message: "Limit poori ho chuki hai! Aap max 10 images hi upload kar sakte hain." });
+      return res.status(400).json({ message:  "Maximum upload limit reached. Only 10 images can be uploaded." });
+
+
     }
 
     // 5. Upload to Cloudinary
@@ -68,11 +71,11 @@ exports.createPost = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Image successfully upload ho gayi hai",
+      message: "Image uploaded successfully",
       post: newPost,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message:"We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team." });
   }
 };
 
@@ -90,7 +93,7 @@ exports.getMyPosts = async (req, res) => {
       posts,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team." });
   }
 };
 
@@ -101,10 +104,10 @@ exports.deletePost = async (req, res) => {
     const userId = req.user.id;
 
     const post = await Post.findById(postId);
-    if (!post) return res.status(404).json({ message: "Image nahi mili" });
+    if (!post) return res.status(404).json({ message: "Image not found" });
 
     if (post.user.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "Aap sirf apni uploaded images delete kar sakte hain." });
+      return res.status(403).json({ message: "You are only allowed to delete your own uploaded images." });
     }
 
     // Cloudinary Delete Logic
@@ -119,9 +122,9 @@ exports.deletePost = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Image delete ho gayi. Aap ab nayi image upload kar sakte hain.",
+      message: "The image has been deleted successfully. You may now upload a new image.",
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team." });
   }
 };
