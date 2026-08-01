@@ -29,20 +29,20 @@ exports.createPost = async (req, res) => {
 
     // 1. File Upload Validation
     if (!req.file) {
-      return res.status(400).json({ message: "Kripya ek image file select karein." });
+      return res.status(400).json({ message: "please select 1 image at a time" });
     }
 
     // 2. Strict Image Type Check
     const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
     if (!allowedTypes.includes(req.file.mimetype)) {
-      return res.status(400).json({ message: "Keval Image files (JPG, PNG, WEBP) hi allowed hain!" });
+      return res.status(400).json({ message: "Only these files (JPG, PNG, WEBP) type allowed!" });
     }
 
     // 3. Check User & Role
     console.log("userid",userId)
     const user = await User.findById(userId);
     console.log("userimage",user);
-    if (!user) return res.status(404).json({ message: "User nahi mila" });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     if (user.role === "user") {
       return res.status(403).json({ message: "Normal users images upload nahi kar sakte." });
@@ -79,7 +79,8 @@ exports.createPost = async (req, res) => {
 // 2. GET MY IMAGES (Logged-in User Profile Grid)
 exports.getMyPosts = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
+    console.log("getapi",userId);
     const posts = await Post.find({ user: userId }).sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -97,7 +98,7 @@ exports.getMyPosts = async (req, res) => {
 exports.deletePost = async (req, res) => {
   try {
     const { postId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     const post = await Post.findById(postId);
     if (!post) return res.status(404).json({ message: "Image nahi mili" });
