@@ -1,18 +1,18 @@
 const express = require("express");
 const router = express.Router();
+
+// Controller Import
 const postController = require("../controllers/postController");
 
-// Path spelling check & auth middleware fix
+// Middlewares Import
 const auth = require("../middlewhere/auth"); 
-
-// Existing Multer middleware
 const upload = require("../middlewhere/multer"); 
 
 // ==========================================
-// POST ROUTES
+// POST / SHOWCASE ROUTES
 // ==========================================
 
-// 1. Create New Post (Image upload + Max 10 limit check)
+// 1. Image Upload (Max 10 Limit & Image-Only Check)
 router.post(
   "/create",
   auth,
@@ -20,16 +20,18 @@ router.post(
   postController.createPost
 );
 
-// 2. Get All Posts (Global Instagram-style Feed)
-router.get("/feed", auth, postController.getAllPosts);
+// 2. Get Logged-in User's Uploaded Images (Remaining Slots + Posts)
+router.get(
+  "/my-posts",
+  auth,
+  postController.getMyPosts
+);
 
-// 3. Get Logged-in Business User's Posts (My Profile Grid)
-router.get("/my-posts", auth, postController.getMyPosts);
-
-// 4. Get Specific Single Post Details
-router.get("/detail/:postId", auth, postController.getPostById);
-
-// 5. Delete Post (Cloudinary + Database cleanup)
-router.delete("/delete/:postId", auth, postController.deletePost);
+// 3. Delete Image (Cloudinary + MongoDB Delete)
+router.delete(
+  "/delete/:postId",
+  auth,
+  postController.deletePost
+);
 
 module.exports = router;
