@@ -23,6 +23,9 @@ const uploadToCloudinary = (fileBuffer) => {
 exports.createPost = async (req, res) => {
   try {
     const userId = req.user._id;
+    console.log("userid",userId);
+    console.log("userid2222",req.user._id);
+
 
     // 1. File Upload Validation
     if (!req.file) {
@@ -36,7 +39,9 @@ exports.createPost = async (req, res) => {
     }
 
     // 3. Check User & Role
+    console.log("userid",userId)
     const user = await User.findById(userId);
+    console.log("userimage",user);
     if (!user) return res.status(404).json({ message: "User nahi mila" });
 
     if (user.role === "user") {
