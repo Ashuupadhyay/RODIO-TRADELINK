@@ -108,7 +108,7 @@ const existingUser = await User.findOne({
             success: true,
             message: "Registration Successful",
             token,
-            redirectTo: "/dashboard",
+            redirectTo: "/",
             user: {
                 id: user._id,
                 role: user.role,
