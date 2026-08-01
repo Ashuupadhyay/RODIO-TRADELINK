@@ -22,9 +22,9 @@ const uploadToCloudinary = (fileBuffer) => {
 // 1. UPLOAD IMAGE (Max 10 Limit & Image-Only Validation)
 exports.createPost = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
     console.log("userid",userId);
-    console.log("userid2222",req.user._id);
+    console.log("userid2222",req.user.id);
 
 
     // 1. File Upload Validation
