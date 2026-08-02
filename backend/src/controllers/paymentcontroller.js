@@ -907,9 +907,9 @@ const generateReferralCode = require("../utills/generateReferralCode");
 // Plan Amounts and Durations Mapping
 const PLAN_DETAILS = {
   "testing": { name: "Testing Plan", amount: 1, months: 0, days: 1 },
-  "1month": { name: "1 Month", amount: 299, months: 1, days: 0 },
-  "6months": { name: "6 Months", amount: 599, months: 6, days: 0 },
-  "1year": { name: "1 Year", amount: 999, months: 12, days: 0 },
+  "3month": { name: "3 Month", amount: 599, months: 3, days: 0 },
+  "6months": { name: "6 Months", amount: 999, months: 6, days: 0 },
+  "1year": { name: "1 Year", amount: 1599, months: 12, days: 0 },
 };
 
 // Static Referral Codes Setup

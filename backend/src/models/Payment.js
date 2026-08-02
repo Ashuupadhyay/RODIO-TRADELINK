@@ -35,7 +35,7 @@ const paymentSchema = new mongoose.Schema(
     },
     planSelected: {
       type: String,
-      enum: ["1 Month", "6 Months", "1 Year", "Testing Plan", "Free Plan"],
+      enum: ["3 Month", "6 Months", "1 Year", "Testing Plan", "Free Plan"],
       default: "1 Year",
     },
     status: {
