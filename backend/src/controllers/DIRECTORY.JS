@@ -1,194 +1,3 @@
-// const Business = require("../models/business");
-// const User = require("../models/register");
-// const Vehicle = require("../models/vehicle");
-
-// // ======================================================
-// // DIRECTORY LIST
-// // GET /api/directory
-// // ======================================================
-
-// exports.getDirectory = async (req, res) => {
-//   try {
-//     const {
-//       role,
-//       state,
-//       city,
-//       vehicleType,
-//       search,
-//       page = 1,
-//       limit = 12,
-//     } = req.query;
-
-//     // ---------------------------------------
-//     // Business Filter
-//     // ---------------------------------------
-
-//     // const businessFilter = {
-//     //   registrationStatus: "completed",
-//     //   subscriptionStatus: "active",
-//     //   profileUnlocked: true,
-//     //   isActive: true,
-//     // };
-// const businessFilter = {
-//   isActive: true,
-// };
-
-// if (state && state !== "Pending") {
-//   businessFilter.currentState = new RegExp(state, "i");
-// }
-
-// if (city && city !== "Pending") {
-//   businessFilter.currentCity = new RegExp(city, "i");
-// }
-
-// if (search) {
-//   businessFilter.$or = [
-//     { firmName: new RegExp(search, "i") },
-//     { name: new RegExp(search, "i") },
-//   ];
-// }
-//     if (state) {
-//       businessFilter.currentState = new RegExp(state, "i");
-//     }
-
-//     if (city) {
-//       businessFilter.currentCity = new RegExp(city, "i");
-//     }
-
-//     if (search) {
-//       businessFilter.firmName = new RegExp(search, "i");
-//     }
-
-//     // ---------------------------------------
-//     // Get Businesses (LIFO Order: Latest created first)
-//     // ---------------------------------------
-
-//     let businesses = await Business.find(businessFilter)
-//       .populate("user", "role")
-//       .sort({ createdAt: -1 })
-//       .lean();
-
-//     // ---------------------------------------
-//     // Role Filter
-//     // ---------------------------------------
-
-//     if (role) {
-//       businesses = businesses.filter(
-//         (item) =>
-//           item.user &&
-//           item.user.role.toLowerCase() === role.toLowerCase()
-//       );
-//     }
-
-//     // ---------------------------------------
-//     // Vehicle Type Filter & Mapping
-//     // ---------------------------------------
-
-//     const result = [];
-
-//     for (const business of businesses) {
-//       const vehicles = await Vehicle.find({
-//         business: business._id,
-//         status: { $ne: "inactive" },
-//       })
-//         .select("vehicleType")
-//         .lean();
-
-//       const vehicleTypes = [
-//         ...new Set(vehicles.map((v) => v.vehicleType)),
-//       ];
-
-//       if (
-//         vehicleType &&
-//         !vehicleTypes.some(
-//           (v) =>
-//             v.toLowerCase() === vehicleType.toLowerCase()
-//         )
-//       ) {
-//         continue;
-//       }
-
-//       result.push({
-//         _id: business._id,
-
-//         firmName: business.firmName,
-
-//         role: business.user?.role || "",
-
-//         phoneNumber: business.phoneNumber,
-
-//         email: business.email,
-
-//         city: business.currentCity,
-
-//         state: business.currentState,
-
-//         workingAreas: business.workingAreas,
-
-//         vehicleTypes,
-
-//         totalVehicles: vehicles.length,
-
-//         createdAt: business.createdAt,
-//       });
-//     }
-
-//     // ---------------------------------------
-//     // Separate Vandana Motors & Put On Top
-//     // ---------------------------------------
-//     const featuredCard = [];
-//     const otherCards = [];
-
-//     const targetPhone = "8319501708";
-//     const targetName = "vandana motors";
-
-//     for (const item of result) {
-//       const name = String(item.firmName || "").toLowerCase().trim();
-//       const phone = String(item.phoneNumber || "").trim();
-
-//       if (phone === targetPhone || name === targetName) {
-//         featuredCard.push(item);
-//       } else {
-//         otherCards.push(item);
-//       }
-//     }
-
-//     // Combine: Featured Card sabse upar, baaki LIFO order me
-//     const finalData = [...featuredCard, ...otherCards];
-
-//     // ---------------------------------------
-//     // Pagination
-//     // ---------------------------------------
-
-//     const start = (page - 1) * limit;
-//     const end = start + Number(limit);
-
-//     const paginated = finalData.slice(start, end);
-
-//     return res.status(200).json({
-//       success: true,
-
-//       total: finalData.length,
-
-//       currentPage: Number(page),
-
-//       totalPages: Math.ceil(
-//         finalData.length / Number(limit)
-//       ),
-
-//       data: paginated,
-//     });
-//   } catch (error) {
-//     console.log(error);
-
-//     return res.status(500).json({
-//       success: false,
-//       message: "Directory fetch failed",
-//     });
-//   }
-// };
-
-
 const Business = require("../models/business");
 const User = require("../models/register");
 const Vehicle = require("../models/vehicle");
@@ -217,11 +26,13 @@ exports.getDirectory = async (req, res) => {
       isActive: true,
     };
 
-    if (state && state !== "Pending") {
+    // Filter state only if valid value is sent
+    if (state && state !== "Pending" && state !== "All") {
       businessFilter.currentState = new RegExp(state, "i");
     }
 
-    if (city && city !== "Pending") {
+    // Filter city only if valid value is sent
+    if (city && city !== "Pending" && city !== "All") {
       businessFilter.currentCity = new RegExp(city, "i");
     }
 
@@ -241,15 +52,16 @@ exports.getDirectory = async (req, res) => {
       .lean();
 
     // ---------------------------------------
-    // 3. Filter by User Role (if specified)
+    // 3. Normalized Role Filtering
     // ---------------------------------------
-    if (role) {
-      businesses = businesses.filter(
-        (item) =>
-          item.user &&
-          item.user.role &&
-          item.user.role.toLowerCase() === role.toLowerCase()
-      );
+    if (role && role !== "all") {
+      const targetRole = role.toLowerCase().replace(/[\s_-]+/g, "");
+
+      businesses = businesses.filter((item) => {
+        if (!item.user || !item.user.role) return false;
+        const userRole = item.user.role.toLowerCase().replace(/[\s_-]+/g, "");
+        return userRole === targetRole;
+      });
     }
 
     // ---------------------------------------
@@ -295,12 +107,12 @@ exports.getDirectory = async (req, res) => {
 
       result.push({
         _id: business._id,
-        firmName: business.firmName,
-        role: business.user?.role || "",
+        firmName: business.firmName || "Unnamed Business",
+        role: business.user?.role || business.category || "",
         phoneNumber: business.phoneNumber,
-        email: business.email,
-        city: business.currentCity,
-        state: business.currentState,
+        email: business.email || "",
+        city: business.currentCity || "Not Specified",
+        state: business.currentState || "Not Specified",
         workingAreas: business.workingAreas || [],
         vehicleTypes,
         totalVehicles: rawVehicles.length,
@@ -309,7 +121,7 @@ exports.getDirectory = async (req, res) => {
     }
 
     // ---------------------------------------
-    // 6. Separate Featured Card (Vandana Motors) & Pin To Top
+    // 6. Featured Card (Vandana Motors) Pin To Top
     // ---------------------------------------
     const featuredCard = [];
     const otherCards = [];
