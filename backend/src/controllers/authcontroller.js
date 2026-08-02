@@ -139,7 +139,8 @@ const register = async (req, res) => {
     id: user._id,
     role: user.role,
     firmName: user.firmName,
-    mobile: user.mobile
+    mobile: user.mobile,
+    token:user.token,
 }
         });
 
