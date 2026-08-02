@@ -88,7 +88,7 @@ const userPosts = await Post.find({ user: userId }).sort({ createdAt: -1 });
     return res.status(500).json({
       success: false,
       message: "Failed to load dashboard",
-      error: error.message,
+      error:"We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
     });
   }
 };

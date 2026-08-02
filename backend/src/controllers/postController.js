@@ -46,7 +46,7 @@ exports.createPost = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not exixting" });
 
     if (user.role === "user") {
-      return res.status(403).json({ message: "Use" });
+      return res.status(403).json({ message: "Only service providers (Transporters, Brokers, etc.) are allowed to upload posts." });
     }
 
     // 4. Max 10 Limit Check

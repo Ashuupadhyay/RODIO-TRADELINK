@@ -29,6 +29,11 @@ const register = async (req, res) => {
 "packers_movers",
 "insurance_company",
  "car_carrier",
+ "miningvehicle_supplier",
+ "partstypesbettry_supplier",
+ "mechanic and service center",
+ "biketexiauto",
+ "candfagent",
 ];
 
 if (!allowedRoles.includes(role)) {
@@ -124,12 +129,13 @@ const existingUser = await User.findOne({
 
 
 // LOGIN
+
+
+
+// LOGIN
 const login = async (req, res) => {
     try {
         const { emailOrMobile, password } = req.body;
-        console.log("data k pehle check");
-        console.log(emailOrMobile);
-        console.log(password);
 
         if (!emailOrMobile || !password) {
             return res.status(400).json({
@@ -138,15 +144,14 @@ const login = async (req, res) => {
             });
         }
 
-        // User Find (By Mobile)
+        // User Find (By Mobile or Email)
         const user = await User.findOne({
             $or: [
-                { email: emailOrMobile.toLowerCase() }, // Safe fall-back if older records exist
+                { email: emailOrMobile.toLowerCase() },
                 { mobile: emailOrMobile }
             ]
         });
 
-        console.log("user check:", user);
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -188,49 +193,59 @@ const login = async (req, res) => {
         let businessId = null;
 
         const businessRoles = [
-    "transporter",
-    "fleet_owner",
-    "cha_agent",
-    "courier",
-    "bus_service",
-    "travel_taxi",
-    "truck_body_builder",
-    "rto_agent",
-    "finance_company",
-    "finance_agent",
-"packers and movers",
-"insurance_company",
-"car_carrier",
+            "transporter",
+            "fleet_owner",
+            "cha_agent",
+            "courier",
+            "bus_service",
+            "travel_taxi",
+            "truck_body_builder",
+            "rto_agent",
+            "finance_company",
+            "finance_agent",
+            "packers_movers", // 👈 Fixed spelling to match schema
+            "insurance_company",
+            "car_carrier",
+            "miningvehicle_supplier",
+            "partstypesbettry_supplier",
+            "mechanic and service center",
+            "biketexiauto",
+            "candfagent",
+        ];
 
-
-];
-
-if (businessRoles.includes(user.role)) {
-    const business = await Business.findOne({
-        user: user._id,
-    });
-
-    if (business) {
-        businessId = business._id;
-    }
-}
-
-/*
-        if (user.role === "broker" || user.role === "transporter") {
+        if (businessRoles.includes(user.role)) {
             const business = await Business.findOne({
                 user: user._id,
             });
+
             if (business) {
                 businessId = business._id;
             }
         }
-*/
+
+        // 👈 Subscription active status check
+        let isSubscriptionActive = false;
+
+        if (user.role !== "user") {
+            const now = new Date();
+            if (
+                user.subscription?.status === "active" &&
+                user.subscription?.endDate &&
+                new Date(user.subscription.endDate) > now
+            ) {
+                isSubscriptionActive = true;
+            }
+        }
+
+        // Clean Response
         return res.status(200).json({
             success: true,
             message: "Login Successful",
             token,
             redirectTo,
             businessId,
+            isSubscriptionActive, // 👈 Active status boolean
+            subscription: user.role !== "user" ? user.subscription : null, // 👈 Full subscription object (User ko chhod kar)
             user: {
                 id: user._id,
                 role: user.role,
@@ -246,6 +261,144 @@ if (businessRoles.includes(user.role)) {
         });
     }
 };
+// const login = async (req, res) => {
+//     try {
+//         const { emailOrMobile, password } = req.body;
+//         console.log("data k pehle check");
+//         console.log(emailOrMobile);
+//         console.log(password);
+
+//         if (!emailOrMobile || !password) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Mobile and Password are required"
+//             });
+//         }
+
+//         // User Find (By Mobile)
+//         const user = await User.findOne({
+//             $or: [
+//                 { email: emailOrMobile.toLowerCase() }, // Safe fall-back if older records exist
+//                 { mobile: emailOrMobile }
+//             ]
+//         });
+
+//         console.log("user check:", user);
+//         if (!user) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "User not registered"
+//             });
+//         }
+
+//         const isMatch = await bcrypt.compare(password, user.password);
+
+//         if (!isMatch) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Wrong Password"
+//             });
+//         }
+
+//         // JWT Generate
+//         const token = jwt.sign(
+//             {
+//                 id: user._id,
+//                 role: user.role
+//             },
+//             process.env.JWT_SECRET,
+//             {
+//                 expiresIn: process.env.JWT_EXPIRE
+//             }
+//         );
+
+//         let redirectTo = "/";
+
+//         // Cookie save
+//         res.cookie("token", token, {
+//             httpOnly: true,
+//             secure: false,
+//             sameSite: "lax",
+//             maxAge: 7 * 24 * 60 * 60 * 1000
+//         });
+
+//         let businessId = null;
+
+//         const businessRoles = [
+//     "transporter",
+//     "fleet_owner",
+//     "cha_agent",
+//     "courier",
+//     "bus_service",
+//     "travel_taxi",
+//     "truck_body_builder",
+//     "rto_agent",
+//     "finance_company",
+//     "finance_agent",
+// "packers and movers",
+// "insurance_company",
+// "car_carrier",
+// "miningvehicle_supplier",
+//  "partstypesbettry_supplier",
+//  "mechanic and service center",
+//  "biketexiauto",
+//  "candfagent",
+
+
+// ];
+
+// if (businessRoles.includes(user.role)) {
+//     const business = await Business.findOne({
+//         user: user._id,
+//     });
+
+
+    
+
+//     if (business) {
+//         businessId = business._id;
+//     }
+// }
+
+// let isSubscriptionActive = false;
+
+// /*
+//         if (user.role === "broker" || user.role === "transporter") {
+//             const business = await Business.findOne({
+//                 user: user._id,
+//             });
+//             if (business) {
+//                 businessId = business._id;
+//             }
+//         }
+// */
+//         return res.status(200).json({
+//             success: true,
+//             message: "Login Successful",
+//             token,
+//             redirectTo,
+//             businessId,
+//             subscription: user.role !== "user" ? user.subscription : null,
+//             user: {
+//                 id: user._id,
+//                 role: user.role,
+//                 mobile: user.mobile
+//             },
+//             user: {
+//                 id: user._id,
+//                 role: user.role,
+//                 mobile: user.mobile
+//             }
+//         });
+
+//     } catch (error) {
+//         console.log(error);
+//         return res.status(500).json({
+//             success: false,
+//             message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
+//         });
+//     }
+// };
 
 
 // LOGOUT

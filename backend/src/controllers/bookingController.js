@@ -1,43 +1,272 @@
+// const Booking = require("../models/lead");
+
+// const Bid = require("../models/bid");
+// // CREATE BOOKING
+// exports.createBooking = async (req, res) => {
+
+//     const booking = await Booking.create({
+
+//         ...req.body,
+
+//         createdBy: req.user.id,
+
+//         creatorRole: req.user.role
+//     });
+
+//     res.status(201).json({
+//         success: true,
+//         data: booking
+//     });
+
+// };
+// exports.myBookings = async (req, res) => {
+
+//     const bookings = await Booking.find({
+//         createdBy: req.user.id
+//     });
+
+//     res.json({
+//         success: true,
+//         data: bookings
+//     });
+
+// };
+// exports.getAllBookings = async (req, res) => {
+//     try {
+
+//         if (!["transporter", "broker"].includes(req.user.role)) {
+//             return res.status(403).json({
+//                 success: false,
+//                 message: "Only transporter or broker can access."
+//             });
+//         }
+
+//         // All leads - latest first
+//         const bookings = await Booking.find()
+//             .populate("createdBy", "name email role")
+//             .sort({ createdAt: -1 })
+//             .lean();
+
+//         // Har lead ka bid count nikalo
+//         const bookingsWithBidCount = await Promise.all(
+//             bookings.map(async (booking) => {
+
+//                 const bidCount = await Bid.countDocuments({
+//                     booking: booking._id
+//                 });
+
+//                 // Available tabhi hai jab:
+//                 // status Open ho AND bids 10 se kam ho
+//                 const isAvailable =
+//                     booking.status === "Open" &&
+//                     bidCount < 10;
+
+//                 let availabilityReason = null;
+
+//                 if (booking.status !== "Open") {
+//                     availabilityReason = "No longer available";
+//                 } else if (bidCount >= 10) {
+//                     availabilityReason = "Bid limit reached";
+//                 }
+
+//                 return {
+//                     ...booking,
+//                     bidCount,
+//                     isAvailable,
+//                     availabilityReason
+//                 };
+//             })
+//         );
+
+//         // =====================================
+//         // Available leads TOP
+//         // Unavailable leads BOTTOM
+//         // Latest first inside both groups
+//         // =====================================
+//         bookingsWithBidCount.sort((a, b) => {
+
+//             // Available ko upar rakho
+//             if (a.isAvailable && !b.isAvailable) {
+//                 return -1;
+//             }
+
+//             if (!a.isAvailable && b.isAvailable) {
+//                 return 1;
+//             }
+
+//             // Same group me latest first
+//             return new Date(b.createdAt) - new Date(a.createdAt);
+//         });
+
+//         res.status(200).json({
+//             success: true,
+//             total: bookingsWithBidCount.length,
+//             data: bookingsWithBidCount
+//         });
+
+//     } catch (error) {
+
+//         console.error("Get All Bookings Error:", error);
+
+//         res.status(500).json({
+//             success: false,
+//             message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
+//         });
+//     }
+// };
+
+
+// // ==========================
+// // My Assigned Leads
+// // ==========================
+// exports.myAssignedLeads = async (req, res) => {
+
+//     try {
+
+//         const bookings = await Booking.find({
+
+//             selectedTransporter: req.user.id
+
+//         })
+//         .populate("createdBy", "name mobile role")
+//         .sort({ createdAt: -1 });
+
+//         res.status(200).json({
+
+//             success: true,
+
+//             total: bookings.length,
+
+//             data: bookings
+
+//         });
+
+//     } catch (error) {
+
+//         res.status(500).json({
+
+//             success: false,
+
+//             message:"We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
+
+//         });
+
+//     }
+
+// };
+// exports.updateLeadStatus = async (req, res) => {
+
+//     try {
+
+//         const { status } = req.body;
+
+//         const booking = await Booking.findById(req.params.id);
+
+//         if (!booking) {
+
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "Lead not found"
+//             });
+
+//         }
+
+//         if (
+//             booking.selectedTransporter.toString() !== req.user.id
+//         ) {
+
+//             return res.status(403).json({
+//                 success: false,
+//                 message: "Unauthorized"
+//             });
+
+//         }
+
+//         booking.status = status;
+
+//         await booking.save();
+
+//         res.status(200).json({
+
+//             success: true,
+
+//             message: "Status Updated",
+
+//             data: booking
+
+//         });
+
+//     } catch (error) {
+
+//         res.status(500).json({
+
+//             success: false,
+
+//             message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
+
+//         });
+
+//     }
+
+// };
 const Booking = require("../models/lead");
-
 const Bid = require("../models/bid");
-// CREATE BOOKING
+
+// ===============================
+// Create Booking / Lead
+// ===============================
 exports.createBooking = async (req, res) => {
+    try {
+        const booking = await Booking.create({
+            ...req.body,
+            createdBy: req.user.id,
+            creatorRole: req.user.role
+        });
 
-    const booking = await Booking.create({
-
-        ...req.body,
-
-        createdBy: req.user.id,
-
-        creatorRole: req.user.role
-    });
-
-    res.status(201).json({
-        success: true,
-        data: booking
-    });
-
+        return res.status(201).json({
+            success: true,
+            data: booking
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
+        });
+    }
 };
+
+// ===============================
+// My Bookings / Created Leads
+// ===============================
 exports.myBookings = async (req, res) => {
+    try {
+        const bookings = await Booking.find({
+            createdBy: req.user.id
+        }).sort({ createdAt: -1 });
 
-    const bookings = await Booking.find({
-        createdBy: req.user.id
-    });
-
-    res.json({
-        success: true,
-        data: bookings
-    });
-
+        return res.json({
+            success: true,
+            total: bookings.length,
+            data: bookings
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
+        });
+    }
 };
+
+// ===============================
+// Get All Bookings (Marketplace Leads)
+// ===============================
 exports.getAllBookings = async (req, res) => {
     try {
-
-        if (!["transporter", "broker"].includes(req.user.role)) {
+        // "user" role ko marketplace view access karne se block karein
+        if (req.user.role === "user") {
             return res.status(403).json({
                 success: false,
-                message: "Only transporter or broker can access."
+                message: "Users are not authorized to view marketplace leads."
             });
         }
 
@@ -50,16 +279,13 @@ exports.getAllBookings = async (req, res) => {
         // Har lead ka bid count nikalo
         const bookingsWithBidCount = await Promise.all(
             bookings.map(async (booking) => {
-
                 const bidCount = await Bid.countDocuments({
                     booking: booking._id
                 });
 
-                // Available tabhi hai jab:
-                // status Open ho AND bids 10 se kam ho
+                // Available tabhi hai jab: status Open ho AND bids 10 se kam ho
                 const isAvailable =
-                    booking.status === "Open" &&
-                    bidCount < 10;
+                    booking.status === "Open" && bidCount < 10;
 
                 let availabilityReason = null;
 
@@ -84,128 +310,101 @@ exports.getAllBookings = async (req, res) => {
         // Latest first inside both groups
         // =====================================
         bookingsWithBidCount.sort((a, b) => {
-
-            // Available ko upar rakho
             if (a.isAvailable && !b.isAvailable) {
                 return -1;
             }
-
             if (!a.isAvailable && b.isAvailable) {
                 return 1;
             }
-
-            // Same group me latest first
             return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             total: bookingsWithBidCount.length,
             data: bookingsWithBidCount
         });
 
     } catch (error) {
-
         console.error("Get All Bookings Error:", error);
 
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
         });
     }
 };
-
 
 // ==========================
 // My Assigned Leads
 // ==========================
 exports.myAssignedLeads = async (req, res) => {
-
     try {
+        // "user" ko skip karke baaki sabhi assigned service providers dekh sakein
+        if (req.user.role === "user") {
+            return res.status(403).json({
+                success: false,
+                message: "Users cannot access assigned leads section."
+            });
+        }
 
         const bookings = await Booking.find({
-
             selectedTransporter: req.user.id
-
         })
         .populate("createdBy", "name mobile role")
         .sort({ createdAt: -1 });
 
-        res.status(200).json({
-
+        return res.status(200).json({
             success: true,
-
             total: bookings.length,
-
             data: bookings
-
         });
 
     } catch (error) {
-
-        res.status(500).json({
-
+        return res.status(500).json({
             success: false,
-
-            message:"We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
-
+            message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
         });
-
     }
-
 };
+
+// ==========================
+// Update Lead Status
+// ==========================
 exports.updateLeadStatus = async (req, res) => {
-
     try {
-
         const { status } = req.body;
 
         const booking = await Booking.findById(req.params.id);
 
         if (!booking) {
-
             return res.status(404).json({
                 success: false,
                 message: "Lead not found"
             });
-
         }
 
-        if (
-            booking.selectedTransporter.toString() !== req.user.id
-        ) {
-
+        // Check if selected assigned service provider is updating status
+        if (!booking.selectedTransporter || booking.selectedTransporter.toString() !== req.user.id) {
             return res.status(403).json({
                 success: false,
-                message: "Unauthorized"
+                message: "Unauthorized to update status for this lead."
             });
-
         }
 
         booking.status = status;
-
         await booking.save();
 
-        res.status(200).json({
-
+        return res.status(200).json({
             success: true,
-
             message: "Status Updated",
-
             data: booking
-
         });
 
     } catch (error) {
-
-        res.status(500).json({
-
+        return res.status(500).json({
             success: false,
-
             message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
-
         });
-
     }
-
 };
