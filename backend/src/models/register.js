@@ -146,6 +146,11 @@ const userSchema = new mongoose.Schema(
       required: [true, "Password is required"],
       minlength: 4,
     },
+    firmName: {
+  type: String,
+  trim: true,
+  default: "",
+},
 
     subscription: {
       status: {

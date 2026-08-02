@@ -18,9 +18,9 @@ exports.saveBusinessDraft = async (req, res) => {
     // Email + Mobile yahin se lenge
     // ==================================================
 
-    const user = await User.findById(userId).select(
-      "name email mobile role"
-    );
+   const user = await User.findById(userId).select(
+  "firmName email mobile role"
+);
 
     if (!user) {
       return res.status(404).json({
@@ -31,15 +31,11 @@ exports.saveBusinessDraft = async (req, res) => {
 
     // ==================================================
     // BUSINESS FORM DATA
-    // ==================================================
-
-    const {
-      category,
-      firmName,
-      address,
-      currentCity,
-      currentState,
-      pincode,
+ const {
+  address,
+  currentCity,
+  currentState,
+  pincode,
 } = req.body;
 
     // ==================================================
@@ -47,12 +43,10 @@ exports.saveBusinessDraft = async (req, res) => {
     // ==================================================
 
     if (
-        !category ||
-      !firmName?.trim() ||
-      !address?.trim() ||
-      !currentCity?.trim() ||
-      !currentState?.trim() ||
-      !pincode?.trim()
+        !address?.trim() ||
+!currentCity?.trim() ||
+!currentState?.trim() ||
+!pincode?.trim()
     ) {
       return res.status(400).json({
         success: false,
@@ -70,27 +64,27 @@ exports.saveBusinessDraft = async (req, res) => {
 
 
 
-    const allowedCategories = [
-  "Transporter",
-  "Broker",
-  "Fleet Owner",
-  "Truck Owner",
-  "Logistics Company",
-  "Warehouse",
-  "Courier",
-  "Packers & Movers",
-  "Commission Agent",
-  "RTO Agent",
-  "Finance Agent",
-  "Others",
-];
+//     const allowedCategories = [
+//   "Transporter",
+//   "Broker",
+//   "Fleet Owner",
+//   "Truck Owner",
+//   "Logistics Company",
+//   "Warehouse",
+//   "Courier",
+//   "Packers & Movers",
+//   "Commission Agent",
+//   "RTO Agent",
+//   "Finance Agent",
+//   "Others",
+// ];
 
-if (!allowedCategories.includes(category)) {
-  return res.status(400).json({
-    success: false,
-    message: "Invalid business category",
-  });
-}
+// if (!allowedCategories.includes(category)) {
+//   return res.status(400).json({
+//     success: false,
+//     message: "Invalid business category",
+//   });
+// }
 
     // ==================================================
     // CHECK EXISTING BUSINESS
@@ -120,12 +114,11 @@ if (!allowedCategories.includes(category)) {
     // ==================================================
 
     if (business) {
-      business.category = category;
-      business.firmName = firmName.trim();
+      business.category = user.role;
+business.firmName = user.firmName;
 
-      // Registered User se automatically
-      business.phoneNumber = user.mobile || "";
-      business.email = user.email || "";
+business.phoneNumber = user.mobile || "";
+business.email = user.email || "";
 
       business.address = address.trim();
       business.currentCity = currentCity.trim();
@@ -145,13 +138,12 @@ if (!allowedCategories.includes(category)) {
 
     else {
       business = await Business.create({
-        user: userId,
- category,
-        firmName: firmName.trim(),
+  user: userId,
+  category: user.role,
+  firmName: user.firmName,
 
-        // Registered User se automatically
-        phoneNumber: user.mobile || "",
-        email: user.email || "",
+  phoneNumber: user.mobile || "",
+  email: user.email || "",
 
         address: address.trim(),
         currentCity: currentCity.trim(),

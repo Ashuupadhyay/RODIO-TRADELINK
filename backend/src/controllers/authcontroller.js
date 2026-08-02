@@ -9,8 +9,7 @@ const Business = require("../models/business");
 // REGISTER
 const register = async (req, res) => {
     try {
-        const { role, mobile, password, confirmPassword } = req.body;
-
+       const { role, firmName, mobile, password, confirmPassword } = req.body;
         console.log(role);
         console.log(mobile);
         console.log(password);
@@ -46,7 +45,7 @@ const register = async (req, res) => {
         }
 
         // Required fields check
-        if (!role || !mobile || !password || !confirmPassword) {
+        if (!role || !firmName || !mobile || !password || !confirmPassword) {
             return res.status(400).json({ 
                 success: false, 
                 message: "All fields are required" 
@@ -82,10 +81,11 @@ const register = async (req, res) => {
 
         // User save
         const user = new User({
-            role,
-            mobile,
-            password: hashedPassword
-        });
+    role,
+    firmName,
+    mobile,
+    password: hashedPassword
+});
 
         await user.save();
         console.log("successfully registered");
@@ -135,11 +135,12 @@ const register = async (req, res) => {
             businessId,
             isSubscriptionActive, // 👈 Frontend ko turant batayega ki active hai ya nahi
             subscription: user.role !== "user" ? user.subscription : null, // 👈 Subscription detail bhej di
-            user: {
-                id: user._id,
-                role: user.role,
-                mobile: user.mobile
-            }
+           user: {
+    id: user._id,
+    role: user.role,
+    firmName: user.firmName,
+    mobile: user.mobile
+}
         });
 
     } catch (error) {
