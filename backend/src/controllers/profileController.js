@@ -275,6 +275,10 @@ const updateProfile = async (req, res) => {
 
     updateData.user = userId;
     updateData.role = user.role;
+    updateData.name = user.name || "";
+updateData.firmName = user.firmName || "";
+updateData.email = user.email || "";
+updateData.phoneNumber = user.mobile || "";
 
     let profile = await Profile.findOne({ user: userId });
 
@@ -335,12 +339,16 @@ const getProfile = async (req, res) => {
     }
 
     return res.status(200).json({
-      success: true,
-      profile: {
-        ...profile.toObject(),
-        profileImage: profile.profileImage || DEFAULT_PROFILE_IMAGE,
-      },
-    });
+  success: true,
+  profile: {
+    ...profile.toObject(),
+    name: profile.name || user.name,
+    firmName: profile.firmName || user.firmName,
+    email: profile.email || user.email,
+    phoneNumber: profile.phoneNumber || user.mobile,
+    profileImage: profile.profileImage || DEFAULT_PROFILE_IMAGE,
+  },
+});
   } catch (error) {
     console.error("Get Profile Error:", error);
     return res.status(500).json({

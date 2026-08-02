@@ -12,10 +12,35 @@ const profileSchema = new mongoose.Schema({
     role: {
         type: String,
         required: true,
-        enum: ["user", "transporter", "broker"]
+        enum: [
+  "user",
+  "transporter",
+  "fleet_owner",
+  "cha_agent",
+  "courier",
+  "bus_service",
+  "travel_taxi",
+  "truck_body_builder",
+  "rto_agent",
+  "finance_company",
+  "finance_agent",
+  "packers_movers",
+  "insurance_company",
+  "car_carrier",
+  "miningvehicle_supplier",
+  "partstypesbettry_supplier",
+  "mechanic and service center",
+  "biketexiauto",
+  "candfagent",
+]
     },
 
    name: {
+  type: String,
+  trim: true,
+  default: "",
+},
+firmName: {
   type: String,
   trim: true,
   default: "",
