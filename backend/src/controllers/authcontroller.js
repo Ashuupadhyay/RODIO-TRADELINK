@@ -140,7 +140,8 @@ const register = async (req, res) => {
     role: user.role,
     firmName: user.firmName,
     mobile: user.mobile,
-    token:user.token,
+    token:token,
+    
 }
         });
 
