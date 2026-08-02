@@ -64,7 +64,11 @@ category: {
       required: true,
       trim: true,
     },
-
+name: {
+  type: String,
+  required: true,
+  trim: true,
+},
     currentCity: {
       type: String,
       required: true,

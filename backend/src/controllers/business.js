@@ -18,8 +18,8 @@ exports.saveBusinessDraft = async (req, res) => {
     // Email + Mobile yahin se lenge
     // ==================================================
 
-   const user = await User.findById(userId).select(
-  "firmName email mobile role"
+  const user = await User.findById(userId).select(
+  "name firmName email mobile role"
 );
 
     if (!user) {
@@ -115,6 +115,7 @@ exports.saveBusinessDraft = async (req, res) => {
 
     if (business) {
       business.category = user.role;
+      business.name = user.name;
 business.firmName = user.firmName;
 
 business.phoneNumber = user.mobile || "";
@@ -139,6 +140,7 @@ business.email = user.email || "";
     else {
       business = await Business.create({
   user: userId,
+    name: user.name,
   category: user.role,
   firmName: user.firmName,
 
