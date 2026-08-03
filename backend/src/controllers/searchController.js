@@ -87,7 +87,7 @@ const Business = require("../models/business");
  */
 exports.searchBusinesses = async (req, res) => {
   try {
-    const { state, city, category, page = 1, limit = 10 } = req.query;
+    const { state, city,   firmName,category, page = 1, limit = 10 } = req.query;
 
     // Default filters: Active and Registration Completed
     const query = {
@@ -106,20 +106,40 @@ exports.searchBusinesses = async (req, res) => {
       query.category = { $regex: new RegExp(`^${escapeRegex(category.trim())}$`, "i") };
     }
 
-    // 2. Working Area Filter (State + City in same sub-document)
-    if (state || city) {
-      const workingAreaCriteria = {};
+    // Firm Name Filter
+if (firmName) {
+  query.firmName = {
+    $regex: new RegExp(escapeRegex(firmName.trim()), "i"),
+  };
+}
+    // // 2. Working Area Filter (State + City in same sub-document)
+    // if (state || city) {
+    //   const workingAreaCriteria = {};
 
-      if (state) {
-        workingAreaCriteria.state = { $regex: new RegExp(escapeRegex(state.trim()), "i") };
-      }
+    //   if (state) {
+    //     workingAreaCriteria.state = { $regex: new RegExp(escapeRegex(state.trim()), "i") };
+    //   }
 
-      if (city) {
-        workingAreaCriteria.cities = { $in: [new RegExp(escapeRegex(city.trim()), "i")] };
-      }
+    //   if (city) {
+    //     workingAreaCriteria.cities = { $in: [new RegExp(escapeRegex(city.trim()), "i")] };
+    //   }
 
-      query.workingAreas = { $elemMatch: workingAreaCriteria };
-    }
+    //   query.workingAreas = { $elemMatch: workingAreaCriteria };
+    // }
+
+    // State Filter
+if (state) {
+  query.currentState = {
+    $regex: new RegExp(`^${escapeRegex(state.trim())}$`, "i"),
+  };
+}
+
+// City Filter
+if (city) {
+  query.currentCity = {
+    $regex: new RegExp(`^${escapeRegex(city.trim())}$`, "i"),
+  };
+}
 
     // Pagination Setup
     const pageNum = parseInt(page, 10) || 1;

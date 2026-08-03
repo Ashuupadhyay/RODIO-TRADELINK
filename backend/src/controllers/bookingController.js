@@ -263,12 +263,12 @@ exports.myBookings = async (req, res) => {
 exports.getAllBookings = async (req, res) => {
     try {
         // "user" role ko marketplace view access karne se block karein
-        if (req.user.role === "user") {
-            return res.status(403).json({
-                success: false,
-                message: "Users are not authorized to view marketplace leads."
-            });
-        }
+        // if (req.user.role === "user") {
+        //     return res.status(403).json({
+        //         success: false,
+        //         message: "Users are not authorized to view marketplace leads."
+        //     });
+        // }
 
         // All leads - latest first
         const bookings = await Booking.find()
