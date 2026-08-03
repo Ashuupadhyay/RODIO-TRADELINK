@@ -99,17 +99,21 @@ exports.searchBusinesses = async (req, res) => {
     // query.profileUnlocked = true;
 
     // Regex Safety Function (Special characters error na de)
-    const escapeRegex = (text) => text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+    const escapeRegex = (text) =>
+  text.replace(/[-[\]{}()*+?.,\\^$|#]/g, "\\$&");
 
     // 1. Category Filter (Case-insensitive)
-    if (category) {
-      query.category = { $regex: new RegExp(`^${escapeRegex(category.trim())}$`, "i") };
-    }
-
+ if (category?.trim()) {
+  query.category = {
+    $regex: category.trim(),
+    $options: "i",
+  };
+}
     // Firm Name Filter
-if (firmName) {
+if (firmName?.trim()) {
   query.firmName = {
-    $regex: new RegExp(escapeRegex(firmName.trim()), "i"),
+    $regex: escapeRegex(firmName.trim()),
+    $options: "i",
   };
 }
     // // 2. Working Area Filter (State + City in same sub-document)
@@ -128,17 +132,19 @@ if (firmName) {
     // }
 
     // State Filter
-if (state) {
+if (state?.trim()) {
   query.currentState = {
-  $regex: new RegExp(escapeRegex(state.trim()), "i"),
-};
+    $regex: state.trim(),
+    $options: "i",
+  };
 }
 
 // City Filter
-if (city) {
- query.currentCity = {
-  $regex: new RegExp(escapeRegex(city.trim()), "i"),
-};
+if (city?.trim()) {
+  query.currentCity = {
+    $regex: city.trim(),
+    $options: "i",
+  };
 }
 
     // Pagination Setup
