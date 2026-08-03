@@ -13,18 +13,18 @@ exports.saveBusinessDraft = async (req, res) => {
     const {name, address, currentCity, currentState, pincode } = req.body;
 
     // 1. Validation Check
-    if (
-      !name?.trim()||
-      !address?.trim() ||
-      !currentCity?.trim() ||
-      !currentState?.trim() ||
-      !pincode?.trim()
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "All business fields (Address, City, State, Pincode) are required",
-      });
-    }
+    // if (
+    //   !name?.trim()||
+    //   !address?.trim() ||
+    //   !currentCity?.trim() ||
+    //   !currentState?.trim() ||
+    //   !pincode?.trim()
+    // ) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "All business fields (Address, City, State, Pincode) are required",
+    //   });
+    // }
 
     // if (!/^[1-9][0-9]{5}$/.test(pincode.trim())) {
     //   return res.status(400).json({
