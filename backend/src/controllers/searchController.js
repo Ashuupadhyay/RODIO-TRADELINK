@@ -132,6 +132,9 @@ if (firmName?.trim()) {
     // }
 
     // State Filter
+    console.log("STATE:", JSON.stringify(state));
+console.log("CITY:", JSON.stringify(city));
+console.log("CATEGORY:", JSON.stringify(category));
 if (state?.trim()) {
   query.currentState = {
     $regex: state.trim(),
@@ -153,6 +156,7 @@ if (city?.trim()) {
     const skip = (pageNum - 1) * limitNum;
 
     // Search Query Execution
+    console.log("QUERY:", query);
     const [businesses, totalCount] = await Promise.all([
       Business.find(query)
         // 👈 FIX: User Schema ke hisab se 'mobile' aur 'role' fetch honge
