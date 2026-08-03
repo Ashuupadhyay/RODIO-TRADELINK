@@ -112,7 +112,7 @@ exports.searchBusinesses = async (req, res) => {
     // Firm Name Filter
 if (firmName?.trim()) {
   query.firmName = {
-    $regex: escapeRegex(firmName.trim()),
+    $regex: firmName.trim(),
     $options: "i",
   };
 }
