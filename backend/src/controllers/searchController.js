@@ -130,15 +130,15 @@ if (firmName) {
     // State Filter
 if (state) {
   query.currentState = {
-    $regex: new RegExp(`^${escapeRegex(state.trim())}$`, "i"),
-  };
+  $regex: new RegExp(escapeRegex(state.trim()), "i"),
+};
 }
 
 // City Filter
 if (city) {
-  query.currentCity = {
-    $regex: new RegExp(`^${escapeRegex(city.trim())}$`, "i"),
-  };
+ query.currentCity = {
+  $regex: new RegExp(escapeRegex(city.trim()), "i"),
+};
 }
 
     // Pagination Setup
