@@ -61,31 +61,31 @@ category: {
 
     address: {
       type: String,
-      required: true,
+       default:"",
       trim: true,
     },
 name: {
   type: String,
-  required: true,
+  default:"",
   trim: true,
 },
     currentCity: {
       type: String,
-      required: true,
+       default:"",
       trim: true,
       index: true,
     },
 
     currentState: {
       type: String,
-      required: true,
+       default:"",
       trim: true,
       index: true,
     },
 
     pincode: {
       type: String,
-      required: true,
+     default:"",
       trim: true,
     },
 

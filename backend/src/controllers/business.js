@@ -10,10 +10,11 @@ const Subscription = require("../models/suscription");
 exports.saveBusinessDraft = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { address, currentCity, currentState, pincode } = req.body;
+    const {name, address, currentCity, currentState, pincode } = req.body;
 
     // 1. Validation Check
     if (
+      !name?.trim()||
       !address?.trim() ||
       !currentCity?.trim() ||
       !currentState?.trim() ||
@@ -44,57 +45,75 @@ exports.saveBusinessDraft = async (req, res) => {
       });
     }
 
-    // Resolved values with guaranteed fallback
-    const resolvedName =
-      (user.name && user.name.trim()) ||
-      (user.firmName && user.firmName.trim()) ||
-      "Business Owner";
+// 1. Owner Name -> Directly taken from Form Input (req.body.name)
+const resolvedName = name.trim();
 
-    const resolvedFirmName =
-      (user.firmName && user.firmName.trim()) ||
-      (user.name && user.name.trim()) ||
-      "Firm Name";
-
+// 2. Firm Name -> Auto-taken from Registration User Table
+const resolvedFirmName = user.firmName?.trim() || "";
     // 3. Find Existing Business
-    let business = await Business.findOne({ user: userId });
+    // let business = await Business.findOne({ user: userId });
 
-    // 4. Update OR Create Business Draft
-    if (business) {
-      business.category = user.role || business.category;
-      business.name = resolvedName;
-      business.firmName = resolvedFirmName;
-      business.phoneNumber = user.mobile || business.phoneNumber || "";
-      business.email = user.email || business.email || "";
+    // // 4. Update OR Create Business Draft
+    // if (business) {
+    //   business.category = user.role || business.category;
+    //   business.name = resolvedName;
+    //   business.firmName = resolvedFirmName;
+    //   business.phoneNumber = user.mobile || business.phoneNumber || "";
+    //   business.email = user.email || business.email || "";
 
-      business.address = address.trim();
-      business.currentCity = currentCity.trim();
-      business.currentState = currentState.trim();
-      business.pincode = pincode.trim();
+    //   business.address = address.trim();
+    //   business.currentCity = currentCity.trim();
+    //   business.currentState = currentState.trim();
+    //   business.pincode = pincode.trim();
 
-      // Explicitly set directory display flags
-      business.isActive = true;
+    //   // Explicitly set directory display flags
+    //   business.isActive = true;
 
-      await business.save();
-    } else {
-      business = await Business.create({
-        user: userId,
-        category: user.role || "Others",
-        name: resolvedName,
-        firmName: resolvedFirmName,
-        phoneNumber: user.mobile || "",
-        email: user.email || "",
+    //   await business.save();
+    // } else {
+    //   business = await Business.create({
+    //     user: userId,
+    //     category: user.role || "Others",
+    //     name: resolvedName,
+    //     firmName: resolvedFirmName,
+    //     phoneNumber: user.mobile || "",
+    //     email: user.email || "",
 
-        address: address.trim(),
-        currentCity: currentCity.trim(),
-        currentState: currentState.trim(),
-        pincode: pincode.trim(),
+    //     address: address.trim(),
+    //     currentCity: currentCity.trim(),
+    //     currentState: currentState.trim(),
+    //     pincode: pincode.trim(),
 
-        registrationStatus: "draft",
-        subscriptionStatus: "pending",
-        profileUnlocked: false,
-        isActive: true, // Directly visible in directory
-      });
-    }
+    //     registrationStatus: "draft",
+    //     subscriptionStatus: "pending",
+    //     profileUnlocked: false,
+    //     isActive: true, // Directly visible in directory
+    //   });
+    // }
+    const business = await Business.findOne({ user: userId });
+
+if (!business) {
+  return res.status(404).json({
+    success: false,
+    message: "Business not found",
+  });
+}
+
+// Update Existing Business
+business.category = user.role || business.category;
+business.name = resolvedName;
+business.firmName = resolvedFirmName;
+business.phoneNumber = user.mobile || "";
+business.email = user.email || "";
+
+business.address = address.trim();
+business.currentCity = currentCity.trim();
+business.currentState = currentState.trim();
+business.pincode = pincode.trim();
+
+business.isActive = true;
+
+await business.save();
 
     // 5. Response
     return res.status(200).json({
