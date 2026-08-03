@@ -9,19 +9,19 @@ exports.searchBusinesses = async (req, res) => {
   try {
     const { state, city, firmName, category, page = 1, limit = 10 } = req.query;
 
-    // Helper to clean text & convert spaces into dynamic regex space matcher (matches both normal space and non-breaking space \u00A0)
+    // Helper to clean input & build MongoDB compatible space-insensitive regex
     const prepareRegex = (text) => {
       if (!text || typeof text !== "string") return null;
-      
-      // Clean leading/trailing spaces & non-breaking spaces
+
+      // 1. Remove extra/non-breaking spaces from incoming parameter
       const cleaned = text.replace(/\u00A0/g, " ").trim();
       if (!cleaned) return null;
 
-      // Escape special regex characters
+      // 2. Escape special regex characters like ( ) [ ] + * ? etc.
       const escaped = cleaned.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-      // Replace spaces with regex pattern that matches both regular spaces AND \u00A0
-      const regexPattern = escaped.replace(/ +/g, "[\\s\\u00A0]+");
+      // 3. Replace spaces with [\s\xc2\xa0]+ (MongoDB PCRE2 safe for NBSP)
+      const regexPattern = escaped.replace(/ +/g, "[\\s\\xc2\\xa0]+");
 
       return { $regex: regexPattern, $options: "i" };
     };
@@ -31,7 +31,7 @@ exports.searchBusinesses = async (req, res) => {
     const cityQuery = prepareRegex(city);
     const categoryQuery = prepareRegex(category);
 
-    // 🛑 RULE: Agar koi bhi search criteria nahi mila, toh empty array return karo
+    // 🛑 If no search query is passed
     if (!firmNameQuery && !stateQuery && !cityQuery && !categoryQuery) {
       return res.status(200).json({
         success: true,
@@ -51,14 +51,14 @@ exports.searchBusinesses = async (req, res) => {
     if (stateQuery) query.currentState = stateQuery;
     if (cityQuery) query.currentCity = cityQuery;
 
-    // Pagination Calculation
+    // Pagination Parameters
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
     const skip = (pageNum - 1) * limitNum;
 
     console.log("EXECUTING MONGODB QUERY:", JSON.stringify(query, null, 2));
 
-    // Parallel DB Calls
+    // Parallel DB Executions
     const [businesses, totalCount] = await Promise.all([
       Business.find(query)
         .populate("user", "mobile role")
