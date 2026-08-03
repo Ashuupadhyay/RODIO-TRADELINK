@@ -20,7 +20,7 @@ updateLeadStatus
 router.post("/create",auth,createBooking);
 
 router.get("/my-bookings", auth, myBookings);
-router.get("/all", auth, getAllBookings);
+router.get("/all", getAllBookings);
 router.get(
     "/assigned-leads",
     auth,

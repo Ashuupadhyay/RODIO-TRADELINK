@@ -44,7 +44,7 @@ category: {
 },
     firmName: {
       type: String,
-      required: true,
+    default:"",
       trim: true,
     },
 
