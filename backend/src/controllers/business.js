@@ -26,12 +26,12 @@ exports.saveBusinessDraft = async (req, res) => {
       });
     }
 
-    if (!/^[1-9][0-9]{5}$/.test(pincode.trim())) {
-      return res.status(400).json({
-        success: false,
-        message: "Enter a valid 6 digit pincode",
-      });
-    }
+    // if (!/^[1-9][0-9]{5}$/.test(pincode.trim())) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Enter a valid 6 digit pincode",
+    //   });
+    // }
 
     // 2. Register User Fetch
     const user = await User.findById(userId).select(
