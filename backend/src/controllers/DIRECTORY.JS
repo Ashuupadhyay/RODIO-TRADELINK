@@ -15,8 +15,7 @@ exports.getDirectory = async (req, res) => {
       city,
       vehicleType,
       search,
-      page = 1,
-      limit = 12,
+      
     } = req.query;
 
     // ---------------------------------------
@@ -145,17 +144,11 @@ exports.getDirectory = async (req, res) => {
     // ---------------------------------------
     // 7. Pagination
     // ---------------------------------------
-    const start = (Number(page) - 1) * Number(limit);
-    const end = start + Number(limit);
-    const paginatedData = finalData.slice(start, end);
-
     return res.status(200).json({
-      success: true,
-      total: finalData.length,
-      currentPage: Number(page),
-      totalPages: Math.ceil(finalData.length / Number(limit)),
-      data: paginatedData,
-    });
+  success: true,
+  total: finalData.length,
+  data: finalData,
+});
   } catch (error) {
     console.error("DIRECTORY FETCH ERROR:", error);
     return res.status(500).json({
