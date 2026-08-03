@@ -90,10 +90,7 @@ exports.searchBusinesses = async (req, res) => {
     const { state, city,   firmName,category, page = 1, limit = 10 } = req.query;
 
     // Default filters: Active and Registration Completed
-    const query = {
-      isActive: true,
-      registrationStatus: "completed",
-    };
+  
 
     // Agar sirf unlocked profiles hi dikhani ho, toh is line ko un-comment karein:
     // query.profileUnlocked = true;
