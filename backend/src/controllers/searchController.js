@@ -7,7 +7,7 @@ const Business = require("../models/business");
  */
 exports.searchBusinesses = async (req, res) => {
   try {
-    const { state, city, firmName, category, page = 1, limit = 10 } = req.query;
+    const { state, city,  category, page = 1, limit = 10 } = req.query;
 
     // Helper to clean input & build MongoDB compatible space-insensitive regex
     const prepareRegex = (text) => {
@@ -26,13 +26,13 @@ exports.searchBusinesses = async (req, res) => {
       return { $regex: regexPattern, $options: "i" };
     };
 
-    const firmNameQuery = prepareRegex(firmName);
+    // const firmNameQuery = prepareRegex(firmName);
     const stateQuery = prepareRegex(state);
     const cityQuery = prepareRegex(city);
     const categoryQuery = prepareRegex(category);
 
     // 🛑 If no search query is passed
-    if (!firmNameQuery && !stateQuery && !cityQuery && !categoryQuery) {
+    if (!stateQuery && !cityQuery && !categoryQuery) {
       return res.status(200).json({
         success: true,
         message: "Please provide search criteria (State/City/Category or Firm Name)",
@@ -45,11 +45,28 @@ exports.searchBusinesses = async (req, res) => {
     }
 
     // Dynamic Filter Query
-    const query = {};
-    if (firmNameQuery) query.firmName = firmNameQuery;
-    if (categoryQuery) query.category = categoryQuery;
-    if (stateQuery) query.currentState = stateQuery;
-    if (cityQuery) query.currentCity = cityQuery;
+ // Dynamic Filter Query
+const query = {};
+
+// if (firmNameQuery) {
+//   query.firmName = firmNameQuery;
+// }
+
+if (categoryQuery) {
+  query.category = categoryQuery;
+}
+
+if (stateQuery) {
+  query.currentState = stateQuery;
+}
+
+if (cityQuery) {
+  query.currentCity = cityQuery;
+}
+
+// Sirf completed aur active profile hi dikhani ho to (optional)
+// query.registrationStatus = "completed";
+// query.profileUnlocked = true;
 
     // Pagination Parameters
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
