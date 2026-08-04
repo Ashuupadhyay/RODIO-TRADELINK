@@ -416,6 +416,9 @@ exports.getLeadBids = async (req, res) => {
       
     );
 
+    console.log("Transporter User:", bid.transporter);
+console.log("Business:", business);
+
     return {
       ...bid.toObject(),
       transporter: {
