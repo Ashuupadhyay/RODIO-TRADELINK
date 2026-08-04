@@ -288,6 +288,7 @@
 
 const Bid = require("../models/bid");
 const Booking = require("../models/lead");
+const Business= require("../models/business")
 
 // ===============================
 // Create Bid
@@ -405,11 +406,36 @@ exports.getLeadBids = async (req, res) => {
         )
         .sort({ amount: 1 });
 
+
+
+        const result = await Promise.all(
+  bids.map(async (bid) => {
+    const business = await Business.findOne({
+      user: bid.transporter._id,
+    });
+
+    return {
+      ...bid.toObject(),
+      transporter: {
+        ...bid.transporter.toObject(),
+        firmName: business?.firmName || "",
+        ownerName: business?.name || "",
+        phoneNumber: business?.phoneNumber || "",
+        email: business?.email || "",
+        address: business?.address || "",
+        currentCity: business?.currentCity || "",
+        currentState: business?.currentState || "",
+        category: business?.category || "",
+      },
+    };
+  })
+);
+
         return res.status(200).json({
-            success: true,
-            totalBids: bids.length,
-            data: bids
-        });
+  success: true,
+  totalBids: result.length,
+  data: result,
+});
 
     } catch (error) {
         return res.status(500).json({
