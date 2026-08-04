@@ -53,6 +53,12 @@ category: {
       type: String,
       trim: true,
     },
+    alternatePhoneNumbers: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     email: {
   type: String,
   trim: true,

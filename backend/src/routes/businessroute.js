@@ -3,6 +3,7 @@ const router = express.Router();
 
 const {
   saveBusinessDraft,
+  updateDashboardBusinessDetails,
   getMyBusiness,
   getDashboard,
   getPublicBusiness,
@@ -41,6 +42,12 @@ router.get(
 router.get(
   "/public/:id",
   getPublicBusiness
+);
+
+router.patch(
+  "/update-details",
+  authMiddleware,
+  updateDashboardBusinessDetails
 );
 
 module.exports = router;
