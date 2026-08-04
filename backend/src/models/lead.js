@@ -67,7 +67,7 @@ const bookingSchema = new mongoose.Schema(
     },
 
     weight: {
-      type: Number,
+      type: String,
     },
 
     contactPerson: {
