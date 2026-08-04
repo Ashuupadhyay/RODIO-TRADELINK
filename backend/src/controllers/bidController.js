@@ -411,8 +411,10 @@ exports.getLeadBids = async (req, res) => {
         const result = await Promise.all(
   bids.map(async (bid) => {
     const business = await Business.findOne({
-      user: bid.transporter._id,
-    });
+      user: bid.transporter._id},
+      "firmName name phoneNumber email address currentCity currentState category"
+      
+    );
 
     return {
       ...bid.toObject(),
