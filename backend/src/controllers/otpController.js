@@ -53,11 +53,12 @@ exports.verifyOtp = async (req, res) => {
       data: response,
     });
   } catch (error) {
-    console.error(error.response?.data || error.message);
+  console.error("MSG91 ERROR:", error.response?.data);
 
-    return res.status(400).json({
-      success: false,
-      message: "Invalid OTP",
-    });
-  }
+  return res.status(500).json({
+    success: false,
+    error: error.response?.data,
+    message: error.message,
+  });
+}
 };
