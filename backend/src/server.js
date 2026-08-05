@@ -3,6 +3,7 @@ require("dotenv").config();
 const app = require("./app");
 
 // Routes
+const otpRoutes = require("./routes/otpRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const businessRoute = require("./routes/businessroutold");
 /*const searchRoutes = require("./routes/vichlesearch");*/ // Fixed: Duplicate const declaration hataya
@@ -67,6 +68,7 @@ app.use("/api/receipt", receiptRoutes);
 app.use("/api/documents", businessDocumentRoutes);
 app.use("/api/directory", directoryRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/otp", otpRoutes);
 
 const PORT = process.env.PORT || 5000;
 
