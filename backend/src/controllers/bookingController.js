@@ -294,13 +294,27 @@ exports.getAllBookings = async (req, res) => {
                 } else if (bidCount >= 10) {
                     availabilityReason = "Bid limit reached";
                 }
+let displayStatus = "ACTIVE";
 
-                return {
-                    ...booking,
-                    bidCount,
-                    isAvailable,
-                    availabilityReason
-                };
+if (booking.status === "Assigned") {
+    displayStatus = "ASSIGNED";
+} else if (booking.status === "In Progress") {
+    displayStatus = "IN_PROGRESS";
+} else if (booking.status === "Completed") {
+    displayStatus = "COMPLETED";
+} else if (booking.status === "Cancelled") {
+    displayStatus = "CANCELLED";
+} else if (bidCount >= 10) {
+    displayStatus = "BID_LIMIT_REACHED";
+}
+
+return {
+    ...booking,
+    bidCount,
+    isAvailable,
+    availabilityReason,
+    displayStatus
+};
             })
         );
 
