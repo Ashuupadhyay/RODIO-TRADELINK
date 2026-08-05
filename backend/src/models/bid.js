@@ -15,6 +15,11 @@ const bidSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    provider: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Business",
+  required: true,
+},
 
     // Bid amount
     amount: {

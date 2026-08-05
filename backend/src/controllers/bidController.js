@@ -293,6 +293,9 @@ const Business= require("../models/business")
 // ===============================
 // Create Bid
 // ===============================
+// const Business = require("../models/business");
+
+
 exports.createBid = async (req, res) => {
     try {
         // Sirf "user" block hoga, baaki saare roles bid laga sakte hain
@@ -302,7 +305,17 @@ exports.createBid = async (req, res) => {
                 message: "Users are not allowed to place a bid. Only service providers can place bids."
             });
         }
+        const provider = await Business.findOne({
+    user: req.user.id
+});
 
+
+if (!provider) {
+    return res.status(404).json({
+        success: false,
+        message: "Business profile not found"
+    });
+}
         const { bookingId } = req.params;
         const { amount, message } = req.body;
 
@@ -351,10 +364,15 @@ exports.createBid = async (req, res) => {
 
         // Bid Create
         const bid = await Bid.create({
+            // booking: bookingId,
+            // transporter: req.user.id,
+            // amount,
+            // message
             booking: bookingId,
-            transporter: req.user.id,
-            amount,
-            message
+    transporter: req.user.id,
+    provider: provider._id,
+    amount,
+    message
         });
 
         return res.status(201).json({
@@ -400,6 +418,7 @@ exports.getLeadBids = async (req, res) => {
         const bids = await Bid.find({
             booking: bookingId
         })
+        .populate("provider")
         .populate(
             "transporter",
             "name mobile email companyName vehicleType role"
@@ -410,11 +429,8 @@ exports.getLeadBids = async (req, res) => {
 
         const result = await Promise.all(
   bids.map(async (bid) => {
-    const business = await Business.findOne({
-      user: bid.transporter._id},
-      "firmName name phoneNumber email address currentCity currentState category"
-      
-    );
+
+   
 
     console.log("Transporter User:", bid.transporter);
 console.log("Business:", business);
@@ -423,14 +439,16 @@ console.log("Business:", business);
       ...bid.toObject(),
       transporter: {
         ...bid.transporter.toObject(),
-        firmName: business?.firmName || "",
-        ownerName: business?.name || "",
-        phoneNumber: business?.phoneNumber || "",
-        email: business?.email || "",
-        address: business?.address || "",
-        currentCity: business?.currentCity || "",
-        currentState: business?.currentState || "",
-        category: business?.category || "",
+       firmName: bid.provider?.firmName || "",
+ownerName: bid.provider?.ownerName || "",
+phoneNumber: bid.provider?.phoneNumber || "",
+email: bid.provider?.email || "",
+address: bid.provider?.address || "",
+currentCity: bid.provider?.currentCity || "",
+currentState: bid.provider?.currentState || "",
+category: bid.provider?.category || "",
+averageRating: bid.provider?.averageRating || 0,
+totalReviews: bid.provider?.totalReviews || 0,
       },
     };
   })
