@@ -439,7 +439,7 @@ exports.getLeadBids = async (req, res) => {
       transporter: {
         ...bid.transporter.toObject(),
        firmName: bid.provider?.firmName || "",
-ownerName: bid.provider?.ownerName || "",
+ownerName: bid.provider?.name || "",
 phoneNumber: bid.provider?.phoneNumber || "",
 email: bid.provider?.email || "",
 address: bid.provider?.address || "",
