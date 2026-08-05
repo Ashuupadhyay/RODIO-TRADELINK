@@ -432,8 +432,7 @@ exports.getLeadBids = async (req, res) => {
 
    
 
-    console.log("Transporter User:", bid.transporter);
-console.log("Business:", business);
+
 
     return {
       ...bid.toObject(),
@@ -461,11 +460,13 @@ totalReviews: bid.provider?.totalReviews || 0,
 });
 
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
-        });
-    }
+    console.error(error);
+
+    return res.status(500).json({
+        success: false,
+        message: error.message
+    });
+}
 };
 
 
