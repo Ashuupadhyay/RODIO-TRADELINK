@@ -8,6 +8,10 @@ router.post("/create-order", auth,createOrder);
 router.post("/verify-payment", auth, verifyPayment);
 router.get("/receipt/:paymentId", auth, getReceipt);
 router.get("/referral/stats", auth, getReferralStats);
-router.post("/webhook", paymentWebhook);
+router.post(
+  "/webhook",
+  express.raw({ type: "application/json" }),
+  paymentWebhook
+);
 
 module.exports = router;

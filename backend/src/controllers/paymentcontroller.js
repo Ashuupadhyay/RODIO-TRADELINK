@@ -1456,10 +1456,15 @@ exports.paymentWebhook = async (req, res) => {
   try {
     const webhookSignature = req.headers["x-razorpay-signature"];
 
+// const expectedSignature = crypto
+//   .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET)
+//   .update(JSON.stringify(req.body))
+//   .digest("hex");
 const expectedSignature = crypto
   .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET)
-  .update(JSON.stringify(req.body))
+  .update(req.body)
   .digest("hex");
+  const payload = JSON.parse(req.body.toString());
 
 if (webhookSignature !== expectedSignature) {
   return res.status(400).json({
@@ -1467,14 +1472,14 @@ if (webhookSignature !== expectedSignature) {
     message: "Invalid Webhook Signature",
   });
 }
-    console.log("Webhook Event:", req.body.event);
-    console.log("Payload:", req.body);
-    const event = req.body.event;
+    // console.log("Webhook Event:", req.body.event);
+    // console.log("Payload:", req.body);
+    const event =  payload.event;
 
 switch (event) {
 
   case "payment.captured":
-    const paymentId = req.body.payload.payment.entity.id;
+    const paymentId =  payload.payload.payment.entity.id;
 
 const payment = await Payment.findOne({
     paymentId,
@@ -1488,7 +1493,7 @@ if (payment) {
 
  case "refund.created": {
 
-    const paymentId = req.body.payload.refund.entity.payment_id;
+    const paymentId =payload.payload.refund.entity.payment_id;
 
     const payment = await Payment.findOne({ paymentId });
 
@@ -1505,7 +1510,7 @@ if (payment) {
 
 case "refund.processed": {
 
-    const paymentId = req.body.payload.refund.entity.payment_id;
+    const paymentId = payload.payload.refund.entity.payment_id;
 
     const payment = await Payment.findOne({ paymentId });
 
@@ -1524,7 +1529,7 @@ case "refund.processed": {
 
 case "refund.failed": {
 
-    const paymentId = req.body.payload.refund.entity.payment_id;
+    const paymentId = payload.payload.refund.entity.payment_id;
 
     const payment = await Payment.findOne({ paymentId });
 
@@ -1540,7 +1545,7 @@ case "refund.failed": {
 
 case "settlement.processed": {
 
-    const paymentId = req.body.payload.payment.entity.id;
+    const paymentId = payload.payload.payment.entity.id;
 
     const payment = await Payment.findOne({ paymentId });
 
@@ -1554,6 +1559,9 @@ case "settlement.processed": {
 
     break;
 }
+default:
+  console.log("Unhandled webhook event:", event);
+  break;
 }
 
     return res.status(200).json({
