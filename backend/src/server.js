@@ -69,6 +69,10 @@ app.use("/api/documents", businessDocumentRoutes);
 app.use("/api/directory", directoryRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/otp", otpRoutes);
+app.use(
+  "/api/payment/webhook",
+  express.raw({ type: "application/json" })
+);
 
 const PORT = process.env.PORT || 5000;
 

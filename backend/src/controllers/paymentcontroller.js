@@ -1460,11 +1460,21 @@ exports.paymentWebhook = async (req, res) => {
 //   .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET)
 //   .update(JSON.stringify(req.body))
 //   .digest("hex");
+// const expectedSignature = crypto
+//   .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET)
+//   .update(req.body)
+//   .digest("hex");
+//   const payload = JSON.parse(req.body.toString());
+const rawBody = Buffer.isBuffer(req.body)
+  ? req.body
+  : Buffer.from(JSON.stringify(req.body));
+
 const expectedSignature = crypto
   .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET)
-  .update(req.body)
+  .update(rawBody)
   .digest("hex");
-  const payload = JSON.parse(req.body.toString());
+
+const payload = JSON.parse(rawBody.toString());
 
 if (webhookSignature !== expectedSignature) {
   return res.status(400).json({
