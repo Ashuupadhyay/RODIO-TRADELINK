@@ -1335,17 +1335,48 @@ exports.getReferralStats = async (req, res) => {
   try {
     const userId = req.user.id;
     const user = await User.findById(userId).select("referralCode referralCount referralEarning role");
-    const payment = await Payment.findOne({
-  user: userId,
-}).sort({ createdAt: -1 });
+//     const payment = await Payment.findOne({
+//   user: userId,
+// }).sort({ createdAt: -1 });
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    const referralsList = await Referral.find({ referrer: userId })
-      .populate("referredUser", "name email mobile role createdAt")
-      .sort({ createdAt: -1 });
+    
+ const referralsList = await Referral.find({ referrer: userId })
+  .populate("referredUser", "name email mobile role createdAt")
+  .populate({
+      path: "payment",
+      select:
+        "status settlementStatus refundStatus settledAt refundRequestedAt refundProcessedAt planSelected amount paymentId",
+  })
+  .sort({ createdAt: -1 });
+  const history = referralsList.map((item) => ({
+  _id: item._id,
+  referredUser: item.referredUser,
+  reward: item.reward,
+  status: item.status,
+
+  paymentStatus: item.payment?.status || "Pending",
+
+  settlementStatus:
+    item.payment?.settlementStatus || "Pending",
+
+  refundStatus:
+    item.payment?.refundStatus || "No Refund",
+
+  settledAt:
+    item.payment?.settledAt || null,
+
+  refundRequestedAt:
+    item.payment?.refundRequestedAt || null,
+
+  refundProcessedAt:
+    item.payment?.refundProcessedAt || null,
+
+  createdAt: item.createdAt,
+}));
 
     return res.status(200).json({
       success: true,
@@ -1354,19 +1385,10 @@ exports.getReferralStats = async (req, res) => {
         totalReferrals: user.referralCount || 0,
         totalEarnings: user.referralEarning || 0,
         currency: "INR",
-        history: referralsList,
+         history: history,
 
 
-         payment: payment
-    ? {
-        status: payment.status,
-        settlementStatus: payment.settlementStatus,
-        refundStatus: payment.refundStatus,
-        settledAt: payment.settledAt,
-        refundRequestedAt: payment.refundRequestedAt,
-        refundProcessedAt: payment.refundProcessedAt,
-      }
-    : null,
+        
 
     referralRewards: {
   testing: 1,
@@ -1374,6 +1396,8 @@ exports.getReferralStats = async (req, res) => {
   month6: 139,
   year1: 224,
 },
+
+
       },
       
     });
