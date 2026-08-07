@@ -12,6 +12,10 @@ const authRoutes = require("./routes/authrout");
 const app = express();   // ✅ Pehle app banao
 
 app.use(cors());
+app.use(
+  "/api/payment/webhook",
+  express.raw({ type: "application/json" })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
