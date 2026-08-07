@@ -64,6 +64,26 @@ const paymentSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
+    settlementStatus: {
+  type: String,
+  enum: ["pending", "settled", "failed"],
+  default: "pending",
+},
+
+settledAt: {
+  type: Date,
+  default: null,
+},
+
+refundRequestedAt: {
+  type: Date,
+  default: null,
+},
+
+refundProcessedAt: {
+  type: Date,
+  default: null,
+},
     receiptNumber: {
       type: String,
       unique: true,
@@ -76,7 +96,7 @@ const paymentSchema = new mongoose.Schema(
     },
     refundStatus: {
       type: String,
-      enum: ["pending", "processed", "failed", null],
+      enum: ["requested","pending", "processed", "failed", null],
       default: null,
     },
     refundAmount: {

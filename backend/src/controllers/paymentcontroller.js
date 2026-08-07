@@ -906,12 +906,18 @@ const generateReferralCode = require("../utills/generateReferralCode");
 
 // Plan Amounts and Durations Mapping
 const PLAN_DETAILS = {
-  "testing": { name: "Testing Plan", amount: 1, months: 0, days: 1 },
+  "testing": { name: "Testing Plan", amount: 2, months: 0, days: 1 },
   "3month": { name: "3 Month", amount: 599, months: 3, days: 0 },
   "6months": { name: "6 Months", amount: 999, months: 6, days: 0 },
   "1year": { name: "1 Year", amount: 1599, months: 12, days: 0 },
 };
-
+const REFERRAL_REWARD = {
+  "Testing Plan": 1,
+  "3 Month": 84,
+  "6 Months": 139,
+  "1 Year": 224,
+  "Free Plan": 0,
+};
 // Static Referral Codes Setup
 const STATIC_REFERRAL_CODES = {
   FREE100: 0,       // ₹0 Free Access
@@ -1137,6 +1143,8 @@ exports.verifyPayment = async (req, res) => {
     payment.signature = razorpay_signature;
     payment.method = paymentDetails.method;
     payment.status = "success";
+    payment.settlementStatus = "pending";
+payment.settledAt = null;
 
     if (!payment.receiptNumber) {
       payment.receiptNumber = generateReceiptNumber();
@@ -1179,15 +1187,17 @@ exports.verifyPayment = async (req, res) => {
         payment.referredBy = referralUser._id;
 
         // Credit ₹100 and +1 count ONLY to Referrer (User A)
+        const reward =
+REFERRAL_REWARD[payment.planSelected] || 0;
         referralUser.referralCount = (referralUser.referralCount || 0) + 1;
-        referralUser.referralEarning = (referralUser.referralEarning || 0) + 100;
+        referralUser.referralEarning = (referralUser.referralEarning || 0) + reward;
 
         await Referral.create({
           referrer: referralUser._id, // User A (Owner)
           referredUser: user._id,     // User B (Buyer)
           referralCode: payment.referralCode,
           payment: payment._id,
-          reward: 100,
+        reward: reward,
           status: "completed",
         });
 
@@ -1227,10 +1237,11 @@ exports.verifyPayment = async (req, res) => {
 // 3. REFUND PAYMENT API (With Free Plan & Count Deduction Fix)
 // ======================================================
 exports.refundPayment = async (req, res) => {
+  let payment = null;
   try {
     const { paymentId, amount, reason } = req.body;
 
-    const payment = await Payment.findById(paymentId);
+    payment = await Payment.findById(paymentId);
     if (!payment) {
       return res.status(404).json({ success: false, message: "Payment transaction not found." });
     }
@@ -1261,6 +1272,10 @@ exports.refundPayment = async (req, res) => {
       });
 
       payment.refundId = refund.id;
+    
+payment.refundRequestedAt = new Date();
+
+
       payment.refundStatus = "processed";
       payment.refundAmount = refundAmount;
       payment.refundReason = reason || "Refund Processed";
@@ -1277,7 +1292,7 @@ exports.refundPayment = async (req, res) => {
 
       const business = await Business.findOne({ user: payment.user });
       if (business) {
-        business.subscriptionStatus = "inactive";
+        business.subscriptionStatus = "cancelled";
         business.profileUnlocked = false;
         await business.save();
       }
@@ -1285,8 +1300,9 @@ exports.refundPayment = async (req, res) => {
       // Deduct both Earning and Count from Referrer (User A)
       if (payment.referredBy) {
         const referrer = await User.findById(payment.referredBy);
-        if (referrer) {
-          referrer.referralEarning = Math.max(0, (referrer.referralEarning || 0) - 100);
+        if (referrer) {const reward =
+REFERRAL_REWARD[payment.planSelected] || 0;
+          referrer.referralEarning = Math.max(0, (referrer.referralEarning || 0) -reward);
           referrer.referralCount = Math.max(0, (referrer.referralCount || 0) - 1);
           await referrer.save();
         }
@@ -1303,6 +1319,10 @@ exports.refundPayment = async (req, res) => {
       refundStatus: payment.refundStatus,
     });
   } catch (error) {
+    if (payment) {
+    payment.refundStatus = "failed";
+    await payment.save();
+}
     console.error("REFUND ERROR:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -1315,6 +1335,9 @@ exports.getReferralStats = async (req, res) => {
   try {
     const userId = req.user.id;
     const user = await User.findById(userId).select("referralCode referralCount referralEarning role");
+    const payment = await Payment.findOne({
+  user: userId,
+}).sort({ createdAt: -1 });
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
@@ -1332,7 +1355,27 @@ exports.getReferralStats = async (req, res) => {
         totalEarnings: user.referralEarning || 0,
         currency: "INR",
         history: referralsList,
+
+
+         payment: payment
+    ? {
+        status: payment.status,
+        settlementStatus: payment.settlementStatus,
+        refundStatus: payment.refundStatus,
+        settledAt: payment.settledAt,
+        refundRequestedAt: payment.refundRequestedAt,
+        refundProcessedAt: payment.refundProcessedAt,
+      }
+    : null,
+
+    referralRewards: {
+  testing: 1,
+  month3: 84,
+  month6: 139,
+  year1: 224,
+},
       },
+      
     });
   } catch (error) {
     console.error("GET REFERRAL STATS ERROR:", error);
@@ -1381,5 +1424,122 @@ exports.getReceipt = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+exports.paymentWebhook = async (req, res) => {
+  try {
+    const webhookSignature = req.headers["x-razorpay-signature"];
+
+const expectedSignature = crypto
+  .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET)
+  .update(JSON.stringify(req.body))
+  .digest("hex");
+
+if (webhookSignature !== expectedSignature) {
+  return res.status(400).json({
+    success: false,
+    message: "Invalid Webhook Signature",
+  });
+}
+    console.log("Webhook Event:", req.body.event);
+    console.log("Payload:", req.body);
+    const event = req.body.event;
+
+switch (event) {
+
+  case "payment.captured":
+    const paymentId = req.body.payload.payment.entity.id;
+
+const payment = await Payment.findOne({
+    paymentId,
+});
+
+if (payment) {
+    payment.status = "success";
+    await payment.save();
+}
+    break;
+
+ case "refund.created": {
+
+    const paymentId = req.body.payload.refund.entity.payment_id;
+
+    const payment = await Payment.findOne({ paymentId });
+
+    if (payment) {
+        payment.refundStatus = "requested";
+        payment.refundRequestedAt = new Date();
+
+        await payment.save();
+    }
+
+    break;
+}
+    
+
+case "refund.processed": {
+
+    const paymentId = req.body.payload.refund.entity.payment_id;
+
+    const payment = await Payment.findOne({ paymentId });
+
+    if (payment) {
+
+        payment.refundStatus = "processed";
+        payment.refundProcessedAt = new Date();
+
+        payment.status = "refunded";
+
+        await payment.save();
+    }
+
+    break;
+}
+
+case "refund.failed": {
+
+    const paymentId = req.body.payload.refund.entity.payment_id;
+
+    const payment = await Payment.findOne({ paymentId });
+
+    if (payment) {
+
+        payment.refundStatus = "failed";
+
+        await payment.save();
+    }
+
+    break;
+}
+
+case "settlement.processed": {
+
+    const paymentId = req.body.payload.payment.entity.id;
+
+    const payment = await Payment.findOne({ paymentId });
+
+    if (payment) {
+
+        payment.settlementStatus = "settled";
+        payment.settledAt = new Date();
+
+        await payment.save();
+    }
+
+    break;
+}
+}
+
+    return res.status(200).json({
+      success: true,
+    });
+  } catch (error) {
+    console.error("Webhook Error:", error);
+
+    return res.status(500).json({
+      success: false,
+    });
   }
 };
