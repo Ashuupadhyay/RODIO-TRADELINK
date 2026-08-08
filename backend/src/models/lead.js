@@ -43,12 +43,12 @@ const bookingSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: [
-         "Pending",
-    "Accepted",
-    "Rejected",
+        "Open",       // Nayi lead ke liye
+    "Assigned",   // Jab bid accept ho jaye
+    "Completed",
     "Cancelled"
       ],
-     default: "Pending",
+   default: "Open",
 
     },
 
