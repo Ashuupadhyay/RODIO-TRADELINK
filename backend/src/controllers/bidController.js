@@ -330,13 +330,24 @@ if (!provider) {
         }
 
         // Sirf Open lead par bid lag sakti hai
-        if (booking.status !== "Open") {
-            return res.status(400).json({
-                success: false,
-                message: "This lead is no longer available."
-            });
-        }
+      // "Open" AUR "Pending" dono ko allow karein:
+const isOpen = booking.status === "Open" || booking.status === "Pending";
 
+if (!isOpen) {
+    return res.status(400).json({
+        success: false,
+        message: "This lead is no longer available."
+    });
+}
+
+// Bids limit check (10 Bids Max)
+const totalBids = await Bid.countDocuments({ booking: booking._id });
+if (totalBids >= 10) {
+    return res.status(400).json({
+        success: false,
+        message: "Bid limit reached for this lead (Max 10 bids allowed)."
+    });
+}
         // Same provider/transporter dubara bid na laga sake
         const alreadyBid = await Bid.findOne({
             booking: bookingId,
