@@ -623,8 +623,12 @@ const getTransporterById = async (req, res) => {
         .sort({ createdAt: -1 }),
       // FIX: Matches both Business ID and Business Owner User ID
       Comment.find({
-        $or: [{ transporter: business._id }, { transporter: business.user }],
-      })
+  $or: [
+    { transporter: business._id },
+    { transporter: business.user },
+    { business: business._id }
+  ],
+})
         .select("rating comment createdAt user")
         .sort({ createdAt: -1 }),
     ]);
