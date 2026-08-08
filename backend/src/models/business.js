@@ -23,6 +23,7 @@ category: {
   enum: [
     "user",
     "transporter",
+      "Transporter",
     "fleet_owner",
     "cha_agent",
     "courier",
