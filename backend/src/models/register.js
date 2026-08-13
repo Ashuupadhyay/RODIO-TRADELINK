@@ -189,10 +189,19 @@ const userSchema = new mongoose.Schema(
       default: 0,
     },
 
+    // models/register.js में यह फ़ील्ड ऐड करें
+upiId: {
+  type: String,
+  trim: true,
+  default: null,
+},
+
     referralEarning: {
       type: Number,
       default: 0,
     },
+
+    
   },
   {
     timestamps: true,

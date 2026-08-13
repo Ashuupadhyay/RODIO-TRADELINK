@@ -26,10 +26,21 @@ const referralSchema = new mongoose.Schema(
       default: 100, // ₹100 Reward per referral
     },
     status: {
-      type: String,
-      enum: ["pending", "completed", "revoked"],
-      default: "completed",
-    },
+  type: String,
+  enum: ["pending", "available", "withdrawn", "revoked"],
+  default: "pending",
+},
+
+availableAt: {
+  type: Date,
+  default: null,
+},
+
+upiId: {
+  type: String,
+  trim: true,
+  default: null,
+},
   },
   { timestamps: true }
 );
