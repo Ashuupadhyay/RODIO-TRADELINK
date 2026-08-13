@@ -38,6 +38,7 @@ const connectDB = require("./config/db");
 const profileRoutes = require("./routes/profile");
 const userRoutes = require("./routes/userRoutes");
 const payoutRoutes = require("./routes/payoutRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 /*
     API Routes
@@ -77,6 +78,7 @@ app.use("/api/posts", postRoutes);
 app.use("/api/otp", otpRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/payout", payoutRoutes);
+app.use("/api/admin", adminRoutes);
 
 const PORT = process.env.PORT || 5000;
 

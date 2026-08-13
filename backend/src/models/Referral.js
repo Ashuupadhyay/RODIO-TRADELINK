@@ -23,7 +23,7 @@ const referralSchema = new mongoose.Schema(
     },
     reward: {
       type: Number,
-      default: 100, // ₹100 Reward per referral
+      default: 0, // ₹100 Reward per referral
     },
     status: {
   type: String,
@@ -36,11 +36,7 @@ availableAt: {
   default: null,
 },
 
-upiId: {
-  type: String,
-  trim: true,
-  default: null,
-},
+
   },
   { timestamps: true }
 );

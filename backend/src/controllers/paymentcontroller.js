@@ -353,6 +353,7 @@ exports.createOrder = async (req, res) => {
       planSelected: plan.name,
 
       referralCode: cleanReferralCode,
+       referredBy: referralUser ? referralUser._id : null,
 
       status: "created",
 
