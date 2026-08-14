@@ -616,25 +616,40 @@ referralUser.referralCount = (referralUser.referralCount || 0) + 1;
 
 
     // 7. ACTIVATE BUSINESS PROFILE
+let business = await Business.findOne({ user: user._id });
 
-    const business = await Business.findOne({ user: user._id });
+if (!business) {
+  business = await Business.create({
+    user: user._id,
 
-    if (business) {
+    category: user.role,
 
-      business.registrationStatus = "completed";
+    firmName: user.firmName || "",
+    name: user.name || "",
 
-      business.subscriptionStatus = "active";
+    phoneNumber: user.mobile || "",
+    email: user.email || "",
 
-      business.profileUnlocked = true;
+    address: "",
+    currentCity: "",
+    currentState: "",
+    pincode: "",
 
-      business.isActive = true;
+    registrationStatus: "completed",
+    subscriptionStatus: "active",
+    profileUnlocked: true,
+    isActive: true,
+  });
+} else {
+  business.registrationStatus = "completed";
+  business.subscriptionStatus = "active";
+  business.profileUnlocked = true;
+  business.isActive = true;
 
-      await business.save();
+  await business.save();
+}
 
-      payment.business = business._id;
-
-    }
-
+payment.business = business._id;
 
 
     await payment.save();
