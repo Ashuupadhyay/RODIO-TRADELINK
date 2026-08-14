@@ -341,8 +341,17 @@ const Subscription = require("../models/suscription");
 exports.saveBusinessDraft = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, address, currentCity, currentState, pincode } = req.body;
 
+    const {
+      name,
+      address,
+      currentCity,
+      currentState,
+      pincode,
+      category,
+    } = req.body;
+
+    // 1. User find karo
     const user = await User.findById(userId).select(
       "name firmName email mobile role"
     );
@@ -354,34 +363,82 @@ exports.saveBusinessDraft = async (req, res) => {
       });
     }
 
-    const resolvedName = name ? name.trim() : "";
-    const resolvedFirmName = user.firmName?.trim() || "";
+    // 2. Business check karo
+    let business = await Business.findOne({ user: userId });
 
-    const business = await Business.findOne({ user: userId });
-
+    // 3. Business nahi hai to CREATE karo
     if (!business) {
-      return res.status(404).json({
-        success: false,
-        message: "Business not found",
+      business = new Business({
+        user: userId,
+
+        category: category || user.role || "Others",
+
+        name: name?.trim() || user.name || "",
+
+        firmName: user.firmName?.trim() || "",
+
+        phoneNumber: user.mobile || "",
+
+        email: user.email || "",
+
+        address: address?.trim() || "",
+
+        currentCity: currentCity?.trim() || "",
+
+        currentState: currentState?.trim() || "",
+
+        pincode: pincode?.trim() || "",
+
+        registrationStatus: "draft",
+
+        subscriptionStatus: "pending",
+
+        profileUnlocked: false,
+
+        isActive: true,
       });
+    } else {
+      // 4. Business already hai to UPDATE karo
+
+      if (name !== undefined) {
+        business.name = name.trim();
+      }
+
+      if (address !== undefined) {
+        business.address = address.trim();
+      }
+
+      if (currentCity !== undefined) {
+        business.currentCity = currentCity.trim();
+      }
+
+      if (currentState !== undefined) {
+        business.currentState = currentState.trim();
+      }
+
+      if (pincode !== undefined) {
+        business.pincode = pincode.trim();
+      }
+
+      business.category =
+        category || user.role || business.category || "Others";
+
+      business.firmName =
+        user.firmName?.trim() || business.firmName || "";
+
+      business.phoneNumber =
+        user.mobile || business.phoneNumber || "";
+
+      business.email =
+        user.email || business.email || "";
+
+      business.isActive = true;
     }
 
-    // Update Basic Auto-filled Info
-    business.category = user.role || business.category;
-    business.name = resolvedName || business.name;
-    business.firmName = resolvedFirmName;
-    business.phoneNumber = user.mobile || business.phoneNumber || "";
-    business.email = user.email || business.email || "";
-
-    // Optional Fields Handling
-    if (address !== undefined) business.address = address.trim();
-    if (currentCity !== undefined) business.currentCity = currentCity.trim();
-    if (currentState !== undefined) business.currentState = currentState.trim();
-    if (pincode !== undefined) business.pincode = pincode.trim();
-
-    business.isActive = true;
+    // 5. Database me save
     await business.save();
 
+    // 6. Response
     return res.status(200).json({
       success: true,
       message: "Business details saved successfully.",
@@ -389,31 +446,33 @@ exports.saveBusinessDraft = async (req, res) => {
         businessId: business._id,
         category: business.category,
         name: business.name,
+        firmName: business.firmName,
         email: business.email,
         phoneNumber: business.phoneNumber,
-        alternatePhoneNumbers: business.alternatePhoneNumbers || [],
-        role: user.role || "",
-
-        firmName: business.firmName,
-        address: business.address,
-        currentCity: business.currentCity,
-        currentState: business.currentState,
-        pincode: business.pincode,
-
-        registrationStatus: business.registrationStatus,
-        subscriptionStatus: business.subscriptionStatus,
-        profileUnlocked: business.profileUnlocked,
+        alternatePhoneNumbers:
+          business.alternatePhoneNumbers || [],
+        address: business.address || "",
+        currentCity: business.currentCity || "",
+        currentState: business.currentState || "",
+        pincode: business.pincode || "",
+        registrationStatus:
+          business.registrationStatus,
+        subscriptionStatus:
+          business.subscriptionStatus,
+        profileUnlocked:
+          business.profileUnlocked,
       },
     });
   } catch (error) {
-    console.error("SAVE BUSINESS DRAFT ERROR:", error);
+    console.error("SAVE BUSINESS ERROR:", error);
+
     return res.status(500).json({
       success: false,
-      message: error.message || "Unable to save business details",
+      message:
+        error.message || "Unable to save business details",
     });
   }
 };
-
 // ======================================================
 // 🟢 NEW: UPDATE DASHBOARD DETAILS (Partial / Flexible Update)
 // User chahe to sirf 1 field (city) update kare, ya address, ya phone numbers
