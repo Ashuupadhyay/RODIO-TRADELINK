@@ -107,3 +107,111 @@ if (cityQuery) {
     });
   }
 };
+
+
+/**
+ * @desc    Search businesses by Firm Name, Owner Name or Phone Number
+ * @route   GET /api/v1/businesses/search-by
+ * @access  Public
+ */
+exports.searchBusinessesByField = async (req, res) => {
+  try {
+    const {
+      searchBy,
+      searchValue,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    // Validate search type
+    const allowedFields = {
+      firmName: "firmName",
+      ownerName: "ownerName",
+      phoneNumber: "phoneNumber",
+    };
+
+    if (!searchBy || !allowedFields[searchBy]) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid searchBy. Use firmName, ownerName or phoneNumber",
+      });
+    }
+
+    if (!searchValue || !searchValue.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide searchValue",
+      });
+    }
+
+    // Escape regex special characters
+    const escapedValue = searchValue
+      .trim()
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    const regexQuery = {
+      $regex: escapedValue,
+      $options: "i",
+    };
+
+    // Dynamic field
+    const field = allowedFields[searchBy];
+
+    const query = {
+      [field]: regexQuery,
+    };
+
+    // Pagination
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(
+      100,
+      Math.max(1, parseInt(limit, 10) || 10)
+    );
+
+    const skip = (pageNum - 1) * limitNum;
+
+    console.log(
+      "SEARCH BY FIELD QUERY:",
+      JSON.stringify(query, null, 2)
+    );
+
+    const [businesses, totalCount] = await Promise.all([
+      Business.find(query)
+        .populate("user", "mobile role")
+        .select(
+          "firmName category phoneNumber email address currentCity currentState pincode workingAreas averageRating totalReviews profileUnlocked createdAt ownerName"
+        )
+        .sort({
+          averageRating: -1,
+          totalReviews: -1,
+          createdAt: -1,
+        })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+
+      Business.countDocuments(query),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Business search results fetched successfully",
+      searchBy,
+      searchValue,
+      count: businesses.length,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limitNum) || 0,
+      currentPage: pageNum,
+      data: businesses,
+    });
+  } catch (error) {
+    console.error("Search By Field API Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error while searching businesses",
+      error: error.message,
+    });
+  }
+};
