@@ -337,7 +337,7 @@
 const Business = require("../models/business");
 const Vehicle = require("../models/vehicle");
 const Profile = require("../models/profile");
-const Comment = require("../models/comment");
+const Comment = require("../models/comments");
 
 /**
  * @desc    Get Directory Data with Universal Category, State, and City Matching
