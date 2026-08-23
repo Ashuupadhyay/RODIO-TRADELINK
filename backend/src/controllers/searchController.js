@@ -1,4 +1,6 @@
 const Business = require("../models/business");
+const Profile = require("../models/profile");
+const Comment = require("../models/comment");
 
 /**
  * @desc    Search businesses by State, City, Category, and Firm Name
@@ -176,23 +178,125 @@ exports.searchBusinessesByField = async (req, res) => {
       JSON.stringify(query, null, 2)
     );
 
-    const [businesses, totalCount] = await Promise.all([
-      Business.find(query)
-        .populate("user", "mobile role")
-        .select(
-          "firmName category phoneNumber email address currentCity currentState pincode workingAreas averageRating totalReviews profileUnlocked createdAt ownerName"
-        )
-        .sort({
-          averageRating: -1,
-          totalReviews: -1,
-          createdAt: -1,
-        })
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
 
-      Business.countDocuments(query),
-    ]);
+
+
+const [businesses, totalCount] = await Promise.all([
+  Business.find(query)
+    .populate("user", "mobile role")
+    .select(
+      "firmName category name phoneNumber email address currentCity currentState pincode workingAreas profileUnlocked createdAt user"
+    )
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limitNum)
+    .lean(),
+
+  Business.countDocuments(query),
+]);
+const businessUserIds = businesses
+  .map((business) => business.user?._id)
+  .filter(Boolean);
+
+const profiles = await Profile.find({
+  user: { $in: businessUserIds },
+})
+  .select("user name firmName profileImage phoneNumber email")
+  .lean();
+
+const profileMap = {};
+
+for (const profile of profiles) {
+  profileMap[profile.user.toString()] = profile;
+}
+
+
+const businessIds = businesses.map(
+  (business) => business._id
+);
+
+const ratingData = await Comment.aggregate([
+  {
+    $match: {
+      transporter: {
+        $in: businessIds,
+      },
+    },
+  },
+  {
+    $group: {
+      _id: "$transporter",
+
+      averageRating: {
+        $avg: "$rating",
+      },
+
+      totalReviews: {
+        $sum: 1,
+      },
+    },
+  },
+]);
+
+const ratingMap = {};
+
+for (const item of ratingData) {
+  ratingMap[item._id.toString()] = {
+    averageRating: Number(
+      item.averageRating.toFixed(1)
+    ),
+    totalReviews: item.totalReviews,
+  };
+}
+
+const formattedBusinesses = businesses.map((business) => {
+  const profile = business.user?._id
+    ? profileMap[business.user._id.toString()]
+    : null;
+
+  const ratings =
+    ratingMap[business._id.toString()] || {
+      averageRating: 0,
+      totalReviews: 0,
+    };
+
+  return {
+    ...business,
+
+    firmName:
+      business.firmName ||
+      profile?.firmName ||
+      business.name ||
+      profile?.name ||
+      "Unnamed Business",
+
+    ownerName:
+      business.name ||
+      profile?.name ||
+      "Owner",
+
+    photo:
+      profile?.profileImage || "",
+
+    phoneNumber:
+      business.phoneNumber ||
+      profile?.phoneNumber ||
+      business.user?.mobile ||
+      "",
+
+    email:
+      business.email ||
+      profile?.email ||
+      "",
+
+    averageRating:
+      ratings.averageRating,
+
+    totalReviews:
+      ratings.totalReviews,
+  };
+});
+
 
     return res.status(200).json({
       success: true,
@@ -203,7 +307,7 @@ exports.searchBusinessesByField = async (req, res) => {
       totalCount,
       totalPages: Math.ceil(totalCount / limitNum) || 0,
       currentPage: pageNum,
-      data: businesses,
+      data: formattedBusinesses,
     });
   } catch (error) {
     console.error("Search By Field API Error:", error);
