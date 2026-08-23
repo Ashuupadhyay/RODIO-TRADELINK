@@ -1,6 +1,6 @@
 const Business = require("../models/business");
 const Profile = require("../models/profile");
-const Comment = require("../models/comment");
+const Comment = require("../models/comments");
 
 /**
  * @desc    Search businesses by State, City, Category, and Firm Name
