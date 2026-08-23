@@ -66,11 +66,7 @@ exports.getUsersWithDocuments = async (req, res) => {
 
 exports.verifyBusiness = async (req, res) => {
   try {
-    const adminId = req.user.id;
-
-    const business = await Business.findById(
-      req.params.businessId
-    );
+    const business = await Business.findById(req.params.businessId);
 
     if (!business) {
       return res.status(404).json({
@@ -82,7 +78,9 @@ exports.verifyBusiness = async (req, res) => {
     business.isVerified = true;
     business.isActive = true;
     business.verifiedAt = new Date();
-    business.verifiedBy = adminId;
+
+    // Authentication nahi hai, isliye verifiedBy mat set karo
+    business.verifiedBy = null;
 
     await business.save();
 
@@ -101,6 +99,7 @@ exports.verifyBusiness = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Unable to verify business",
+      error: error.message,
     });
   }
 };
