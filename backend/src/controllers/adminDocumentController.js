@@ -22,7 +22,6 @@ exports.getUsersWithDocuments = async (req, res) => {
 
         return {
           userId: business.user?._id || null,
-
           businessId: business._id,
 
           name:
@@ -31,7 +30,6 @@ exports.getUsersWithDocuments = async (req, res) => {
             "N/A",
 
           firmName: business.firmName || "",
-
           email: business.email || "",
 
           mobile:
@@ -40,7 +38,6 @@ exports.getUsersWithDocuments = async (req, res) => {
             "",
 
           isVerified: business.isVerified || false,
-
           verifiedAt: business.verifiedAt || null,
 
           documents,
@@ -54,10 +51,7 @@ exports.getUsersWithDocuments = async (req, res) => {
       data,
     });
   } catch (error) {
-    console.error(
-      "GET USERS WITH DOCUMENTS ERROR:",
-      error
-    );
+    console.error("GET USERS WITH DOCUMENTS ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -65,6 +59,7 @@ exports.getUsersWithDocuments = async (req, res) => {
     });
   }
 };
+
 // ======================================================
 // VERIFY BUSINESS
 // ======================================================
@@ -85,6 +80,7 @@ exports.verifyBusiness = async (req, res) => {
     }
 
     business.isVerified = true;
+    business.isActive = true;
     business.verifiedAt = new Date();
     business.verifiedBy = adminId;
 
@@ -100,10 +96,7 @@ exports.verifyBusiness = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(
-      "VERIFY BUSINESS ERROR:",
-      error
-    );
+    console.error("VERIFY BUSINESS ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -111,6 +104,7 @@ exports.verifyBusiness = async (req, res) => {
     });
   }
 };
+
 // ======================================================
 // REMOVE BUSINESS VERIFICATION
 // ======================================================
@@ -128,7 +122,10 @@ exports.unverifyBusiness = async (req, res) => {
       });
     }
 
+    // Card directory me rahega,
+    // sirf verification badge remove hoga.
     business.isVerified = false;
+    business.isActive = true;
     business.verifiedAt = null;
     business.verifiedBy = null;
 
@@ -139,10 +136,7 @@ exports.unverifyBusiness = async (req, res) => {
       message: "Business verification removed",
     });
   } catch (error) {
-    console.error(
-      "UNVERIFY BUSINESS ERROR:",
-      error
-    );
+    console.error("UNVERIFY BUSINESS ERROR:", error);
 
     return res.status(500).json({
       success: false,

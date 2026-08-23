@@ -390,7 +390,10 @@ exports.getDirectory = async (req, res) => {
     const searchMatcher = createUniversalMatcher(rawSearch);
 
     // Fetch all active businesses once
-    let allBusinesses = await Business.find({ isActive: true })
+let allBusinesses = await Business.find({
+  isActive: true,
+ 
+})
       .populate("user", "mobile role")
       .sort({ averageRating: -1, totalReviews: -1, createdAt: -1 })
       .lean();
@@ -620,6 +623,10 @@ result.push({
 
   totalReviews:
     ratingMap[bId]?.totalReviews || 0,
+    // Verification
+  isVerified: business.isVerified || false,
+  verifiedAt: business.verifiedAt || null,
+
 
 
   // Vehicles

@@ -98,7 +98,12 @@ const register = async (req, res) => {
       registrationStatus: "draft",
       subscriptionStatus: "pending",
       profileUnlocked: false,
-      isActive: true, // Direct directory me dikhega
+      isActive: true, 
+      isVerified: false,
+  verifiedAt: null,
+  verifiedBy: null,
+
+// Direct directory me dikhega
     });
 
     console.log("Successfully registered & Business Card created");
@@ -149,6 +154,8 @@ const register = async (req, res) => {
         firmName: user.firmName,
         mobile: user.mobile,
         token: token,
+        businessId: business._id,
+isVerified: business.isVerified,
       },
     });
   } catch (error) {
