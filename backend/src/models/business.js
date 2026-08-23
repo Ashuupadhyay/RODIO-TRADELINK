@@ -122,6 +122,20 @@ name: {
       default: "pending",
       index: true,
     },
+    isVerified: {
+  type: Boolean,
+  default: false,
+  index: true,
+},
+verifiedAt: {
+  type: Date,
+  default: null,
+},
+verifiedBy: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  default: null,
+},
 
     // Payment successful hone ke baad true
     profileUnlocked: {

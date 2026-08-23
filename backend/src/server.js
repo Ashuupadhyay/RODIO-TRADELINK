@@ -31,6 +31,9 @@ const vehicleSearchRoutes = require("./routes/vehicleSearchRoutes");
 
 const businessDocumentRoutes = require("./routes/document.js");
 const postRoutes = require("./routes/postRoutes");
+const adminDocumentRoutes = require(
+  "./routes/adminDocumentRoutes"
+);
 
 // Database
 const connectDB = require("./config/db");
@@ -79,6 +82,10 @@ app.use("/api/otp", otpRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/payout", payoutRoutes);
 app.use("/api/admin", adminRoutes);
+app.use(
+  "/api/admin",
+  adminDocumentRoutes
+);
 
 const PORT = process.env.PORT || 5000;
 
