@@ -336,6 +336,8 @@
 
 const Business = require("../models/business");
 const Vehicle = require("../models/vehicle");
+const Profile = require("../models/profile");
+const Comment = require("../models/comment");
 
 /**
  * @desc    Get Directory Data with Universal Category, State, and City Matching
@@ -392,7 +394,59 @@ exports.getDirectory = async (req, res) => {
       .populate("user", "mobile role")
       .sort({ averageRating: -1, totalReviews: -1, createdAt: -1 })
       .lean();
+      const businessUserIds = allBusinesses
+  .map((b) => b.user?._id)
+  .filter(Boolean);
 
+const profiles = await Profile.find({
+  user: { $in: businessUserIds },
+})
+  .select("user name firmName profileImage")
+  .lean();
+
+const profileMap = {};
+
+for (const profile of profiles) {
+  profileMap[profile.user.toString()] = profile;
+}
+// -------------------------------------------------------------
+// Calculate Ratings From Comments
+// -------------------------------------------------------------
+const businessIdsForRating = allBusinesses.map(
+  (business) => business._id
+);
+
+const ratingData = await Comment.aggregate([
+  {
+    $match: {
+      transporter: {
+        $in: businessIdsForRating,
+      },
+    },
+  },
+  {
+    $group: {
+      _id: "$transporter",
+
+      averageRating: {
+        $avg: "$rating",
+      },
+
+      totalReviews: {
+        $sum: 1,
+      },
+    },
+  },
+]);
+
+const ratingMap = {};
+
+for (const item of ratingData) {
+  ratingMap[item._id.toString()] = {
+    averageRating: Number(item.averageRating.toFixed(1)),
+    totalReviews: item.totalReviews,
+  };
+}
     // -------------------------------------------------------------
     // Filtering & Scoring Engine (Handles All Categories & Locations)
     // -------------------------------------------------------------
@@ -404,7 +458,9 @@ exports.getDirectory = async (req, res) => {
       const busCategory = cleanInput(b.category);
       const busUserRole = cleanInput(b.user?.role);
       const busName = cleanInput(b.firmName || b.name);
-
+const profile = b.user?._id
+  ? profileMap[b.user._id.toString()]
+  : null;
       // --- State Filtering ---
       if (stateMatcher) {
         if (stateMatcher.flexRegex.test(busState)) score += 30;
@@ -504,21 +560,77 @@ exports.getDirectory = async (req, res) => {
         continue;
       }
 
-      result.push({
-        _id: business._id,
-        firmName: business.firmName || business.name || "Unnamed Business",
-        role: business.category || business.user?.role || "Transporter",
-        phoneNumber: business.phoneNumber || business.user?.mobile || "",
-        email: business.email || "",
-        city: business.currentCity || "Not Specified",
-        state: business.currentState || "Not Specified",
-        workingAreas: business.workingAreas || [],
-        averageRating: business.averageRating || 0,
-        totalReviews: business.totalReviews || 0,
-        vehicleTypes,
-        totalVehicles: rawVehicles.length,
-        createdAt: business.createdAt,
-      });
+     const profile = business.user?._id
+  ? profileMap[business.user._id.toString()]
+  : null;
+
+result.push({
+  _id: business._id,
+
+  // Business details
+  firmName:
+    business.firmName ||
+    profile?.firmName ||
+    business.name ||
+    profile?.name ||
+    "Unnamed Business",
+
+  ownerName:
+    business.name ||
+    profile?.name ||
+    "Owner",
+
+  role:
+    business.category ||
+    business.user?.role ||
+    "Transporter",
+
+  phoneNumber:
+    business.phoneNumber ||
+    profile?.phoneNumber ||
+    business.user?.mobile ||
+    "",
+
+  email:
+    business.email ||
+    profile?.email ||
+    "",
+
+  // Profile photo
+  photo:
+    profile?.profileImage ||
+    "",
+
+  // Location
+  city:
+    business.currentCity ||
+    "Not Specified",
+
+  state:
+    business.currentState ||
+    "Not Specified",
+
+  workingAreas:
+    business.workingAreas || [],
+
+  // Rating
+  // Rating
+  averageRating:
+    ratingMap[bId]?.averageRating || 0,
+
+  totalReviews:
+    ratingMap[bId]?.totalReviews || 0,
+
+
+  // Vehicles
+  vehicleTypes,
+
+  totalVehicles:
+    rawVehicles.length,
+
+  createdAt:
+    business.createdAt,
+});
     }
 
     // -------------------------------------------------------------

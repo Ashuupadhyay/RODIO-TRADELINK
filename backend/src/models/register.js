@@ -190,6 +190,7 @@ const userSchema = new mongoose.Schema(
     },
 
     // models/register.js में यह फ़ील्ड ऐड करें
+    
 upiId: {
   type: String,
   trim: true,
