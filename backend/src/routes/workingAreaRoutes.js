@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const auth = require("../middlewhere/auth");
@@ -15,21 +16,18 @@ router.put(
   addWorkingAreas
 );
 
+// GET Working Areas
 router.get(
   "/working-areas",
   auth,
-  addWorkingAreas
+  getMyWorkingAreas
 );
 
+// DELETE Working Area
 router.delete(
   "/working-areas",
   auth,
-  addWorkingAreas
+  deleteWorkingArea
 );
-
-
-
-
-
 
 module.exports = router;
