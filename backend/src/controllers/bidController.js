@@ -67,7 +67,7 @@ exports.createBid = async (req, res) => {
         if (totalBids >= 3) {
             return res.status(400).json({
                 success: false,
-                message: "Bid limit reached for this lead (Max 10 bids allowed)."
+                message: "Bid limit reached for this lead (Max 3 bids allowed)."
             });
         }
 
