@@ -92,7 +92,7 @@
 //     });
 //   }
 // };
-exports.getDashboard = async (req, res) => {
+const getDashboard = async (req, res) => {
   try {
     const business = await Business.findOne({ user: req.user.id })
       .populate(
