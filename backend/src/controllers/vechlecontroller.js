@@ -211,7 +211,7 @@ const Business = require("../models/business"); // 👈 FIX 1: Missing Import Ad
 // 1. CREATE VEHICLE
 exports.createVehicle = async (req, res) => {
   try {
-    const { vehicleType, vehicleNumber, capacity, bodyType } = req.body;
+    const { vehicleType, capacity, bodyType } = req.body;
 
     // if (!vehicleType || !vehicleNumber) {
     //   return res.status(400).json({
@@ -237,7 +237,7 @@ exports.createVehicle = async (req, res) => {
     const vehicle = await Vehicle.create({
       business: businessId,
       vehicleType,
-      vehicleNumber: vehicleNumber.trim().toUpperCase(),
+      // vehicleNumber: vehicleNumber.trim().toUpperCase(),
       capacity,
       bodyType,
     });
