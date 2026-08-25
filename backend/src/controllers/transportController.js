@@ -535,6 +535,7 @@ const getTransporterById = async (req, res) => {
         _id: business._id,
         category: business.category || "",
         firmName: business.firmName || "",
+        name: business.name || "",
 
         profile: {
           name: profile?.name || business.firmName || "",
@@ -545,11 +546,35 @@ const getTransporterById = async (req, res) => {
         mobile: user?.mobile || "",
 
         phoneNumber: business.phoneNumber || "",
+        alternatePhoneNumbers:
+  business.alternatePhoneNumbers || [],
+
+whatsappNumber:
+  business.whatsappNumber || "",
         email: business.email || "",
         address: business.address || "",
+        addresses:
+  business.addresses || [],
+
+landlineNumbers:
+  business.landlineNumbers || [],
         currentCity: business.currentCity || "",
         currentState: business.currentState || "",
         pincode: business.pincode || "",
+        website:
+  business.website || "",
+
+employeeRange:
+  business.employeeRange || "",
+
+officeWorkingHours:
+  business.officeWorkingHours || {
+    start: "",
+    end: "",
+  },
+
+officeWorkingDays:
+  business.officeWorkingDays || [],
         workingAreas: business.workingAreas || [],
 
         totalVehicles: vehicles.length,
