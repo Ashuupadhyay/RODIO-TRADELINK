@@ -267,18 +267,88 @@ const updateProfile = async (req, res) => {
 // UPDATE BUSINESS CONTACT DETAILS
 // ==========================================
 
+
+
+// let business = await Business.findOne({
+//   user: userId,
+// });
+
+// if (business) {
+//   // WhatsApp Number
+//   if (updateData.whatsappNumber !== undefined) {
+//     business.whatsappNumber =
+//       String(updateData.whatsappNumber).trim();
+//   }
+
+//   // Alternative Numbers
+//   if (updateData.alternatePhoneNumbers !== undefined) {
+//     business.alternatePhoneNumbers =
+//       Array.isArray(updateData.alternatePhoneNumbers)
+//         ? updateData.alternatePhoneNumbers
+//             .map((num) => String(num).trim())
+//             .filter(Boolean)
+//         : [];
+//   }
+
+//   await business.save();
+// }
+
+// ==========================================
+// UPDATE BUSINESS PROFILE DETAILS
+// ==========================================
+
 let business = await Business.findOne({
   user: userId,
 });
 
 if (business) {
-  // WhatsApp Number
-  if (updateData.whatsappNumber !== undefined) {
-    business.whatsappNumber =
-      String(updateData.whatsappNumber).trim();
+
+  // ==========================================
+  // ROLE / CATEGORY
+  // ==========================================
+
+  if (updateData.role !== undefined) {
+    business.category = String(updateData.role).trim();
   }
 
-  // Alternative Numbers
+  if (updateData.category !== undefined) {
+    business.category = String(updateData.category).trim();
+  }
+
+  // ==========================================
+  // NAME
+  // ==========================================
+
+  if (updateData.name !== undefined) {
+    business.name = String(updateData.name).trim();
+  }
+
+  // ==========================================
+  // FIRM NAME
+  // ==========================================
+
+  if (updateData.firmName !== undefined) {
+    business.firmName = String(updateData.firmName).trim();
+  }
+
+  // ==========================================
+  // MOBILE NUMBER
+  // ==========================================
+
+  if (updateData.phoneNumber !== undefined) {
+    business.phoneNumber =
+      String(updateData.phoneNumber).trim();
+  }
+
+  if (updateData.mobile !== undefined) {
+    business.phoneNumber =
+      String(updateData.mobile).trim();
+  }
+
+  // ==========================================
+  // ALTERNATE MOBILE NUMBERS
+  // ==========================================
+
   if (updateData.alternatePhoneNumbers !== undefined) {
     business.alternatePhoneNumbers =
       Array.isArray(updateData.alternatePhoneNumbers)
@@ -288,8 +358,152 @@ if (business) {
         : [];
   }
 
+  // ==========================================
+  // WHATSAPP NUMBER
+  // ==========================================
+
+  if (updateData.whatsappNumber !== undefined) {
+    business.whatsappNumber =
+      String(updateData.whatsappNumber).trim();
+  }
+
+  // ==========================================
+  // EMAIL
+  // ==========================================
+
+  if (updateData.email !== undefined) {
+    business.email =
+      String(updateData.email).trim().toLowerCase();
+  }
+
+  // ==========================================
+  // MAIN ADDRESS
+  // ==========================================
+
+  if (updateData.address !== undefined) {
+    business.address =
+      String(updateData.address).trim();
+  }
+
+  // ==========================================
+  // MULTIPLE OFFICE ADDRESSES
+  // ==========================================
+
+  if (updateData.addresses !== undefined) {
+    business.addresses =
+      Array.isArray(updateData.addresses)
+        ? updateData.addresses
+            .map((address) => String(address).trim())
+            .filter(Boolean)
+        : [];
+  }
+
+  // ==========================================
+  // OFFICE LANDLINE NUMBERS
+  // ==========================================
+
+  if (updateData.landlineNumbers !== undefined) {
+    business.landlineNumbers =
+      Array.isArray(updateData.landlineNumbers)
+        ? updateData.landlineNumbers
+            .map((number) => String(number).trim())
+            .filter(Boolean)
+        : [];
+  }
+
+  // ==========================================
+  // WEBSITE
+  // ==========================================
+
+  if (updateData.website !== undefined) {
+    business.website =
+      String(updateData.website).trim();
+  }
+
+  // ==========================================
+  // EMPLOYEE RANGE
+  // ==========================================
+
+  if (updateData.employeeRange !== undefined) {
+    business.employeeRange =
+      String(updateData.employeeRange).trim();
+  }
+
+  // ==========================================
+  // OFFICE WORKING HOURS
+  // ==========================================
+
+  if (updateData.officeWorkingHours !== undefined) {
+    business.officeWorkingHours = {
+      start:
+        updateData.officeWorkingHours?.start || "",
+
+      end:
+        updateData.officeWorkingHours?.end || "",
+    };
+  }
+
+  // ==========================================
+  // OFFICE WORKING DAYS
+  // ==========================================
+
+  if (updateData.officeWorkingDays !== undefined) {
+    business.officeWorkingDays =
+      Array.isArray(updateData.officeWorkingDays)
+        ? updateData.officeWorkingDays
+            .map((day) => String(day).trim())
+            .filter(Boolean)
+        : [];
+  }
+
+  // ==========================================
+  // CITY
+  // ==========================================
+
+  if (updateData.currentCity !== undefined) {
+    business.currentCity =
+      String(updateData.currentCity).trim();
+  }
+
+  // ==========================================
+  // STATE
+  // ==========================================
+
+  if (updateData.currentState !== undefined) {
+    business.currentState =
+      String(updateData.currentState).trim();
+  }
+
+  // ==========================================
+  // PINCODE
+  // ==========================================
+
+  if (updateData.pincode !== undefined) {
+    business.pincode =
+      String(updateData.pincode).trim();
+  }
+
+  // ==========================================
+  // WORKING AREAS
+  // ==========================================
+
+  if (updateData.workingAreas !== undefined) {
+    business.workingAreas =
+      updateData.workingAreas;
+  }
+
+  // ==========================================
+  // DIRECTORY STATUS
+  // ==========================================
+
+  business.registrationStatus = "completed";
+  business.isActive = true;
+
   await business.save();
 }
+
+
+
     // 6. Update or Create Profile Collection Dynamically
     if (imageUrl) {
       updateData.profileImage = imageUrl;
@@ -301,7 +515,10 @@ if (business) {
     }
 
     updateData.user = userId;
-    updateData.role = user.role;
+    updateData.role =
+  updateData.role !== undefined
+    ? updateData.role
+    : user.role;
     updateData.name = user.name || "";
 updateData.firmName = user.firmName || "";
 updateData.email = user.email || "";
@@ -324,15 +541,96 @@ updateData.phoneNumber = user.mobile || "";
     return res.status(200).json({
       success: true,
       message: "Profile updated successfully",
-      profile: {
-    ...profile.toObject(),
+  //     profile: {
+  //   ...profile.toObject(),
 
-    alternatePhoneNumbers:
-      business?.alternatePhoneNumbers || [],
+  //   alternatePhoneNumbers:
+  //     business?.alternatePhoneNumbers || [],
 
-    whatsappNumber:
-      business?.whatsappNumber || "",
-  },
+  //   whatsappNumber:
+  //     business?.whatsappNumber || "",
+  // }
+  
+  
+  profile: {
+  ...profile.toObject(),
+
+  role:
+    business?.category ||
+    user.role ||
+    "",
+
+  name:
+    business?.name ||
+    user.name ||
+    "",
+
+  firmName:
+    business?.firmName ||
+    user.firmName ||
+    "",
+
+  phoneNumber:
+    business?.phoneNumber ||
+    user.mobile ||
+    "",
+
+  mobile:
+    business?.phoneNumber ||
+    user.mobile ||
+    "",
+
+  email:
+    business?.email ||
+    user.email ||
+    "",
+
+  alternatePhoneNumbers:
+    business?.alternatePhoneNumbers || [],
+
+  whatsappNumber:
+    business?.whatsappNumber || "",
+
+  address:
+    business?.address || "",
+
+  addresses:
+    business?.addresses || [],
+
+  landlineNumbers:
+    business?.landlineNumbers || [],
+
+  currentCity:
+    business?.currentCity || "",
+
+  currentState:
+    business?.currentState || "",
+
+  pincode:
+    business?.pincode || "",
+
+  website:
+    business?.website || "",
+
+  employeeRange:
+    business?.employeeRange || "",
+
+  officeWorkingHours:
+    business?.officeWorkingHours || {
+      start: "",
+      end: "",
+    },
+
+  officeWorkingDays:
+    business?.officeWorkingDays || [],
+
+  workingAreas:
+    business?.workingAreas || [],
+
+  profileImage:
+    profile.profileImage ||
+    DEFAULT_PROFILE_IMAGE,
+},
     });
   } catch (error) {
     console.error("Update Profile Error:", error);
@@ -364,26 +662,105 @@ const getProfile = async (req, res) => {
     const business = await Business.findOne({ user: userId }).lean();
 
     // Profile nahi hai
+
+    
     if (!profile) {
       return res.status(200).json({
         success: true,
+
+        
+        // profile: {
+        //   role: user.role || "",
+        //   name: user.name || "",
+        //   email: user.email || "",
+        //   firmName: user.firmName || "",
+        //   mobile: user.mobile || "",
+        //   phoneNumber: user.mobile || "",
+
+        //   // Business fields
+        //   alternatePhoneNumbers:
+        //     business?.alternatePhoneNumbers || [],
+
+        //   whatsappNumber:
+        //     business?.whatsappNumber || "",
+
+        //   profileImage: DEFAULT_PROFILE_IMAGE,
+        // },
         profile: {
-          role: user.role || "",
-          name: user.name || "",
-          email: user.email || "",
-          firmName: user.firmName || "",
-          mobile: user.mobile || "",
-          phoneNumber: user.mobile || "",
+  role:
+    business?.category ||
+    user.role ||
+    "",
 
-          // Business fields
-          alternatePhoneNumbers:
-            business?.alternatePhoneNumbers || [],
+  name:
+    business?.name ||
+    user.name ||
+    "",
 
-          whatsappNumber:
-            business?.whatsappNumber || "",
+  email:
+    business?.email ||
+    user.email ||
+    "",
 
-          profileImage: DEFAULT_PROFILE_IMAGE,
-        },
+  firmName:
+    business?.firmName ||
+    user.firmName ||
+    "",
+
+  mobile:
+    business?.phoneNumber ||
+    user.mobile ||
+    "",
+
+  phoneNumber:
+    business?.phoneNumber ||
+    user.mobile ||
+    "",
+
+  alternatePhoneNumbers:
+    business?.alternatePhoneNumbers || [],
+
+  whatsappNumber:
+    business?.whatsappNumber || "",
+
+  address:
+    business?.address || "",
+
+  addresses:
+    business?.addresses || [],
+
+  landlineNumbers:
+    business?.landlineNumbers || [],
+
+  currentCity:
+    business?.currentCity || "",
+
+  currentState:
+    business?.currentState || "",
+
+  pincode:
+    business?.pincode || "",
+
+  website:
+    business?.website || "",
+
+  employeeRange:
+    business?.employeeRange || "",
+
+  officeWorkingHours:
+    business?.officeWorkingHours || {
+      start: "",
+      end: "",
+    },
+
+  officeWorkingDays:
+    business?.officeWorkingDays || [],
+
+  workingAreas:
+    business?.workingAreas || [],
+
+  profileImage: DEFAULT_PROFILE_IMAGE,
+},
       });
     }
 
@@ -391,42 +768,87 @@ const getProfile = async (req, res) => {
     return res.status(200).json({
       success: true,
       profile: {
-        ...profile.toObject(),
+  ...profile.toObject(),
 
-        role: user.role || "",
+  role:
+    business?.category ||
+    user.role ||
+    "",
 
-        name: profile.name || user.name || "",
+  name:
+    business?.name ||
+    profile.name ||
+    user.name ||
+    "",
 
-        firmName:
-          profile.firmName ||
-          user.firmName ||
-          "",
+  firmName:
+    business?.firmName ||
+    profile.firmName ||
+    user.firmName ||
+    "",
 
-        email:
-          profile.email ||
-          user.email ||
-          "",
+  email:
+    business?.email ||
+    profile.email ||
+    user.email ||
+    "",
 
-        phoneNumber:
-          profile.phoneNumber ||
-          user.mobile ||
-          "",
+  phoneNumber:
+    business?.phoneNumber ||
+    user.mobile ||
+    "",
 
-        mobile:
-          user.mobile ||
-          "",
+  mobile:
+    business?.phoneNumber ||
+    user.mobile ||
+    "",
 
-        // Business fields
-        alternatePhoneNumbers:
-          business?.alternatePhoneNumbers || [],
+  alternatePhoneNumbers:
+    business?.alternatePhoneNumbers || [],
 
-        whatsappNumber:
-          business?.whatsappNumber || "",
+  whatsappNumber:
+    business?.whatsappNumber || "",
 
-        profileImage:
-          profile.profileImage ||
-          DEFAULT_PROFILE_IMAGE,
-      },
+  address:
+    business?.address || "",
+
+  addresses:
+    business?.addresses || [],
+
+  landlineNumbers:
+    business?.landlineNumbers || [],
+
+  currentCity:
+    business?.currentCity || "",
+
+  currentState:
+    business?.currentState || "",
+
+  pincode:
+    business?.pincode || "",
+
+  website:
+    business?.website || "",
+
+  employeeRange:
+    business?.employeeRange || "",
+
+  officeWorkingHours:
+    business?.officeWorkingHours || {
+      start: "",
+      end: "",
+    },
+
+  officeWorkingDays:
+    business?.officeWorkingDays || [],
+
+  workingAreas:
+    business?.workingAreas || [],
+
+  profileImage:
+    profile.profileImage ||
+    DEFAULT_PROFILE_IMAGE,
+},
     });
 
   } catch (error) {

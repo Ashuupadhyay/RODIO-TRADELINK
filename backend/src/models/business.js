@@ -1,3 +1,222 @@
+// const mongoose = require("mongoose");
+
+// const businessSchema = new mongoose.Schema(
+//   {
+//     // ==========================================
+//     // OWNER
+//     // ==========================================
+
+//     user: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "User",
+//       required: true,
+//       unique: true, // one business per user
+//       index: true,
+//     },
+
+//     // ==========================================
+//     // BASIC BUSINESS DETAILS
+//     // ==========================================
+// category: {
+//   type: String,
+//   required: true,
+//   enum: [
+//     "user",
+//     "transporter",
+//       "Transporter",
+//     "fleet_owner",
+//     "cha_agent",
+//     "courier",
+//     "bus_service",
+//     "travel_taxi",
+//     "truck_body_builder",
+//     "rto_agent",
+//     "finance_company",
+//     "finance_agent",
+//     "packers_movers",
+//     "insurance_company",
+//     "car_carrier",
+//     "miningvehicle_supplier",
+//     "partstypesbettry_supplier",
+//     "mechanic and service center",
+//     "biketexiauto",
+//     "candfagent",
+//   ],
+// },
+//     firmName: {
+//       type: String,
+//     default:"",
+//       trim: true,
+//     },
+
+//     // Registered User se automatically aayega
+//     phoneNumber: {
+//       type: String,
+//       trim: true,
+//     },
+//     alternatePhoneNumbers: [
+//       {
+//         type: String,
+//         trim: true,
+//       },
+//     ],
+
+// whatsappNumber: {
+//   type: String,
+//   trim: true,
+//   default: "",
+// },
+//     email: {
+//   type: String,
+//   trim: true,
+//   lowercase: true,
+// },
+
+//     address: {
+//       type: String,
+//        default:"",
+//       trim: true,
+//     },
+//     address: {
+//   type: String,
+//   default: "",
+//   trim: true,
+// },
+
+// // Multiple Office / Branch Addresses
+// addresses: [
+//   {
+//     type: String,
+//     trim: true,
+//   },
+// ],
+
+// // Office Landline Numbers
+// landlineNumbers: [
+//   {
+//     type: String,
+//     trim: true,
+//   },
+// ],
+
+// name: {
+//   type: String,
+//   default: "",
+//   trim: true,
+// },
+// name: {
+//   type: String,
+//   default:"",
+//   trim: true,
+// },
+//     currentCity: {
+//       type: String,
+//        default:"",
+//       trim: true,
+//       index: true,
+//     },
+
+//     currentState: {
+//       type: String,
+//        default:"",
+//       trim: true,
+//       index: true,
+//     },
+
+//     pincode: {
+//       type: String,
+//      default:"",
+//       trim: true,
+//     },
+
+//     // ==========================================
+//     // REGISTRATION STATUS
+//     // ==========================================
+
+//     registrationStatus: {
+//       type: String,
+//       enum: ["draft", "completed"],
+//       default: "draft",
+//       index: true,
+//     },
+
+//     // ==========================================
+//     // SUBSCRIPTION
+//     // ==========================================
+
+//     subscriptionStatus: {
+//       type: String,
+//       enum: [
+//         "pending",
+//         "active",
+//         "expired",
+//         "cancelled",
+//       ],
+//       default: "pending",
+//       index: true,
+//     },
+//     isVerified: {
+//   type: Boolean,
+//   default: false,
+//   index: true,
+// },
+// verifiedAt: {
+//   type: Date,
+//   default: null,
+// },
+// verifiedBy: {
+//   type: mongoose.Schema.Types.ObjectId,
+//   ref: "User",
+//   default: null,
+// },
+
+//     // Payment successful hone ke baad true
+//     profileUnlocked: {
+//       type: Boolean,
+//       default: false,
+//     },
+
+//     // ==========================================
+//     // WORKING AREAS
+//     // Payment ke baad user add kar sakta hai
+//     // ==========================================
+
+//     workingAreas: [
+//       {
+//         state: {
+//           type: String,
+//           trim: true,
+//         },
+
+//         cities: [
+//           {
+//             type: String,
+//             trim: true,
+//           },
+//         ],
+//       },
+//     ],
+
+//     // ==========================================
+//     // ACTIVE STATUS
+//     // ==========================================
+
+//     isActive: {
+//       type: Boolean,
+//       default: true,
+//     },
+//   },
+//   {
+//     timestamps: true,
+//   }
+// );
+
+// module.exports =
+//   mongoose.models.Business ||
+//   mongoose.model(
+//     "Business",
+//     businessSchema
+//   );
 const mongoose = require("mongoose");
 
 const businessSchema = new mongoose.Schema(
@@ -10,50 +229,65 @@ const businessSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true, // one business per user
+      unique: true,
       index: true,
     },
 
     // ==========================================
     // BASIC BUSINESS DETAILS
     // ==========================================
-category: {
-  type: String,
-  required: true,
-  enum: [
-    "user",
-    "transporter",
-      "Transporter",
-    "fleet_owner",
-    "cha_agent",
-    "courier",
-    "bus_service",
-    "travel_taxi",
-    "truck_body_builder",
-    "rto_agent",
-    "finance_company",
-    "finance_agent",
-    "packers_movers",
-    "insurance_company",
-    "car_carrier",
-    "miningvehicle_supplier",
-    "partstypesbettry_supplier",
-    "mechanic and service center",
-    "biketexiauto",
-    "candfagent",
-  ],
-},
+
+    category: {
+      type: String,
+      required: true,
+      enum: [
+        "user",
+        "transporter",
+        "Transporter",
+        "fleet_owner",
+        "cha_agent",
+        "courier",
+        "bus_service",
+        "travel_taxi",
+        "truck_body_builder",
+        "rto_agent",
+        "finance_company",
+        "finance_agent",
+        "packers_movers",
+        "insurance_company",
+        "car_carrier",
+        "miningvehicle_supplier",
+        "partstypesbettry_supplier",
+        "mechanic and service center",
+        "biketexiauto",
+        "candfagent",
+      ],
+    },
+
     firmName: {
       type: String,
-    default:"",
+      default: "",
       trim: true,
     },
 
-    // Registered User se automatically aayega
-    phoneNumber: {
+    name: {
       type: String,
+      default: "",
       trim: true,
     },
+
+    // ==========================================
+    // CONTACT DETAILS
+    // ==========================================
+
+    // Primary Mobile Number
+    phoneNumber: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    // Alternate Mobile Numbers
     alternatePhoneNumbers: [
       {
         type: String,
@@ -61,46 +295,130 @@ category: {
       },
     ],
 
-whatsappNumber: {
-  type: String,
-  trim: true,
-  default: "",
-},
-    email: {
-  type: String,
-  trim: true,
-  lowercase: true,
-},
-
-    address: {
+    // WhatsApp Number
+    whatsappNumber: {
       type: String,
-       default:"",
+      default: "",
       trim: true,
     },
-name: {
-  type: String,
-  default:"",
-  trim: true,
-},
+
+    // Email
+    email: {
+      type: String,
+      default: "",
+      trim: true,
+      lowercase: true,
+    },
+
+    // ==========================================
+    // OFFICE ADDRESS
+    // ==========================================
+
+    // Main / Primary Office Address
+    address: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    // Multiple Office / Branch Addresses
+    addresses: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
+    // ==========================================
+    // OFFICE LANDLINE
+    // ==========================================
+
+    landlineNumbers: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
+    // ==========================================
+    // LOCATION
+    // ==========================================
+
     currentCity: {
       type: String,
-       default:"",
+      default: "",
       trim: true,
       index: true,
     },
 
     currentState: {
       type: String,
-       default:"",
+      default: "",
       trim: true,
       index: true,
     },
 
     pincode: {
       type: String,
-     default:"",
+      default: "",
       trim: true,
     },
+
+    // ==========================================
+    // WEBSITE
+    // ==========================================
+
+    website: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    // ==========================================
+    // EMPLOYEE DETAILS
+    // ==========================================
+
+    employeeRange: {
+      type: String,
+      default: "",
+      trim: true,
+
+      // Example:
+      // "0-10"
+      // "10-20"
+      // "20-50"
+      // "50-100"
+      // "100+"
+    },
+
+    // ==========================================
+    // OFFICE WORKING HOURS
+    // ==========================================
+
+    officeWorkingHours: {
+      start: {
+        type: String,
+        default: "",
+        trim: true,
+      },
+
+      end: {
+        type: String,
+        default: "",
+        trim: true,
+      },
+    },
+
+    // ==========================================
+    // OFFICE WORKING DAYS
+    // ==========================================
+
+    officeWorkingDays: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
 
     // ==========================================
     // REGISTRATION STATUS
@@ -128,22 +446,32 @@ name: {
       default: "pending",
       index: true,
     },
-    isVerified: {
-  type: Boolean,
-  default: false,
-  index: true,
-},
-verifiedAt: {
-  type: Date,
-  default: null,
-},
-verifiedBy: {
-  type: mongoose.Schema.Types.ObjectId,
-  ref: "User",
-  default: null,
-},
 
-    // Payment successful hone ke baad true
+    // ==========================================
+    // VERIFICATION
+    // ==========================================
+
+    isVerified: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    verifiedAt: {
+      type: Date,
+      default: null,
+    },
+
+    verifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    // ==========================================
+    // PROFILE UNLOCK
+    // ==========================================
+
     profileUnlocked: {
       type: Boolean,
       default: false,
@@ -151,7 +479,6 @@ verifiedBy: {
 
     // ==========================================
     // WORKING AREAS
-    // Payment ke baad user add kar sakta hai
     // ==========================================
 
     workingAreas: [
@@ -186,7 +513,4 @@ verifiedBy: {
 
 module.exports =
   mongoose.models.Business ||
-  mongoose.model(
-    "Business",
-    businessSchema
-  );
+  mongoose.model("Business", businessSchema);
