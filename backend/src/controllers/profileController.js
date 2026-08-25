@@ -184,6 +184,109 @@ const bcrypt = require("bcrypt");
 
 const DEFAULT_PROFILE_IMAGE =
   "https://res.cloudinary.com/tyt9mt1f/image/upload/v1784103262/DUMMYIMAGE_xuc0xa.jpg";
+  const getFriendlyErrorMessage = (error) => {
+  const message = String(error?.message || "").toLowerCase();
+
+  // Duplicate data
+  if (error?.code === 11000) {
+    const field = Object.keys(error.keyPattern || {})[0];
+
+    if (field === "email") {
+      return "This email address is already registered. Please use a different email address.";
+    }
+
+    if (field === "mobile") {
+      return "This mobile number is already registered. Please enter a different mobile number.";
+    }
+
+    if (field === "phoneNumber") {
+      return "This phone number is already registered. Please enter a different phone number.";
+    }
+
+    if (field === "user") {
+      return "This user already has a business profile. Please update the existing profile instead.";
+    }
+
+    return "Some information already exists. Please check the entered details and try again.";
+  }
+
+  // Mongoose validation
+  if (error?.name === "ValidationError") {
+    const firstError = Object.values(error.errors || {})[0];
+
+    if (!firstError) {
+      return "Some information is invalid. Please check all fields and try again.";
+    }
+
+    switch (firstError.path) {
+      case "category":
+        return "Business category is invalid. Please select a valid business category.";
+
+      case "name":
+        return "Name is invalid. Please enter your correct name.";
+
+      case "firmName":
+        return "Firm name is invalid. Please enter your business or company name.";
+
+      case "phoneNumber":
+        return "Phone number is invalid. Please enter a valid phone number.";
+
+      case "email":
+        return "Email address is invalid. Please enter a valid email address.";
+
+      case "address":
+        return "Business address is invalid. Please enter your complete address.";
+
+      case "currentCity":
+        return "City is invalid. Please select or enter a valid city.";
+
+      case "currentState":
+        return "State is invalid. Please select a valid state.";
+
+      case "pincode":
+        return "Pincode is invalid. Please enter a valid pincode.";
+
+      case "website":
+        return "Website address is invalid. Please enter a valid website address.";
+
+      case "workingAreas":
+        return "Working areas are invalid. Please check the selected states and cities.";
+
+      default:
+        return `${firstError.path} contains invalid information. Please check this field and try again.`;
+    }
+  }
+
+  // Invalid MongoDB ID
+  if (error?.name === "CastError") {
+    return `The ${error.path || "provided information"} has an invalid format. Please check it and try again.`;
+  }
+
+  // Image / Cloudinary
+  if (
+    message.includes("cloudinary") ||
+    message.includes("upload")
+  ) {
+    return "We couldn't upload your profile image. Please check the image and try again.";
+  }
+
+  // Password
+  if (message.includes("password")) {
+    return "Password could not be updated. Please check your password and try again.";
+  }
+
+  // Database/server
+  if (
+    message.includes("mongo") ||
+    message.includes("mongodb") ||
+    message.includes("database")
+  ) {
+    return "We couldn't save your changes right now. Please try again in a moment.";
+  }
+
+  // Default
+  return "We couldn't update your profile. Please check your information and try again.";
+};
 
 // UPDATE PROFILE (Dynamic for User, Transporter, Broker - Single or Multi Field)
 const updateProfile = async (req, res) => {
@@ -852,14 +955,13 @@ const getProfile = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Get Profile Error:", error);
+  console.error("Update Profile Error:", error);
 
-    return res.status(500).json({
-      success: false,
-      message:
-        "We couldn't process your request at the moment. Please try again later.",
-    });
-  }
+  return res.status(500).json({
+    success: false,
+    message: getFriendlyErrorMessage(error),
+  });
+}
 };
 
 module.exports = {
