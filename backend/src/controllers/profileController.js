@@ -263,7 +263,33 @@ const updateProfile = async (req, res) => {
     }
 
     await user.save();
+// ==========================================
+// UPDATE BUSINESS CONTACT DETAILS
+// ==========================================
 
+let business = await Business.findOne({
+  user: userId,
+});
+
+if (business) {
+  // WhatsApp Number
+  if (updateData.whatsappNumber !== undefined) {
+    business.whatsappNumber =
+      String(updateData.whatsappNumber).trim();
+  }
+
+  // Alternative Numbers
+  if (updateData.alternatePhoneNumbers !== undefined) {
+    business.alternatePhoneNumbers =
+      Array.isArray(updateData.alternatePhoneNumbers)
+        ? updateData.alternatePhoneNumbers
+            .map((num) => String(num).trim())
+            .filter(Boolean)
+        : [];
+  }
+
+  await business.save();
+}
     // 6. Update or Create Profile Collection Dynamically
     if (imageUrl) {
       updateData.profileImage = imageUrl;
@@ -298,7 +324,15 @@ updateData.phoneNumber = user.mobile || "";
     return res.status(200).json({
       success: true,
       message: "Profile updated successfully",
-      profile,
+      profile: {
+    ...profile.toObject(),
+
+    alternatePhoneNumbers:
+      business?.alternatePhoneNumbers || [],
+
+    whatsappNumber:
+      business?.whatsappNumber || "",
+  },
     });
   } catch (error) {
     console.error("Update Profile Error:", error);
