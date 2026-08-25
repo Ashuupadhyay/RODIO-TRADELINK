@@ -486,6 +486,8 @@ exports.updateDashboardBusinessDetails = async (req, res) => {
       currentState,
       pincode,
       alternatePhoneNumbers,
+      whatsappNumber,
+
     } = req.body;
 
     const business = await Business.findOne({ user: userId });
@@ -509,7 +511,10 @@ exports.updateDashboardBusinessDetails = async (req, res) => {
         .map((num) => String(num).trim())
         .filter((num) => num.length > 0);
     }
-
+// WhatsApp Number
+if (whatsappNumber !== undefined) {
+  business.whatsappNumber = String(whatsappNumber).trim();
+}
     await business.save();
 
     return res.status(200).json({
@@ -522,6 +527,7 @@ exports.updateDashboardBusinessDetails = async (req, res) => {
         pincode: business.pincode,
         phoneNumber: business.phoneNumber,
         alternatePhoneNumbers: business.alternatePhoneNumbers,
+          whatsappNumber: business.whatsappNumber || "",
       },
     });
   } catch (error) {
@@ -607,6 +613,7 @@ exports.getDashboard = async (req, res) => {
         phoneNumber: business.phoneNumber || "",
         alternatePhoneNumbers: business.alternatePhoneNumbers || [],
         email: business.email || "",
+        whatsappNumber: business.whatsappNumber || "",
 
         user: {
           id: business.user?._id,

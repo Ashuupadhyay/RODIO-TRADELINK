@@ -177,6 +177,7 @@
 // };
 const Profile = require("../models/profile");
 const User = require("../models/register");
+const Business = require("../models/business");
 const cloudinary = require("../config/cloudnary");
 const streamifier = require("streamifier");
 const bcrypt = require("bcrypt");
@@ -309,6 +310,9 @@ updateData.phoneNumber = user.mobile || "";
 };
 
 // GET PROFILE
+
+
+
 const getProfile = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -323,37 +327,81 @@ const getProfile = async (req, res) => {
     }
 
     const profile = await Profile.findOne({ user: userId });
+    const business = await Business.findOne({ user: userId }).lean();
 
+    // Profile nahi hai
     if (!profile) {
       return res.status(200).json({
         success: true,
         profile: {
-          role: user.role,
-          name: user.name,
-          email: user.email,
-            firmName: user.firmName,
-          mobile: user.mobile,
+          role: user.role || "",
+          name: user.name || "",
+          email: user.email || "",
+          firmName: user.firmName || "",
+          mobile: user.mobile || "",
+          phoneNumber: user.mobile || "",
+
+          // Business fields
+          alternatePhoneNumbers:
+            business?.alternatePhoneNumbers || [],
+
+          whatsappNumber:
+            business?.whatsappNumber || "",
+
           profileImage: DEFAULT_PROFILE_IMAGE,
         },
       });
     }
 
+    // Profile + Business data
     return res.status(200).json({
-  success: true,
-  profile: {
-    ...profile.toObject(),
-    name: profile.name || user.name,
-    firmName: profile.firmName || user.firmName,
-    email: profile.email || user.email,
-    phoneNumber: profile.phoneNumber || user.mobile,
-    profileImage: profile.profileImage || DEFAULT_PROFILE_IMAGE,
-  },
-});
+      success: true,
+      profile: {
+        ...profile.toObject(),
+
+        role: user.role || "",
+
+        name: profile.name || user.name || "",
+
+        firmName:
+          profile.firmName ||
+          user.firmName ||
+          "",
+
+        email:
+          profile.email ||
+          user.email ||
+          "",
+
+        phoneNumber:
+          profile.phoneNumber ||
+          user.mobile ||
+          "",
+
+        mobile:
+          user.mobile ||
+          "",
+
+        // Business fields
+        alternatePhoneNumbers:
+          business?.alternatePhoneNumbers || [],
+
+        whatsappNumber:
+          business?.whatsappNumber || "",
+
+        profileImage:
+          profile.profileImage ||
+          DEFAULT_PROFILE_IMAGE,
+      },
+    });
+
   } catch (error) {
     console.error("Get Profile Error:", error);
+
     return res.status(500).json({
       success: false,
-      message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team.",
+      message:
+        "We couldn't process your request at the moment. Please try again later.",
     });
   }
 };
