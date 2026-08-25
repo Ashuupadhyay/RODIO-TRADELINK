@@ -213,12 +213,12 @@ exports.createVehicle = async (req, res) => {
   try {
     const { vehicleType, vehicleNumber, capacity, bodyType } = req.body;
 
-    if (!vehicleType || !vehicleNumber) {
-      return res.status(400).json({
-        success: false,
-        message: "Vehicle type and vehicle number are required",
-      });
-    }
+    // if (!vehicleType || !vehicleNumber) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Vehicle type and vehicle number are required",
+    //   });
+    // }
 
     // Business ID handle karein (Middleware context se)
     let businessId = req.business ? req.business._id : null;
