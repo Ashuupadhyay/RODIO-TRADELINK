@@ -12,7 +12,9 @@ createBooking,
 myBookings,
 getAllBookings,
 myAssignedLeads,
-updateLeadStatus
+updateLeadStatus,
+updateLead,
+    deleteLead
 } = require("../controllers/bookingController");
 
 
@@ -30,5 +32,18 @@ router.put(
     "/status/:id",
     auth,
     updateLeadStatus
+);
+// Edit Lead
+router.patch(
+    "/:id",
+    auth,
+    updateLead
+);
+
+// Delete Lead
+router.delete(
+    "/:id",
+    auth,
+    deleteLead
 );
 module.exports = router;

@@ -446,6 +446,125 @@ exports.myBookings = async (req, res) => {
         });
     }
 };
+// ==========================
+// Edit Lead - Single / Multiple Fields
+// ==========================
+exports.updateLead = async (req, res) => {
+    try {
+        const booking = await Booking.findOne({
+            _id: req.params.id,
+            createdBy: req.user.id
+        });
+
+        if (!booking) {
+            return res.status(404).json({
+                success: false,
+                message: "Lead not found or you are not authorized to edit this lead."
+            });
+        }
+
+        // Sirf allowed fields hi update hongi
+        const allowedFields = [
+            "service",
+            "vehicleType",
+            "pickupLocation",
+            "loading_point",
+            "pickupDate",
+            "goodsType",
+            "weight",
+            "contactPerson",
+            "contactNumber",
+            "expectedBudget",
+            "remarks"
+        ];
+
+        const updateData = {};
+
+        allowedFields.forEach((field) => {
+            if (req.body[field] !== undefined) {
+                updateData[field] = req.body[field];
+            }
+        });
+
+        if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide at least one field to update."
+            });
+        }
+
+        const updatedBooking = await Booking.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                createdBy: req.user.id
+            },
+            {
+                $set: updateData
+            },
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Lead updated successfully.",
+            data: updatedBooking
+        });
+
+    } catch (error) {
+        console.error("UPDATE LEAD ERROR:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to update the lead. Please check the information and try again."
+        });
+    }
+};
+// ==========================
+// Delete Lead
+// ==========================
+exports.deleteLead = async (req, res) => {
+    try {
+        const booking = await Booking.findOne({
+            _id: req.params.id,
+            createdBy: req.user.id
+        });
+
+        if (!booking) {
+            return res.status(404).json({
+                success: false,
+                message: "Lead not found or you are not authorized to delete this lead."
+            });
+        }
+
+        await Booking.deleteOne({
+            _id: req.params.id,
+            createdBy: req.user.id
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Lead deleted successfully."
+        });
+
+    } catch (error) {
+        console.error("DELETE LEAD ERROR:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to delete the lead. Please try again."
+        });
+    }
+};
+
+
+
+
+
+
+
 
 // ===============================
 // Get All Bookings (Marketplace Leads)
