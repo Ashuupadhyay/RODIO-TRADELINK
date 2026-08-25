@@ -129,6 +129,18 @@ exports.unverifyBusiness = async (req, res) => {
     business.verifiedBy = null;
 
     await business.save();
+    //Business ke saare active documents verify karo
+await BusinessDocument.updateMany(
+  {
+    business: business._id,
+    isActive: true,
+  },
+  {
+    $set: {
+      verificationStatus: "verified",
+    },
+  }
+);
 
     return res.status(200).json({
       success: true,
