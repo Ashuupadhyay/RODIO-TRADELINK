@@ -92,6 +92,9 @@
 //     });
 //   }
 // };
+
+const Business = require("../models/business");
+const Post = require("../models/Post")
 const getDashboard = async (req, res) => {
   try {
     const business = await Business.findOne({ user: req.user.id })
