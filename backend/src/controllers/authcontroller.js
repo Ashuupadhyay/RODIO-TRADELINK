@@ -177,7 +177,7 @@ if (user.role !== "user") {
         firmName: user.firmName,
         mobile: user.mobile,
         token: token,
-        businessId: business._id,
+        businessId: business?._id || null,
 isVerified: business?.isVerified || false,
       },
     });
