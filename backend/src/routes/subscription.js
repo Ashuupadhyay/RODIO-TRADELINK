@@ -2,7 +2,7 @@ const express = require("express");
 
 const router = express.Router();
 
-const expireSubscriptions = require("../services/subscriptionExpiry");
+const expireSubscriptions = require("../controllers/subscriptionExpiry");
 
 // ==========================================
 // MANUAL SUBSCRIPTION EXPIRY CHECK
