@@ -117,17 +117,57 @@ const getDashboard = async (req, res) => {
     })
       .sort({ createdAt: -1 })
       .lean();
+// ==========================================
+// SUBSCRIPTION EXPIRY CHECK
+// ==========================================
 
-    const unlocked =
-      business.registrationStatus === "completed" &&
-      business.subscriptionStatus === "active" &&
-      business.profileUnlocked === true;
+const userSubscription = business.user?.subscription;
 
-    const subscriptionStatus =
-      business.user?.subscription?.status || "inactive";
+const endDate = userSubscription?.endDate
+  ? new Date(userSubscription.endDate)
+  : null;
 
-    const hasActiveSubscription =
-      subscriptionStatus === "active";
+const now = new Date();
+
+// Subscription expired?
+const isExpired =
+  !!endDate && now >= endDate;
+
+// 2 days before expiry
+const warningDate = endDate
+  ? new Date(
+      endDate.getTime() - 2 * 24 * 60 * 60 * 1000
+    )
+  : null;
+
+// Show warning between:
+// warningDate <= now < endDate
+const expiresSoon =
+  !!endDate &&
+  now >= warningDate &&
+  now < endDate;
+
+// Actual active subscription
+const hasActiveSubscription =
+  userSubscription?.status === "active" &&
+  !isExpired;
+
+// Final access/unlock condition
+const unlocked =
+  business.registrationStatus === "completed" &&
+  business.subscriptionStatus === "active" &&
+  business.profileUnlocked === true &&
+  hasActiveSubscription;
+    // const unlocked =
+    //   business.registrationStatus === "completed" &&
+    //   business.subscriptionStatus === "active" &&
+    //   business.profileUnlocked === true;
+
+    // const subscriptionStatus =
+    //   business.user?.subscription?.status || "inactive";
+
+    // const hasActiveSubscription =
+    //   subscriptionStatus === "active";
 
     return res.status(200).json({
       success: true,
@@ -183,17 +223,25 @@ const getDashboard = async (req, res) => {
         // SUBSCRIPTION
         // ==========================================
         subscription: {
-          status: subscriptionStatus,
+  status: isExpired
+    ? "expired"
+    : userSubscription?.status || "inactive",
 
-          plan:
-            business.user?.subscription?.plan || "",
+  plan:
+    userSubscription?.plan || "",
 
-          startDate:
-            business.user?.subscription?.startDate || null,
+  startDate:
+    userSubscription?.startDate || null,
 
-          endDate:
-            business.user?.subscription?.endDate || null,
-        },
+  endDate:
+    userSubscription?.endDate || null,
+
+  expiresSoon: expiresSoon,
+
+  expiryMessage: expiresSoon
+    ? "Your subscription expires soon."
+    : null,
+},
 
         // ==========================================
         // PAYMENT SUBSCRIPTION
@@ -207,10 +255,12 @@ const getDashboard = async (req, res) => {
           business.registrationStatus,
 
         subscriptionStatus:
-          business.subscriptionStatus,
+  isExpired
+    ? "expired"
+    : business.subscriptionStatus,
 
-        profileUnlocked:
-          business.profileUnlocked,
+       profileUnlocked:
+  unlocked,
 
         // ==========================================
         // REFERRAL
@@ -220,9 +270,11 @@ const getDashboard = async (req, res) => {
             ? business.user?.referralCode || null
             : null,
 
-          message: hasActiveSubscription
-            ? null
-            : "You don't have a referral code. First add a service.",
+         message: hasActiveSubscription
+  ? null
+  : isExpired
+    ? "Your subscription has expired. Renew your subscription to use referral features."
+    : "You don't have an active subscription.",
         },
 
         // ==========================================

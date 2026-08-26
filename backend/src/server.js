@@ -34,7 +34,9 @@ const postRoutes = require("./routes/postRoutes");
 const adminDocumentRoutes = require(
   "./routes/adminDocumentRoutes"
 );
-
+const cron = require("node-cron");
+const expireSubscriptions = require("./services/subscriptionExpiry");
+const subscriptionRoutes = require("./routes/subscription");
 // Database
 const connectDB = require("./config/db");
 
@@ -62,7 +64,7 @@ app.use("/api/bids", bidRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api", dashboardRoutes);
 app.use("/api/update-profile", updateProfileRoutes);
-
+app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/business", businessRoutes);
 app.use("/api/businesses", searchRoutes);
 
@@ -89,18 +91,78 @@ app.use(
   adminDocumentRoutes
 );
 
+// const PORT = process.env.PORT || 5000;
+
+// const startServer = async () => {
+//     try {
+//         await connectDB();
+
+//         app.listen(PORT, "0.0.0.0", () => {
+//             console.log(`Server Running on ${PORT}`);
+//         });
+//     } catch (error) {
+//         console.log(error);
+//     }
+// };
+// cron.schedule("*/10 * * * *", async () => {
+//   console.log("🔄 Running subscription expiry check...");
+
+//   const result = await expireSubscriptions();
+
+//   console.log("Subscription expiry result:", result);
+// });
+
+// startServer();
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
-    try {
-        await connectDB();
+  try {
+    await connectDB();
 
-        app.listen(PORT, "0.0.0.0", () => {
-            console.log(`Server Running on ${PORT}`);
-        });
-    } catch (error) {
-        console.log(error);
-    }
+    console.log("MongoDB connected");
+
+    // ==========================================
+    // CHECK EXPIRY ON SERVER START
+    // ==========================================
+
+    await expireSubscriptions();
+
+    // ==========================================
+    // CHECK EVERY 10 MINUTES
+    // ==========================================
+
+    cron.schedule("*/10 * * * *", async () => {
+      console.log(
+        "🔄 Running subscription expiry check..."
+      );
+
+      try {
+        const result = await expireSubscriptions();
+
+        console.log(
+          "Subscription expiry result:",
+          result
+        );
+      } catch (error) {
+        console.error(
+          "Subscription expiry cron error:",
+          error
+        );
+      }
+    });
+
+    // ==========================================
+    // START SERVER
+    // ==========================================
+
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server Running on ${PORT}`);
+    });
+
+  } catch (error) {
+    console.error("Server startup error:", error);
+    process.exit(1);
+  }
 };
 
 startServer();
