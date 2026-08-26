@@ -35,7 +35,7 @@ const adminDocumentRoutes = require(
   "./routes/adminDocumentRoutes"
 );
 const cron = require("node-cron");
-const expireSubscriptions = require("./services/subscriptionExpiry");
+const expireSubscriptions = require("./controllers/subscriptionExpiry");
 const subscriptionRoutes = require("./routes/subscription");
 // Database
 const connectDB = require("./config/db");
