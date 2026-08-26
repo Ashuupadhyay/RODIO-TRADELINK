@@ -84,27 +84,50 @@ const register = async (req, res) => {
     });
 
     // 2. 🟢 Business Directory Card Auto-Create
-    const business = await Business.create({
-      user: user._id,
-      category: user.role,
-      firmName: user.firmName || `${user.mobile} - Business`,
-      name: name || user.firmName || "Business Owner",
-      phoneNumber: user.mobile,
-      email: user.email || "",
-      address: "",
-      currentCity: "",
-      currentState: "",
-      pincode: "000000",
-      registrationStatus: "draft",
-      subscriptionStatus: "pending",
-      profileUnlocked: false,
-      isActive: true, 
-      isVerified: false,
-  verifiedAt: null,
-  verifiedBy: null,
+//     const business = await Business.create({
+//       user: user._id,
+//       category: user.role,
+//       firmName: user.firmName || `${user.mobile} - Business`,
+//       name: name || user.firmName || "Business Owner",
+//       phoneNumber: user.mobile,
+//       email: user.email || "",
+//       address: "",
+//       currentCity: "",
+//       currentState: "",
+//       pincode: "000000",
+//       registrationStatus: "draft",
+//       subscriptionStatus: "pending",
+//       profileUnlocked: false,
+//       isActive: true, 
+//       isVerified: false,
+//   verifiedAt: null,
+//   verifiedBy: null,
 
-// Direct directory me dikhega
-    });
+// // Direct directory me dikhega
+//     });
+let business = null;
+
+if (user.role !== "user") {
+  business = await Business.create({
+    user: user._id,
+    category: user.role,
+    firmName: user.firmName || `${user.mobile} - Business`,
+    name: name || user.firmName || "Business Owner",
+    phoneNumber: user.mobile,
+    email: user.email || "",
+    address: "",
+    currentCity: "",
+    currentState: "",
+    pincode: "000000",
+    registrationStatus: "draft",
+    subscriptionStatus: "pending",
+    profileUnlocked: false,
+    isActive: true,
+    isVerified: false,
+    verifiedAt: null,
+    verifiedBy: null,
+  });
+}
 
     console.log("Successfully registered & Business Card created");
 

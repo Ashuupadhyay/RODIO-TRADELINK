@@ -64,10 +64,10 @@ exports.createBid = async (req, res) => {
 
         // Bids limit check (10 Bids Max)
         const totalBids = await Bid.countDocuments({ booking: booking._id });
-        if (totalBids >=4) {
+        if (totalBids >=10) {
             return res.status(400).json({
                 success: false,
-                message: "Bid limit reached for this lead (Max 4 bids allowed)."
+                message: "Bid limit reached for this lead (Max 10 bids allowed)."
             });
         }
 
