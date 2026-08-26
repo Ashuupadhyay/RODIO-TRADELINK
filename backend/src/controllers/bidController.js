@@ -94,7 +94,123 @@ exports.createBid = async (req, res) => {
     }
 };
 
+// ==========================
+// Update My Bid
+// ==========================
+exports.updateBid = async (req, res) => {
+    try {
+        const { bidId } = req.params;
+        const { amount, message } = req.body;
 
+        const bid = await Bid.findById(bidId);
+
+        if (!bid) {
+            return res.status(404).json({
+                success: false,
+                message: "Bid not found."
+            });
+        }
+
+        // Sirf apni bid edit kar sakta hai
+        if (bid.transporter.toString() !== req.user.id) {
+            return res.status(403).json({
+                success: false,
+                message: "You can only edit your own bid."
+            });
+        }
+
+        // Accepted / Rejected ke baad edit nahi
+        if (bid.status !== "Pending") {
+            return res.status(400).json({
+                success: false,
+                message: "Only pending bids can be edited."
+            });
+        }
+
+        // Amount update
+        if (amount !== undefined) {
+            if (amount === "" || amount === null || Number(amount) <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please provide a valid bid amount."
+                });
+            }
+
+            bid.amount = Number(amount);
+        }
+
+        // Message update
+        if (message !== undefined) {
+            bid.message = message;
+        }
+
+        await bid.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Bid updated successfully.",
+            data: bid
+        });
+
+    } catch (error) {
+        console.error("Update Bid Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "We couldn't process your request at the moment. Please try again later."
+        });
+    }
+};
+
+
+// ==========================
+// Delete My Bid
+// ==========================
+exports.deleteBid = async (req, res) => {
+    try {
+        const { bidId } = req.params;
+
+        const bid = await Bid.findById(bidId);
+
+        if (!bid) {
+            return res.status(404).json({
+                success: false,
+                message: "Bid not found."
+            });
+        }
+
+        // Sirf apni bid delete kar sakta hai
+        if (bid.transporter.toString() !== req.user.id) {
+            return res.status(403).json({
+                success: false,
+                message: "You can only delete your own bid."
+            });
+        }
+
+        // Accepted / Rejected ke baad delete nahi
+        if (bid.status !== "Pending") {
+            return res.status(400).json({
+                success: false,
+                message: "Only pending bids can be deleted."
+            });
+        }
+
+        await Bid.findByIdAndDelete(bidId);
+
+        return res.status(200).json({
+            success: true,
+            message: "Bid deleted successfully."
+        });
+
+    } catch (error) {
+        console.error("Delete Bid Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "We couldn't process your request at the moment. Please try again later."
+        });
+    }
+};
 // ===============================
 // Get All Bids Of One Lead
 // ===============================
