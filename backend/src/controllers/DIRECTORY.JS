@@ -607,11 +607,11 @@ result.push({
   // Location
   city:
     business.currentCity ||
-    "Not Specified",
+    "",
 
   state:
     business.currentState ||
-    "Not Specified",
+    "",
 
   workingAreas:
     business.workingAreas || [],
