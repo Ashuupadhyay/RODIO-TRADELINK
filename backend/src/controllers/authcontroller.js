@@ -168,7 +168,7 @@ if (user.role !== "user") {
       message: "Registration Successful",
       token,
       redirectTo: "/",
-      businessId: business._id, // 👈 Auto-created Business ki ID
+ businessId: business?._id || null, // 👈 Auto-created Business ki ID
       isSubscriptionActive,
       subscription: user.role !== "user" ? user.subscription : null,
       user: {
@@ -178,7 +178,7 @@ if (user.role !== "user") {
         mobile: user.mobile,
         token: token,
         businessId: business._id,
-isVerified: business.isVerified,
+isVerified: business?.isVerified || false,
       },
     });
   } catch (error) {
