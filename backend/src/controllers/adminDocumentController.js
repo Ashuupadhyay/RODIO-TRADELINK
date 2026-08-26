@@ -64,6 +64,50 @@ exports.getUsersWithDocuments = async (req, res) => {
 // VERIFY BUSINESS
 // ======================================================
 
+// exports.verifyBusiness = async (req, res) => {
+//   try {
+//     const business = await Business.findById(req.params.businessId);
+
+//     if (!business) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Business not found",
+//       });
+//     }
+
+//     business.isVerified = true;
+//     business.isActive = true;
+//     business.verifiedAt = new Date();
+
+//     // Authentication nahi hai, isliye verifiedBy mat set karo
+//     business.verifiedBy = null;
+
+//     await business.save();
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Business verified successfully",
+//       data: {
+//         businessId: business._id,
+//         isVerified: business.isVerified,
+//         verifiedAt: business.verifiedAt,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("VERIFY BUSINESS ERROR:", error);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Unable to verify business",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
+// ======================================================
+// VERIFY BUSINESS
+// ======================================================
 exports.verifyBusiness = async (req, res) => {
   try {
     const business = await Business.findById(req.params.businessId);
@@ -75,14 +119,26 @@ exports.verifyBusiness = async (req, res) => {
       });
     }
 
+    // 1. Business update karo
     business.isVerified = true;
     business.isActive = true;
     business.verifiedAt = new Date();
-
-    // Authentication nahi hai, isliye verifiedBy mat set karo
     business.verifiedBy = null;
 
     await business.save();
+
+    // 2. Business ke saare active documents ka status "verified" karo (YE MISSING THA)
+    await BusinessDocument.updateMany(
+      {
+        business: business._id,
+        isActive: true,
+      },
+      {
+        $set: {
+          verificationStatus: "verified",
+        },
+      }
+    );
 
     return res.status(200).json({
       success: true,
@@ -103,16 +159,63 @@ exports.verifyBusiness = async (req, res) => {
     });
   }
 };
-
 // ======================================================
 // REMOVE BUSINESS VERIFICATION
 // ======================================================
 
+// exports.unverifyBusiness = async (req, res) => {
+//   try {
+//     const business = await Business.findById(
+//       req.params.businessId
+//     );
+
+//     if (!business) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Business not found",
+//       });
+//     }
+
+//     // Card directory me rahega,
+//     // sirf verification badge remove hoga.
+//     business.isVerified = false;
+//     business.isActive = true;
+//     business.verifiedAt = null;
+//     business.verifiedBy = null;
+
+//     await business.save();
+//     //Business ke saare active documents verify karo
+// await BusinessDocument.updateMany(
+//   {
+//     business: business._id,
+//     isActive: true,
+//   },
+//   {
+//     $set: {
+//       verificationStatus: "verified",
+//     },
+//   }
+// );
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Business verification removed",
+//     });
+//   } catch (error) {
+//     console.error("UNVERIFY BUSINESS ERROR:", error);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Unable to remove verification",
+//     });
+//   }
+// };
+// ======================================================
+// REMOVE BUSINESS VERIFICATION
+// ======================================================
 exports.unverifyBusiness = async (req, res) => {
   try {
-    const business = await Business.findById(
-      req.params.businessId
-    );
+    const business = await Business.findById(req.params.businessId);
 
     if (!business) {
       return res.status(404).json({
@@ -121,26 +224,25 @@ exports.unverifyBusiness = async (req, res) => {
       });
     }
 
-    // Card directory me rahega,
-    // sirf verification badge remove hoga.
     business.isVerified = false;
     business.isActive = true;
     business.verifiedAt = null;
     business.verifiedBy = null;
 
     await business.save();
-    //Business ke saare active documents verify karo
-await BusinessDocument.updateMany(
-  {
-    business: business._id,
-    isActive: true,
-  },
-  {
-    $set: {
-      verificationStatus: "verified",
-    },
-  }
-);
+
+    // Business unverify karne par documents ka status wapas "pending" karo
+    await BusinessDocument.updateMany(
+      {
+        business: business._id,
+        isActive: true,
+      },
+      {
+        $set: {
+          verificationStatus: "pending",
+        },
+      }
+    );
 
     return res.status(200).json({
       success: true,
