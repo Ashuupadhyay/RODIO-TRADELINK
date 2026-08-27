@@ -434,6 +434,7 @@ const Profile = require("../models/profile");
 const Vehicle = require("../models/vehicle");
 const Comment = require("../models/comments");
 const Post = require("../models/Post");
+const BusinessDocument = require("../models/documents");
 
 /**
  * @desc    Get Business / Transporter Detail by ID (Works with Business ID or User ID)
@@ -463,7 +464,7 @@ const getTransporterById = async (req, res) => {
     // =====================================================
     // 2. PARALLEL FETCHING (Vehicles, Posts, Comments, User, Profile)
     // =====================================================
-    const [user, profile, vehicles, posts, comments] = await Promise.all([
+    const [user, profile, vehicles, posts, comments,documents,] = await Promise.all([
       User.findById(business.user).select("role subscription mobile"),
       Profile.findOne({ user: business.user }).select("name profileImage"),
       Vehicle.find({
@@ -479,6 +480,17 @@ const getTransporterById = async (req, res) => {
       })
         .select("rating comment createdAt user")
         .sort({ createdAt: -1 }),
+
+BusinessDocument.find({
+  business: business._id,
+  user: business.user,
+  isActive: true,
+}).select(
+  "documentType documentName documentUrl publicId verificationStatus"
+),
+
+
+
     ]);
 
     // =====================================================
@@ -576,6 +588,7 @@ officeWorkingHours:
 officeWorkingDays:
   business.officeWorkingDays || [],
         workingAreas: business.workingAreas || [],
+        documents: documents || [],
 
         totalVehicles: vehicles.length,
         vehicles: vehicles || [],
