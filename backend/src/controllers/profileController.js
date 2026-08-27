@@ -359,6 +359,9 @@ const updateProfile = async (req, res) => {
     if (updateData.email) user.email = updateData.email;
     if (phoneNumber) user.mobile = String(phoneNumber);
     if (updateData.firmName) user.firmName = updateData.firmName;
+    if (updateData.role !== undefined) {
+  user.role = String(updateData.role).trim();
+}
 
     if (updateData.password && updateData.password.trim() !== "") {
       user.password = await bcrypt.hash(updateData.password, 10);
