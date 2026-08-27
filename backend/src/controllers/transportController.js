@@ -483,7 +483,6 @@ const getTransporterById = async (req, res) => {
 
 BusinessDocument.find({
   business: business._id,
-  user: business.user,
   isActive: true,
 }).select(
   "documentType documentName documentUrl publicId verificationStatus"

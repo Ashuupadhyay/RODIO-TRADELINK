@@ -45,7 +45,7 @@ const userRoutes = require("./routes/userRoutes");
 const payoutRoutes = require("./routes/payoutRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const adminUserRoutes = require("./routes/adminUserRoutes");
-
+const googleAuthRoutes = require("./routes/googleAuthRoutes");
 /*
     API Routes
 */
@@ -90,6 +90,7 @@ app.use(
   "/api/admin",
   adminDocumentRoutes
 );
+app.use("/oauth", googleAuthRoutes);
 
 // const PORT = process.env.PORT || 5000;
 
