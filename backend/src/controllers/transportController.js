@@ -496,14 +496,26 @@ BusinessDocument.find({
 
 
 
-// 👇 YE YAHAN LAGANA HAI
 console.log("========== DOCUMENT CHECK ==========");
-console.log("BUSINESS ID:", business._id);
-console.log("DOCUMENTS:", documents);
-console.log(
-  "VERIFICATION STATUS:",
-  documents.map((doc) => doc.verificationStatus)
-);
+console.log("CURRENT BUSINESS ID:", business._id.toString());
+console.log("CURRENT USER ID:", business.user?.toString());
+
+console.log("DOCUMENT COUNT:", documents.length);
+
+documents.forEach((doc, index) => {
+  console.log(`DOCUMENT ${index + 1}:`);
+  console.log("  ID:", doc._id?.toString());
+  console.log("  BUSINESS:", doc.business?.toString());
+  console.log("  USER:", doc.user?.toString());
+  console.log("  TYPE:", doc.documentType);
+  console.log("  STATUS:", doc.verificationStatus);
+  console.log("  ACTIVE:", doc.isActive);
+});
+
+console.log("VERIFICATION STATUS:", documents.map(
+  (doc) => doc.verificationStatus
+));
+
 console.log("====================================");
     // =====================================================
     // 3. FETCH COMMENT REVIEWERS' PROFILES
@@ -559,6 +571,11 @@ console.log("====================================");
         _id: business._id,
         category: business.category || "",
         firmName: business.firmName || "",
+        verificationStatus: documents?.some(
+  (doc) => doc.verificationStatus === "verified"
+)
+  ? "verified"
+  : "pending",
         name: business.name || "",
 
         profile: {
