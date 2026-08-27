@@ -492,6 +492,19 @@ BusinessDocument.find({
 
     ]);
 
+
+
+
+
+// 👇 YE YAHAN LAGANA HAI
+console.log("========== DOCUMENT CHECK ==========");
+console.log("BUSINESS ID:", business._id);
+console.log("DOCUMENTS:", documents);
+console.log(
+  "VERIFICATION STATUS:",
+  documents.map((doc) => doc.verificationStatus)
+);
+console.log("====================================");
     // =====================================================
     // 3. FETCH COMMENT REVIEWERS' PROFILES
     // =====================================================
