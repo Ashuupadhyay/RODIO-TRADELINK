@@ -319,21 +319,39 @@ const updateProfile = async (req, res) => {
       }
     }
 
-    // 3. Duplicate Mobile Check (Only if mobile is passed & changed)
-    const phoneNumber = updateData.phoneNumber || updateData.mobile;
-    if (phoneNumber && String(phoneNumber) !== String(user.mobile)) {
-      const mobileExist = await User.findOne({
-        mobile: String(phoneNumber),
-        _id: { $ne: userId },
-      });
+ const phoneNumber = updateData.phoneNumber || updateData.mobile;
 
-      if (mobileExist) {
-        return res.status(400).json({
-          success: false,
-          message: "Mobile number already exists",
-        });
-      }
-    }
+if (phoneNumber && String(phoneNumber) !== String(user.mobile)) {
+  const normalizedPhone = String(phoneNumber).trim();
+
+  // 1. Check User collection
+  const mobileExist = await User.findOne({
+    mobile: normalizedPhone,
+    _id: { $ne: userId },
+  }).lean();
+
+  if (mobileExist) {
+    return res.status(400).json({
+      success: false,
+      message:
+          "This mobile number is already associated with another user's primary number on our platform. Please enter a different mobile number.",
+    });
+  }
+
+  // 2. Check Business collection
+  const businessPhoneExist = await Business.findOne({
+    phoneNumber: normalizedPhone,
+    user: { $ne: userId },
+  }).lean();
+
+  if (businessPhoneExist) {
+    return res.status(400).json({
+      success: false,
+      message:
+          "This mobile number is already associated with another user's primary number on our platform. Please enter a different mobile number.",
+    });
+  }
+}
 
     // 4. Upload Profile Image to Cloudinary (If File Provided)
     let imageUrl = "";
