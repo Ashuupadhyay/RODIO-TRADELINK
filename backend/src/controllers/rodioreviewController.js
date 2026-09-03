@@ -265,6 +265,7 @@ exports.getMyReview = async (req, res) => {
 exports.deleteMyReview = async (req, res) => {
   try {
     const userId = getUserId(req);
+    const { id } = req.params;
 
     if (!userId) {
       return res.status(401).json({
@@ -273,29 +274,37 @@ exports.deleteMyReview = async (req, res) => {
       });
     }
 
-    const result = await Review.deleteMany({
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid review ID",
+      });
+    }
+
+    const review = await Review.findOneAndDelete({
+      _id: id,
       user: userId,
     });
 
-    if (!result || result.deletedCount === 0) {
+    if (!review) {
       return res.status(404).json({
         success: false,
-        message: "Review not found",
+        message: "Review not found or you are not allowed to delete it",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "All your reviews deleted successfully",
-      deletedCount: result.deletedCount,
+      message: "Review deleted successfully",
+      review,
     });
 
   } catch (error) {
-    console.error("Delete My Reviews Error:", error);
+    console.error("Delete My Review Error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to delete reviews",
+      message: "Failed to delete review",
       error: error.message,
     });
   }

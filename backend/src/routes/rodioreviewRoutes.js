@@ -1,7 +1,5 @@
 const express = require("express");
-
 const router = express.Router();
-
 const {
   addOrUpdateReview,
   getAllReviews,
@@ -33,7 +31,7 @@ router.get("/my-review", auth, getMyReview);
 router.post("/", auth, addOrUpdateReview);
 
 // delete
-router.delete("/my-review", auth, deleteMyReview);
+router.delete("/my-review/:id", auth, deleteMyReview);
 
 
 module.exports = router;
