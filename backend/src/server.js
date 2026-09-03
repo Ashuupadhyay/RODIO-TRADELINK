@@ -49,6 +49,7 @@ const googleAuthRoutes = require("./routes/googleAuthRoutes");
 const reviewRoutes = require("./routes/rodioreviewRoutes");
 const adminReviewRoutes = require("./routes/adminrevewrout");
 const heroslide=require("./routes/heroSlideRoutes.js");
+const mediaPostRoutes = require("./routes/mediaPostRoutes");
 //const adminUserRoutes2 = require("./routes/adminUserRoutes2");
 /*
     API Routes
@@ -100,6 +101,9 @@ app.use("/oauth", googleAuthRoutes);
 app.use("/api/reviews", reviewRoutes);
 
 app.use("/api/admin", adminReviewRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/admin", adminReviewRoutes);
+app.use("/api/media-posts", mediaPostRoutes);
 
 // const PORT = process.env.PORT || 5000;
 
