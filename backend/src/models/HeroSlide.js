@@ -4,21 +4,21 @@ const heroSlideSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: true,
+      default: "India's Trusted Transport Network",
       trim: true,
     },
     subtitle: {
       type: String,
-      trim: true,
       default: "",
+      trim: true,
     },
     desktopImage: {
       type: String,
-      required: true,
+      required: true, // Cloudinary URL
     },
     mobileImage: {
       type: String,
-      required: true,
+      required: true, // Cloudinary URL
     },
     order: {
       type: Number,

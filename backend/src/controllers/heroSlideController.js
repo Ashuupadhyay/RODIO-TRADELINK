@@ -1,8 +1,49 @@
 const HeroSlide = require("../models/HeroSlide");
+const { uploadToCloudinary } = require("../config/cloudnary");
 
-// ==========================================
-// 1. GET ACTIVE SLIDES (Public - For Frontend)
-// ==========================================
+// 1. CREATE SLIDE (Uploads straight to Cloudinary)
+exports.createSlide = async (req, res) => {
+  try {
+    const { title, subtitle, order } = req.body;
+
+    if (!req.files || !req.files.desktopImage || !req.files.mobileImage) {
+      return res.status(400).json({
+        success: false,
+        message: "Desktop aur Mobile dono pictures select karna zaroori hai!",
+      });
+    }
+
+    // Direct Cloudinary Upload
+    const [desktopCloudinaryUrl, mobileCloudinaryUrl] = await Promise.all([
+      uploadToCloudinary(req.files.desktopImage[0].buffer, "rodio/desktop"),
+      uploadToCloudinary(req.files.mobileImage[0].buffer, "rodio/mobile"),
+    ]);
+
+    const newSlide = await HeroSlide.create({
+      title: title ? title.trim() : "India's Trusted Transport Network",
+      subtitle: subtitle ? subtitle.trim() : "",
+      desktopImage: desktopCloudinaryUrl,
+      mobileImage: mobileCloudinaryUrl,
+      order: order ? Number(order) : 0,
+      isActive: true,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Slide Cloudinary par successfully upload ho gayi!",
+      data: newSlide,
+    });
+  } catch (error) {
+    console.error("Slide Upload Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Cloudinary upload failed",
+      error: error.message,
+    });
+  }
+};
+
+// 2. GET ACTIVE SLIDES (For Frontend Website)
 exports.getActiveSlides = async (req, res) => {
   try {
     const slides = await HeroSlide.find({ isActive: true })
@@ -14,132 +55,40 @@ exports.getActiveSlides = async (req, res) => {
       data: slides,
     });
   } catch (error) {
-    console.error("Get Active Slides Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Slides fetch karne mein dikkat aayi",
-      error: error.message,
-    });
+    return res.status(500).json({ success: false, error: error.message });
   }
 };
 
-// ==========================================
-// 2. GET ALL SLIDES (Admin Control Panel)
-// ==========================================
+// 3. GET ALL SLIDES (For Admin Panel)
 exports.getAllAdminSlides = async (req, res) => {
   try {
     const slides = await HeroSlide.find().sort({ order: 1, createdAt: -1 });
-
-    return res.status(200).json({
-      success: true,
-      data: slides,
-    });
+    return res.status(200).json({ success: true, data: slides });
   } catch (error) {
-    console.error("Get Admin Slides Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Slides load nahi ho payi",
-      error: error.message,
-    });
+    return res.status(500).json({ success: false, error: error.message });
   }
 };
 
-// ==========================================
-// 3. ADD NEW SLIDE (Admin Control Panel)
-// ==========================================
-exports.createSlide = async (req, res) => {
-  try {
-    const { title, subtitle, desktopImage, mobileImage, order, isActive } = req.body;
-
-    if (!title || !desktopImage || !mobileImage) {
-      return res.status(400).json({
-        success: false,
-        message: "Title, Desktop Image URL aur Mobile Image URL zaroori hain.",
-      });
-    }
-
-    const slide = await HeroSlide.create({
-      title: title.trim(),
-      subtitle: subtitle ? subtitle.trim() : "",
-      desktopImage: desktopImage.trim(),
-      mobileImage: mobileImage.trim(),
-      order: order ? Number(order) : 0,
-      isActive: isActive !== undefined ? isActive : true,
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: "Slide successfully add ho gayi!",
-      data: slide,
-    });
-  } catch (error) {
-    console.error("Create Slide Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Slide add karne mein dikkat aayi",
-      error: error.message,
-    });
-  }
-};
-
-// ==========================================
-// 4. UPDATE SLIDE STATUS (Enable / Disable)
-// ==========================================
+// 4. TOGGLE SLIDE STATUS
 exports.toggleSlideStatus = async (req, res) => {
   try {
-    const { id } = req.params;
-    const slide = await HeroSlide.findById(id);
-
-    if (!slide) {
-      return res.status(404).json({
-        success: false,
-        message: "Slide nahi mili",
-      });
-    }
+    const slide = await HeroSlide.findById(req.params.id);
+    if (!slide) return res.status(404).json({ success: false, message: "Slide nahi mili" });
 
     slide.isActive = !slide.isActive;
     await slide.save();
-
-    return res.status(200).json({
-      success: true,
-      message: `Slide ab ${slide.isActive ? "Active" : "Inactive"} hai`,
-      data: slide,
-    });
+    return res.status(200).json({ success: true, data: slide });
   } catch (error) {
-    console.error("Toggle Slide Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Status update nahi ho paya",
-      error: error.message,
-    });
+    return res.status(500).json({ success: false, error: error.message });
   }
 };
 
-// ==========================================
-// 5. DELETE SLIDE (Admin Control Panel)
-// ==========================================
+// 5. DELETE SLIDE
 exports.deleteSlide = async (req, res) => {
   try {
-    const { id } = req.params;
-    const slide = await HeroSlide.findByIdAndDelete(id);
-
-    if (!slide) {
-      return res.status(404).json({
-        success: false,
-        message: "Slide nahi mili",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Slide successfully delete ho gayi!",
-    });
+    await HeroSlide.findByIdAndDelete(req.params.id);
+    return res.status(200).json({ success: true, message: "Slide deleted successfully" });
   } catch (error) {
-    console.error("Delete Slide Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Slide delete nahi ho payi",
-      error: error.message,
-    });
+    return res.status(500).json({ success: false, error: error.message });
   }
 };
