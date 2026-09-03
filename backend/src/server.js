@@ -47,6 +47,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const adminUserRoutes = require("./routes/adminUserRoutes");
 const googleAuthRoutes = require("./routes/googleAuthRoutes");
 const reviewRoutes = require("./routes/rodioreviewRoutes");
+const adminReviewRoutes = require("./routes/adminrevewrout");
 //const adminUserRoutes2 = require("./routes/adminUserRoutes2");
 /*
     API Routes
@@ -95,6 +96,8 @@ app.use(
 );
 app.use("/oauth", googleAuthRoutes);
 app.use("/api/reviews", reviewRoutes);
+
+app.use("/api/admin", adminReviewRoutes);
 
 // const PORT = process.env.PORT || 5000;
 
