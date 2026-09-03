@@ -1,20 +1,24 @@
+const mongoose = require("mongoose");
 
 const Review = require("../models/RodioReview");
-const User = require("../models/register");
 const Profile = require("../models/profile");
 const Business = require("../models/business");
 
 // ==========================================
-// ADD REVIEW
+// HELPER - GET LOGGED IN USER ID
+// ==========================================
+const getUserId = (req) => {
+  return req.user?._id || req.user?.id || req.userId || null;
+};
+
+
+// ==========================================
+// 1. ADD REVIEW
 // One user can submit multiple reviews
 // ==========================================
-
 exports.addOrUpdateReview = async (req, res) => {
   try {
-    const userId =
-      req.user?._id ||
-      req.user?.id ||
-      req.userId;
+    const userId = getUserId(req);
 
     if (!userId) {
       return res.status(401).json({
@@ -23,12 +27,15 @@ exports.addOrUpdateReview = async (req, res) => {
       });
     }
 
-    const { rating, comment } = req.body;
+    const { rating, comment } = req.body || {};
 
+    // ------------------------------------------
     // Rating validation
+    // ------------------------------------------
     if (
       rating === undefined ||
       rating === null ||
+      rating === "" ||
       Number(rating) < 1 ||
       Number(rating) > 5
     ) {
@@ -38,19 +45,23 @@ exports.addOrUpdateReview = async (req, res) => {
       });
     }
 
+    // ------------------------------------------
     // Comment validation
-    if (!comment || !comment.trim()) {
+    // ------------------------------------------
+    if (
+      typeof comment !== "string" ||
+      !comment.trim()
+    ) {
       return res.status(400).json({
         success: false,
         message: "Please write your review",
       });
     }
 
-    // ==========================================
+    // ------------------------------------------
     // CREATE NEW REVIEW
-    // Same user can create multiple reviews
-    // ==========================================
-
+    // Multiple reviews allowed
+    // ------------------------------------------
     const review = await Review.create({
       user: userId,
       rating: Number(rating),
@@ -76,24 +87,26 @@ exports.addOrUpdateReview = async (req, res) => {
 
 
 // ==========================================
-// GET ALL RODIO REVIEWS
+// 2. GET ALL REVIEWS
 // ALL USERS + ALL REVIEWS
 // ==========================================
-
 exports.getAllReviews = async (req, res) => {
   try {
-    // No isActive filter
-    // Every review from every user will come
     const reviews = await Review.find({})
       .populate("user", "mobile role")
-      .sort({ createdAt: -1 })
+      .sort({
+        createdAt: -1,
+      })
       .lean();
 
     console.log("TOTAL REVIEWS:", reviews.length);
 
+    // ------------------------------------------
+    // Format reviews
+    // ------------------------------------------
     const formattedReviews = await Promise.all(
       reviews.map(async (review) => {
-        const userId = review.user?._id;
+        const userId = review.user?._id || review.user || null;
 
         let profile = null;
         let business = null;
@@ -141,15 +154,18 @@ exports.getAllReviews = async (req, res) => {
             profileImage:
               profile?.profileImage ||
               "",
+
+            mobile:
+              review.user?.mobile ||
+              "",
           },
         };
       })
     );
 
-    // ==========================================
-    // AVERAGE RATING
-    // ==========================================
-
+    // ------------------------------------------
+    // Rating statistics
+    // ------------------------------------------
     const ratingStats = await Review.aggregate([
       {
         $group: {
@@ -167,9 +183,10 @@ exports.getAllReviews = async (req, res) => {
     ]);
 
     const averageRating =
-      ratingStats.length > 0
+      ratingStats.length > 0 &&
+      ratingStats[0].averageRating !== undefined
         ? Number(
-            ratingStats[0].averageRating.toFixed(1)
+            Number(ratingStats[0].averageRating).toFixed(1)
           )
         : 0;
 
@@ -178,17 +195,13 @@ exports.getAllReviews = async (req, res) => {
         ? ratingStats[0].totalReviews
         : 0;
 
-    // ==========================================
-    // RESPONSE
-    // ==========================================
-
+    // ------------------------------------------
+    // Response
+    // ------------------------------------------
     return res.status(200).json({
       success: true,
-
       averageRating,
-
       totalReviews,
-
       reviews: formattedReviews,
     });
 
@@ -205,16 +218,12 @@ exports.getAllReviews = async (req, res) => {
 
 
 // ==========================================
-// GET MY REVIEWS
+// 3. GET MY REVIEWS
 // Returns ALL reviews of logged-in user
 // ==========================================
-
 exports.getMyReview = async (req, res) => {
   try {
-    const userId =
-      req.user?._id ||
-      req.user?.id ||
-      req.userId;
+    const userId = getUserId(req);
 
     if (!userId) {
       return res.status(401).json({
@@ -226,7 +235,9 @@ exports.getMyReview = async (req, res) => {
     const reviews = await Review.find({
       user: userId,
     })
-      .sort({ createdAt: -1 })
+      .sort({
+        createdAt: -1,
+      })
       .lean();
 
     return res.status(200).json({
@@ -248,16 +259,12 @@ exports.getMyReview = async (req, res) => {
 
 
 // ==========================================
-// DELETE MY REVIEWS
+// 4. DELETE MY REVIEWS
 // Deletes ALL reviews of logged-in user
 // ==========================================
-
 exports.deleteMyReview = async (req, res) => {
   try {
-    const userId =
-      req.user?._id ||
-      req.user?.id ||
-      req.userId;
+    const userId = getUserId(req);
 
     if (!userId) {
       return res.status(401).json({
@@ -270,7 +277,7 @@ exports.deleteMyReview = async (req, res) => {
       user: userId,
     });
 
-    if (result.deletedCount === 0) {
+    if (!result || result.deletedCount === 0) {
       return res.status(404).json({
         success: false,
         message: "Review not found",
@@ -284,11 +291,151 @@ exports.deleteMyReview = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Delete Reviews Error:", error);
+    console.error("Delete My Reviews Error:", error);
 
     return res.status(500).json({
       success: false,
       message: "Failed to delete reviews",
+      error: error.message,
+    });
+  }
+};
+
+
+// ==========================================
+// 5. ADMIN UPDATE REVIEW
+// PUT /api/admin/reviews/:id
+// ==========================================
+exports.adminUpdateReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // ------------------------------------------
+    // Check ID
+    // ------------------------------------------
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid review ID",
+      });
+    }
+
+    // ------------------------------------------
+    // Safe body
+    // ------------------------------------------
+    const { rating, comment } = req.body || {};
+
+    // ------------------------------------------
+    // Rating validation
+    // ------------------------------------------
+    if (
+      rating === undefined ||
+      rating === null ||
+      rating === "" ||
+      Number(rating) < 1 ||
+      Number(rating) > 5
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Rating must be between 1 and 5",
+      });
+    }
+
+    // ------------------------------------------
+    // Comment validation
+    // ------------------------------------------
+    if (
+      typeof comment !== "string" ||
+      !comment.trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please write your review",
+      });
+    }
+
+    // ------------------------------------------
+    // UPDATE REVIEW
+    // ------------------------------------------
+    const review = await Review.findByIdAndUpdate(
+      id,
+      {
+        rating: Number(rating),
+        comment: comment.trim(),
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Review updated successfully",
+      review,
+    });
+
+  } catch (error) {
+    console.error("Admin Update Review Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update review",
+      error: error.message,
+    });
+  }
+};
+
+
+// ==========================================
+// 6. ADMIN DELETE REVIEW
+// DELETE /api/admin/reviews/:id
+// ==========================================
+exports.adminDeleteReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // ------------------------------------------
+    // Check ID
+    // ------------------------------------------
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid review ID",
+      });
+    }
+
+    // ------------------------------------------
+    // DELETE REVIEW
+    // ------------------------------------------
+    const review = await Review.findByIdAndDelete(id);
+
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Review deleted successfully",
+      review,
+    });
+
+  } catch (error) {
+    console.error("Admin Delete Review Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete review",
       error: error.message,
     });
   }
