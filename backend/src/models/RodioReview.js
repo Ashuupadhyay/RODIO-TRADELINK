@@ -6,7 +6,6 @@ const reviewSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true, // ek user sirf ek review dega
       index: true,
     },
 
@@ -23,11 +22,6 @@ const reviewSchema = new mongoose.Schema(
       trim: true,
       minlength: 2,
       maxlength: 1000,
-    },
-
-    isActive: {
-      type: Boolean,
-      default: true,
     },
   },
   {
