@@ -48,6 +48,7 @@ const adminUserRoutes = require("./routes/adminUserRoutes");
 const googleAuthRoutes = require("./routes/googleAuthRoutes");
 const reviewRoutes = require("./routes/rodioreviewRoutes");
 const adminReviewRoutes = require("./routes/adminrevewrout");
+const heroslide=require("./routes/heroSlideRoutes.js");
 //const adminUserRoutes2 = require("./routes/adminUserRoutes2");
 /*
     API Routes
@@ -89,6 +90,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/payout", payoutRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminUserRoutes);
+app.use("/api/hero-slides", heroslide);
 //app.use("/api/admin/users", adminUserRoutes2);
 app.use(
   "/api/admin", 
