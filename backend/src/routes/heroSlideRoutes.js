@@ -1,14 +1,66 @@
 const express = require("express");
+
 const router = express.Router();
+
 const heroSlideController = require("../controllers/heroSlideController");
+const { upload } = require("../config/cloudnary");
 
-// Public (Frontend carousel ke liye)
-router.get("/active", heroSlideController.getActiveSlides);
+// ==========================================
+// PUBLIC - FRONTEND CAROUSEL
+// ==========================================
+router.get(
+  "/active",
+  heroSlideController.getActiveSlides
+);
 
-// Admin Control Panel ke liye (yahan apna admin auth middleware add kar sakte hain)
-router.get("/admin/all", heroSlideController.getAllAdminSlides);
-router.post("/admin/create", heroSlideController.createSlide);
-router.patch("/admin/toggle/:id", heroSlideController.toggleSlideStatus);
-router.delete("/admin/delete/:id", heroSlideController.deleteSlide);
+
+// ==========================================
+// ADMIN - GET ALL SLIDES
+// ==========================================
+router.get(
+  "/admin/all",
+  heroSlideController.getAllAdminSlides
+);
+
+
+// ==========================================
+// ADMIN - CREATE SLIDE
+// Desktop + Mobile Image
+// ==========================================
+router.post(
+  "/admin/create",
+
+  upload.fields([
+    {
+      name: "desktopImage",
+      maxCount: 1,
+    },
+    {
+      name: "mobileImage",
+      maxCount: 1,
+    },
+  ]),
+
+  heroSlideController.createSlide
+);
+
+
+// ==========================================
+// ADMIN - TOGGLE SLIDE
+// ==========================================
+router.patch(
+  "/admin/toggle/:id",
+  heroSlideController.toggleSlideStatus
+);
+
+
+// ==========================================
+// ADMIN - DELETE SLIDE
+// ==========================================
+router.delete(
+  "/admin/delete/:id",
+  heroSlideController.deleteSlide
+);
+
 
 module.exports = router;
