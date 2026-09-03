@@ -767,11 +767,37 @@ const logout = (req, res) => {
         message: "Logout Successful"
     });
 };
+///// admin panel get api  users 
+
+
+
+// GET NEWLY REGISTERED USERS
+const getNewlyRegisteredUsers = async (req, res) => {
+  try {
+    const users = await User.find({})
+      .select("_id role firmName mobile createdAt")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: users.length,
+      users,
+    });
+  } catch (error) {
+    console.error("GET NEWLY REGISTERED USERS ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch newly registered users",
+    });
+  }
+};
 
 
 // EXPORTS
 module.exports = {
     register,
     login,
-    logout
+    logout,
+      getNewlyRegisteredUsers
 };

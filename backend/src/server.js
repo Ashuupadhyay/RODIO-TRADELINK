@@ -46,6 +46,7 @@ const payoutRoutes = require("./routes/payoutRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const adminUserRoutes = require("./routes/adminUserRoutes");
 const googleAuthRoutes = require("./routes/googleAuthRoutes");
+//const adminUserRoutes2 = require("./routes/adminUserRoutes2");
 /*
     API Routes
 */
@@ -86,6 +87,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/payout", payoutRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminUserRoutes);
+//app.use("/api/admin/users", adminUserRoutes2);
 app.use(
   "/api/admin",
   adminDocumentRoutes

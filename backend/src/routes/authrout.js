@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middlewhere/auth");
-const { register, login,logout} = require("../controllers/authcontroller");
+const { register, login,logout,getNewlyRegisteredUsers} = require("../controllers/authcontroller");
 const {forgotPassword} = require("../controllers/forgotPassword");
 const {verifyOTP} = require("../controllers/verifyotpcontroller");
 
@@ -23,5 +23,5 @@ router.get("/profile", auth, (req, res) => {
         user: req.user
     });
 });
-
+router.get("/newly-registered", getNewlyRegisteredUsers);
 module.exports = router;
