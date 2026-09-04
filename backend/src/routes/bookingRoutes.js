@@ -50,7 +50,6 @@ router.delete(
 // ADMIN CREATE LOAD
 router.post(
   "/admin-create",
-  auth,
   adminCreateBooking
 );
 module.exports = router;
