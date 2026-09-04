@@ -399,7 +399,7 @@
 
 const Booking = require("../models/lead");
 const Bid = require("../models/bid");
-
+const mongoose = require("mongoose");
 // ===============================
 // Create Booking / Lead
 // ===============================
