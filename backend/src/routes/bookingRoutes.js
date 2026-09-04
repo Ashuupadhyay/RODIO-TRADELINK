@@ -14,7 +14,8 @@ getAllBookings,
 myAssignedLeads,
 updateLeadStatus,
 updateLead,
-    deleteLead
+    deleteLead,
+    adminCreateBooking,
 } = require("../controllers/bookingController");
 
 
@@ -45,5 +46,11 @@ router.delete(
     "/:id",
     auth,
     deleteLead
+);
+// ADMIN CREATE LOAD
+router.post(
+  "/admin-create",
+  auth,
+  adminCreateBooking
 );
 module.exports = router;

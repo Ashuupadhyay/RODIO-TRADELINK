@@ -707,3 +707,101 @@ exports.updateLeadStatus = async (req, res) => {
         });
     }
 };
+// ==========================================
+// ADMIN CREATE LOAD
+// Existing createBooking ko touch nahi karta
+// ==========================================
+
+exports.adminCreateBooking = async (req, res) => {
+  try {
+    const {
+      createdBy,
+      creatorRole,
+      service,
+      vehicleType,
+      pickupLocation,
+      loading_point,
+      pickupDate,
+      goodsType,
+      weight,
+      contactPerson,
+      contactNumber,
+      expectedBudget,
+      remarks,
+      status,
+    } = req.body || {};
+
+    // USER OBJECT ID
+    if (
+      !createdBy ||
+      !mongoose.Types.ObjectId.isValid(createdBy)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid User Object ID is required",
+      });
+    }
+
+    // USER EXIST KARTA HAI YA NAHI
+    const user = await mongoose
+      .model("User")
+      .findById(createdBy)
+      .select("_id name email mobile role");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // CREATE LOAD
+    const booking = await Booking.create({
+      createdBy: user._id,
+
+      creatorRole:
+        creatorRole || user.role,
+
+      status: status || "Open",
+
+      service,
+      vehicleType,
+      pickupLocation,
+      loading_point,
+      pickupDate,
+
+      goodsType: goodsType || "",
+      weight: weight || "",
+
+      contactPerson,
+      contactNumber,
+
+      expectedBudget:
+        expectedBudget !== "" &&
+        expectedBudget !== undefined
+          ? Number(expectedBudget)
+          : undefined,
+
+      remarks: remarks || "",
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Load created successfully",
+      data: booking,
+      user,
+    });
+
+  } catch (error) {
+    console.error(
+      "Admin Create Booking Error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create load",
+      error: error.message,
+    });
+  }
+};
