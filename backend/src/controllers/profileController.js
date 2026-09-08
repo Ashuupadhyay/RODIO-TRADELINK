@@ -1173,8 +1173,8 @@
 const Profile = require("../models/profile");
 const User = require("../models/register");
 const Business = require("../models/business");
-const cloudinary = require("../config/cloudnary");
-const streamifier = require("streamifier");
+const { uploadToCloudinary } = require("../config/cloudnary");
+
 const bcrypt = require("bcrypt");
 
 const DEFAULT_PROFILE_IMAGE =
@@ -1349,23 +1349,18 @@ if (phoneNumber && String(phoneNumber) !== String(user.mobile)) {
 }
 
     // 4. Upload Profile Image to Cloudinary (If File Provided)
-    let imageUrl = "";
-    if (req.file) {
-      const uploadImage = () =>
-        new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            { folder: "profiles" },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            }
-          );
-          streamifier.createReadStream(req.file.buffer).pipe(stream);
-        });
+    // ==========================================
+// UPLOAD PROFILE IMAGE TO CLOUDINARY
+// ==========================================
 
-      const result = await uploadImage();
-      imageUrl = result.secure_url;
-    }
+let imageUrl = "";
+
+if (req.file) {
+  imageUrl = await uploadToCloudinary(
+    req.file.buffer,
+    "profiles"
+  );
+}
 
     // 5. Update Base User Collection
     if (updateData.name) user.name = updateData.name;

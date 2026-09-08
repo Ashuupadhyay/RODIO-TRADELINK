@@ -50,7 +50,7 @@ const STATIC_REFERRAL_CODES = {
 
   FREE100: 0,       // ₹0 Free Access
 
-  TO50: 299,        // Override to ₹299
+  TO50: 299,        // Override to ₹29900000
 
   DISCOUNT599: 599, // Override to ₹599
 
