@@ -1,6 +1,6 @@
 const Post = require("../models/Post");
 const User = require("../models/register");
-const cloudinary = require("../config/cloudnary");
+const { cloudinary } = require("../config/cloudnary");
 
 
 // Cloudinary Buffer Upload Helper Function
