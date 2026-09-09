@@ -545,7 +545,7 @@ console.log("====================================");
         createdAt: item.createdAt,
         user: {
           _id: item.user || null,
-          name: reviewer?.name || "Anonymous",
+          name: reviewer?.name || "Guest User",
           profileImage: reviewer?.profileImage || "",
         },
       };
