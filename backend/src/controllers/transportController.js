@@ -359,7 +359,7 @@
 //         createdAt: item.createdAt,
 //         user: {
 //           _id: item.user,
-//           name: reviewer?.name || "Anonymous",
+//           name: reviewer?.name || "",
 //           profileImage: reviewer?.profileImage || "",
 //         },
 //       };
