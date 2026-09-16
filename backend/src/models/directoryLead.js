@@ -178,7 +178,16 @@ const directoryLeadSchema = new mongoose.Schema(
     // =====================================
     // PUBLIC DIRECTORY STATUS
     // =====================================
+isVerified: {
+  type: Boolean,
+  default: false,
+  index: true
+},
 
+verifiedAt: {
+  type: Date,
+  default: null
+},
     isActive: {
       type: Boolean,
       default: true,

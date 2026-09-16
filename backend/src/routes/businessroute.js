@@ -7,6 +7,8 @@ const {
   getMyBusiness,
   getDashboard,
   getPublicBusiness,
+  verifyAllDummyLeads,
+unverifyAllDummyLeads,
 } = require("../controllers/business");
 
 const authMiddleware = require("../middlewhere/auth");
@@ -43,6 +45,8 @@ router.get(
   "/public/:id",
   getPublicBusiness
 );
+router.put("/dummy/verify-all", verifyAllDummyLeads);
+router.put("/dummy/unverify-all", unverifyAllDummyLeads);
 
 router.patch(
   "/update-details",

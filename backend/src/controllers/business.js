@@ -729,6 +729,8 @@ exports.getPublicBusiness = async (req, res) => {
         gallery: dummyLead.gallery || [],
 
         isDummy: true,
+        isVerified: dummyLead.isVerified || false,
+verifiedAt: dummyLead.verifiedAt || null,
       },
     });
   }
@@ -786,6 +788,62 @@ exports.getPublicBusiness = async (req, res) => {
       success: false,
       message:
         "We couldn't process your request at the moment. Please try again later.",
+    });
+  }
+};
+///dummy 
+exports.verifyAllDummyLeads = async (req, res) => {
+  try {
+    const result = await DirectoryLead.updateMany(
+      {
+        status: "dummy",
+        isActive: true
+      },
+      {
+        $set: {
+          isVerified: true,
+          verifiedAt: new Date()
+        }
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "All dummy cards verified",
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+exports.unverifyAllDummyLeads = async (req, res) => {
+  try {
+    const result = await DirectoryLead.updateMany(
+      {
+        status: "dummy",
+        isActive: true
+      },
+      {
+        $set: {
+          isVerified: false,
+          verifiedAt: null
+        }
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Dummy verification removed",
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
     });
   }
 };
