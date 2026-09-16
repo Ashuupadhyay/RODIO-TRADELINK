@@ -811,6 +811,8 @@ for (const item of scoredDummyLeads) {
 
     createdAt:
       lead.createdAt,
+      isVerified: lead.isVerified || false,
+verifiedAt: lead.verifiedAt || null,
 
     // Frontend identification
     isDummy: true,
