@@ -1,315 +1,541 @@
+// // const Comment = require("../models/comments");
+// // const Business = require("../models/business");
+
+
+
+// // // ============================
+// // // ADD COMMENT / RATING
+// // // ============================
+
+// // const addComment = async(req,res)=>{
+
+
+// // try{
+
+
+// // const {rating,comment}=req.body;
+
+
+
+// // if(!rating || !comment){
+
+// // return res.status(400).json({
+
+// // success:false,
+
+// // message:"Rating and comment required"
+
+// // });
+
+// // }
+
+
+
+
+// // // Find transporter
+
+// // const transporter = await Business.findById(
+// // req.params.id
+// // );
+
+
+
+// // if(!transporter){
+
+
+// // return res.status(404).json({
+
+// // success:false,
+
+// // message:"Transporter not found"
+
+// // });
+
+
+// // }
+
+
+
+
+
+
+// // // Create Comment
+
+// // const review = await Comment.create({
+
+// // transporter:transporter._id,
+
+// // user:req.user.id,
+
+// // rating,
+
+// // comment,
+
+// // });
+
+
+
+
+
+
+
+// // // Push comment id
+
+// // if(!transporter.comments){
+
+// // transporter.comments=[];
+
+// // }
+
+
+
+// // transporter.comments.push(
+// // review._id
+// // );
+
+
+
+
+
+
+
+// // // Get all reviews
+
+// // const reviews = await Comment.find({
+
+// // transporter:transporter._id
+
+// // });
+
+
+
+
+
+
+
+// // // Update count
+
+// // transporter.totalReviews =
+// // reviews.length;
+
+
+
+
+
+
+
+// // // Update average rating
+
+// // transporter.averageRating =
+
+// // reviews.length > 0
+
+// // ?
+
+// // reviews.reduce(
+// // (sum,item)=>sum+item.rating,
+// // 0
+// // )
+// // /
+// // reviews.length
+
+// // :
+
+// // 0;
+
+
+
+
+
+
+
+// // await transporter.save();
+
+
+
+
+
+
+
+// // res.status(201).json({
+
+// // success:true,
+
+// // message:"Review Added Successfully",
+
+// // review
+
+// // });
+
+
+
+
+
+// // }
+
+// // catch(error){
+
+
+// // res.status(500).json({
+
+// // success:false,
+
+// // message:error.message
+
+// // });
+
+
+// // }
+
+
+
+// // };
+
+
+
+
+
+
+
+
+
+// // // ============================
+// // // GET TRANSPORTER REVIEWS
+// // // ============================
+
+
+// // const getTransporterComments = async(req,res)=>{
+
+
+// // try{
+
+
+// // const transporter = await Business.findById(
+// // req.params.id
+// // );
+
+
+
+// // if(!transporter){
+
+
+// // return res.status(404).json({
+
+// // success:false,
+
+// // message:"Transporter not found"
+
+// // });
+
+
+// // }
+
+
+
+
+
+
+// // const comments = await Comment.find({
+
+// // transporter:transporter._id
+
+// // })
+
+// // .populate(
+// // "user",
+// // "name email mobile"
+// // )
+
+// // .sort({
+// // createdAt:-1
+// // });
+
+
+
+
+
+
+
+// // res.status(200).json({
+
+// // success:true,
+
+// // averageRating:
+// // transporter.averageRating,
+
+
+// // totalReviews:
+// // transporter.totalReviews,
+
+
+// // comments
+
+
+// // });
+
+
+
+
+
+// // }
+
+// // catch(error){
+
+
+// // res.status(500).json({
+
+// // success:false,
+
+// // message:error.message
+
+// // });
+
+
+// // }
+
+
+
+// // };
+
+
+
+
+
+// // module.exports={
+
+// // addComment,
+
+// // getTransporterComments
+
+// // };
 // const Comment = require("../models/comments");
 // const Business = require("../models/business");
-
-
+// const DirectoryLead = require("../models/directoryLead");
 
 // // ============================
 // // ADD COMMENT / RATING
 // // ============================
+// const addComment = async (req, res) => {
+//     try {
+//         const { rating, comment } = req.body;
 
-// const addComment = async(req,res)=>{
+//         // Rating aur comment required check
+//         if (!rating || !comment) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Rating and comment required"
+//             });
+//         }
 
+//         // Rating limit check (1 se 5 ke beech)
+//         if (rating < 1 || rating > 5) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Rating must be between 1 and 5"
+//             });
+//         }
 
-// try{
+//         // Target Service Provider / Business Profile Find Karein
+//         const provider = await Business.findById(req.params.id);
 
+// // ==========================================
+// // REAL BUSINESS
+// // ==========================================
+// if (provider) {
 
-// const {rating,comment}=req.body;
+//     if (provider.user && provider.user.toString() === req.user.id) {
+//         return res.status(400).json({
+//             success: false,
+//             message: "You cannot review your own profile"
+//         });
+//     }
 
+//     const review = await Comment.create({
+//         transporter: provider._id,
+//         user: req.user.id,
+//         rating: Number(rating),
+//         comment
+//     });
 
+//     if (!provider.comments) {
+//         provider.comments = [];
+//     }
 
-// if(!rating || !comment){
+//     provider.comments.push(review._id);
 
-// return res.status(400).json({
+//     const reviews = await Comment.find({
+//         transporter: provider._id
+//     });
 
-// success:false,
+//     provider.totalReviews = reviews.length;
 
-// message:"Rating and comment required"
+//     provider.averageRating =
+//         reviews.length > 0
+//             ? reviews.reduce(
+//                 (sum, item) => sum + Number(item.rating || 0),
+//                 0
+//             ) / reviews.length
+//             : 0;
 
-// });
+//     await provider.save();
 
+//     return res.status(201).json({
+//         success: true,
+//         message: "Review added successfully",
+//         data: review
+//     });
 // }
 
 
-
-
-// // Find transporter
-
-// const transporter = await Business.findById(
-// req.params.id
-// );
-
-
-
-// if(!transporter){
-
-
-// return res.status(404).json({
-
-// success:false,
-
-// message:"Transporter not found"
-
+// // ==========================================
+// // DUMMY DIRECTORY LEAD
+// // ==========================================
+// const dummyLead = await DirectoryLead.findOne({
+//     _id: req.params.id,
+//     status: "dummy",
+//     isActive: true
 // });
 
-
+// if (!dummyLead) {
+//     return res.status(404).json({
+//         success: false,
+//         message: "Service provider / Business profile not found"
+//     });
 // }
 
 
-
-
-
-
-// // Create Comment
+// // Dummy self-review ki zarurat nahi,
+// // kyunki dummy ka registered User nahi hai.
 
 // const review = await Comment.create({
-
-// transporter:transporter._id,
-
-// user:req.user.id,
-
-// rating,
-
-// comment,
-
+//     transporter: dummyLead._id,
+//     user: req.user.id,
+//     rating: Number(rating),
+//     comment
 // });
 
 
-
-
-
-
-
-// // Push comment id
-
-// if(!transporter.comments){
-
-// transporter.comments=[];
-
-// }
-
-
-
-// transporter.comments.push(
-// review._id
-// );
-
-
-
-
-
-
-
-// // Get all reviews
-
+// // Dummy ke reviews calculate karo
 // const reviews = await Comment.find({
-
-// transporter:transporter._id
-
+//     transporter: dummyLead._id
 // });
 
 
+// // Dummy rating update
+// dummyLead.totalReviews = reviews.length;
 
+// dummyLead.averageRating =
+//     reviews.length > 0
+//         ? reviews.reduce(
+//             (sum, item) => sum + Number(item.rating || 0),
+//             0
+//         ) / reviews.length
+//         : 0;
 
+// await dummyLead.save();
 
-
-
-// // Update count
-
-// transporter.totalReviews =
-// reviews.length;
-
-
-
-
-
-
-
-// // Update average rating
-
-// transporter.averageRating =
-
-// reviews.length > 0
-
-// ?
-
-// reviews.reduce(
-// (sum,item)=>sum+item.rating,
-// 0
-// )
-// /
-// reviews.length
-
-// :
-
-// 0;
-
-
-
-
-
-
-
-// await transporter.save();
-
-
-
-
-
-
-
-// res.status(201).json({
-
-// success:true,
-
-// message:"Review Added Successfully",
-
-// review
-
+// return res.status(201).json({
+//     success: true,
+//     message: "Review added successfully",
+//     data: review
 // });
 
+//         // Rule Check: Service provider khud ke card / profile par review nahi de sakta
+//         if (provider.user && provider.user.toString() === req.user.id) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "You cannot review your own profile"
+//             });
+//         }
 
+//         // Create Comment / Review
+//         const review = await Comment.create({
+//             transporter: provider._id, // References Business / Provider Profile ID
+//             user: req.user.id,
+//             rating: Number(rating),
+//             comment
+//         });
 
+//         // Provider profile ke comments array mein ID push karein
+//         if (!provider.comments) {
+//             provider.comments = [];
+//         }
+//         provider.comments.push(review._id);
 
+//         // Target Provider ke sabhi reviews nikalein
+//         const reviews = await Comment.find({
+//             transporter: provider._id
+//         });
 
-// }
+//         // Update Total Reviews Count
+//         provider.totalReviews = reviews.length;
 
-// catch(error){
+//         // Update Average Rating
+//         provider.averageRating =
+//             reviews.length > 0
+//                 ? reviews.reduce((sum, item) => sum + item.rating, 0) / reviews.length
+//                 : 0;
 
+//         await provider.save();
 
-// res.status(500).json({
+//         return res.status(201).json({
+//             success: true,
+//             message: "Review added successfully",
+//             data: review
+//         });
 
-// success:false,
-
-// message:error.message
-
-// });
-
-
-// }
-
-
-
+//     } catch (error) {
+//         return res.status(500).json({
+//             success: false,
+//             message: error.message
+//         });
+//     }
 // };
 
 
-
-
-
-
-
-
-
 // // ============================
-// // GET TRANSPORTER REVIEWS
+// // GET PROVIDER REVIEWS
 // // ============================
+// const getTransporterComments = async (req, res) => {
+//     try {
+//         const provider = await Business.findById(req.params.id);
 
+//         if (!provider) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "Service provider / Business profile not found"
+//             });
+//         }
 
-// const getTransporterComments = async(req,res)=>{
+//         const comments = await Comment.find({
+//             transporter: provider._id
+//         })
+//         .populate("user", "name email mobile role")
+//         .sort({ createdAt: -1 });
 
+//         return res.status(200).json({
+//             success: true,
+//             averageRating: provider.averageRating || 0,
+//             totalReviews: provider.totalReviews || 0,
+//             data: comments
+//         });
 
-// try{
-
-
-// const transporter = await Business.findById(
-// req.params.id
-// );
-
-
-
-// if(!transporter){
-
-
-// return res.status(404).json({
-
-// success:false,
-
-// message:"Transporter not found"
-
-// });
-
-
-// }
-
-
-
-
-
-
-// const comments = await Comment.find({
-
-// transporter:transporter._id
-
-// })
-
-// .populate(
-// "user",
-// "name email mobile"
-// )
-
-// .sort({
-// createdAt:-1
-// });
-
-
-
-
-
-
-
-// res.status(200).json({
-
-// success:true,
-
-// averageRating:
-// transporter.averageRating,
-
-
-// totalReviews:
-// transporter.totalReviews,
-
-
-// comments
-
-
-// });
-
-
-
-
-
-// }
-
-// catch(error){
-
-
-// res.status(500).json({
-
-// success:false,
-
-// message:error.message
-
-// });
-
-
-// }
-
-
-
+//     } catch (error) {
+//         return res.status(500).json({
+//             success: false,
+//             message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
+//         });
+//     }
 // };
 
 
-
-
-
-// module.exports={
-
-// addComment,
-
-// getTransporterComments
-
+// module.exports = {
+//     addComment,
+//     getTransporterComments
 // };
 const Comment = require("../models/comments");
 const Business = require("../models/business");
+const DirectoryLead = require("../models/directoryLead");
 
 // ============================
 // ADD COMMENT / RATING
@@ -326,7 +552,7 @@ const addComment = async (req, res) => {
             });
         }
 
-        // Rating limit check (1 se 5 ke beech)
+        // Rating limit check
         if (rating < 1 || rating > 5) {
             return res.status(400).json({
                 success: false,
@@ -334,61 +560,118 @@ const addComment = async (req, res) => {
             });
         }
 
-        // Target Service Provider / Business Profile Find Karein
+        // ==========================================
+        // 1. REAL BUSINESS
+        // ==========================================
         const provider = await Business.findById(req.params.id);
 
-        if (!provider) {
+        if (provider) {
+
+            // Service provider khud ke profile par review nahi de sakta
+            if (
+                provider.user &&
+                provider.user.toString() === req.user.id
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "You cannot review your own profile"
+                });
+            }
+
+            // Create Comment / Review
+            const review = await Comment.create({
+                transporter: provider._id,
+                user: req.user.id,
+                rating: Number(rating),
+                comment
+            });
+
+            // Push comment id
+            if (!provider.comments) {
+                provider.comments = [];
+            }
+
+            provider.comments.push(review._id);
+
+            // Get all reviews
+            const reviews = await Comment.find({
+                transporter: provider._id
+            });
+
+            // Update count
+            provider.totalReviews = reviews.length;
+
+            // Update average rating
+            provider.averageRating =
+                reviews.length > 0
+                    ? reviews.reduce(
+                        (sum, item) => sum + Number(item.rating || 0),
+                        0
+                    ) / reviews.length
+                    : 0;
+
+            await provider.save();
+
+            return res.status(201).json({
+                success: true,
+                message: "Review added successfully",
+                data: review
+            });
+        }
+
+
+        // ==========================================
+        // 2. DUMMY DIRECTORY LEAD
+        // ==========================================
+        const dummyLead = await DirectoryLead.findOne({
+            _id: req.params.id,
+            status: "dummy",
+            isActive: true
+        });
+
+        if (!dummyLead) {
             return res.status(404).json({
                 success: false,
                 message: "Service provider / Business profile not found"
             });
         }
 
-        // Rule Check: Service provider khud ke card / profile par review nahi de sakta
-        if (provider.user && provider.user.toString() === req.user.id) {
-            return res.status(400).json({
-                success: false,
-                message: "You cannot review your own profile"
-            });
-        }
-
-        // Create Comment / Review
-        const review = await Comment.create({
-            transporter: provider._id, // References Business / Provider Profile ID
+        // Dummy ke liye review create
+        const dummyReview = await Comment.create({
+            transporter: dummyLead._id,
             user: req.user.id,
             rating: Number(rating),
             comment
         });
 
-        // Provider profile ke comments array mein ID push karein
-        if (!provider.comments) {
-            provider.comments = [];
-        }
-        provider.comments.push(review._id);
-
-        // Target Provider ke sabhi reviews nikalein
-        const reviews = await Comment.find({
-            transporter: provider._id
+        // Dummy ke all reviews
+        const dummyReviews = await Comment.find({
+            transporter: dummyLead._id
         });
 
-        // Update Total Reviews Count
-        provider.totalReviews = reviews.length;
+        // Dummy total reviews update
+        dummyLead.totalReviews = dummyReviews.length;
 
-        // Update Average Rating
-        provider.averageRating =
-            reviews.length > 0
-                ? reviews.reduce((sum, item) => sum + item.rating, 0) / reviews.length
+        // Dummy average rating update
+        dummyLead.averageRating =
+            dummyReviews.length > 0
+                ? dummyReviews.reduce(
+                    (sum, item) => sum + Number(item.rating || 0),
+                    0
+                ) / dummyReviews.length
                 : 0;
 
-        await provider.save();
+        await dummyLead.save();
 
         return res.status(201).json({
             success: true,
             message: "Review added successfully",
-            data: review
+            data: dummyReview
         });
 
     } catch (error) {
+        console.error("ADD COMMENT ERROR:", error);
+
         return res.status(500).json({
             success: false,
             message: error.message
@@ -402,9 +685,39 @@ const addComment = async (req, res) => {
 // ============================
 const getTransporterComments = async (req, res) => {
     try {
+
+        // ==========================================
+        // 1. REAL BUSINESS
+        // ==========================================
         const provider = await Business.findById(req.params.id);
 
-        if (!provider) {
+        if (provider) {
+
+            const comments = await Comment.find({
+                transporter: provider._id
+            })
+                .populate("user", "name email mobile role")
+                .sort({ createdAt: -1 });
+
+            return res.status(200).json({
+                success: true,
+                averageRating: provider.averageRating || 0,
+                totalReviews: provider.totalReviews || 0,
+                data: comments
+            });
+        }
+
+
+        // ==========================================
+        // 2. DUMMY DIRECTORY LEAD
+        // ==========================================
+        const dummyLead = await DirectoryLead.findOne({
+            _id: req.params.id,
+            status: "dummy",
+            isActive: true
+        });
+
+        if (!dummyLead) {
             return res.status(404).json({
                 success: false,
                 message: "Service provider / Business profile not found"
@@ -412,22 +725,25 @@ const getTransporterComments = async (req, res) => {
         }
 
         const comments = await Comment.find({
-            transporter: provider._id
+            transporter: dummyLead._id
         })
-        .populate("user", "name email mobile role")
-        .sort({ createdAt: -1 });
+            .populate("user", "name email mobile role")
+            .sort({ createdAt: -1 });
 
         return res.status(200).json({
             success: true,
-            averageRating: provider.averageRating || 0,
-            totalReviews: provider.totalReviews || 0,
+            averageRating: dummyLead.averageRating || 0,
+            totalReviews: dummyLead.totalReviews || 0,
             data: comments
         });
 
     } catch (error) {
+        console.error("GET PROVIDER REVIEWS ERROR:", error);
+
         return res.status(500).json({
             success: false,
-            message: "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
+            message:
+                "We couldn't process your request at the moment. Please try again later. If the problem continues, contact our support team."
         });
     }
 };
