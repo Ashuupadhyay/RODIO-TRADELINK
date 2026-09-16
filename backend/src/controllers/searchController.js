@@ -1,6 +1,7 @@
 const Business = require("../models/business");
 const Profile = require("../models/profile");
 const Comment = require("../models/comments");
+const DirectoryLead = require("../models/directoryLead");
 
 /**
  * @desc    Search businesses by State, City, Category, and Firm Name
@@ -94,7 +95,7 @@ if (cityQuery) {
     return res.status(200).json({
       success: true,
       message: "Search results fetched successfully",
-      count: businesses.length,
+     count: formattedBusinesses.length + formattedDummyLeads.length,
       totalCount,
       totalPages: Math.ceil(totalCount / limitNum) || 0,
       currentPage: pageNum,
@@ -296,7 +297,74 @@ const formattedBusinesses = businesses.map((business) => {
       ratings.totalReviews,
   };
 });
+//dummy data
+// =====================================================
+// DUMMY DIRECTORY LEADS - ADDITIONAL SEARCH RESULTS
+// Existing Business search functionality remains unchanged
+// =====================================================
 
+const dummyFieldMap = {
+  firmName: "firmName",
+  ownerName: "ownerName",
+  phoneNumber: "mobile",
+};
+
+const dummyField = dummyFieldMap[searchBy];
+
+const dummyQuery = {
+  status: "dummy",
+  isActive: true,
+  [dummyField]: regexQuery,
+};
+
+const dummyLeads = await DirectoryLead.find(dummyQuery)
+  .sort({ createdAt: -1 })
+  .lean();
+
+const formattedDummyLeads = dummyLeads.map((lead) => ({
+  _id: lead._id,
+
+  firmName: lead.firmName || "Unnamed Business",
+
+  ownerName: lead.ownerName || "Owner",
+
+  role: lead.category || "Transporter",
+
+  phoneNumber: lead.mobile || "",
+
+  email: lead.email || "",
+
+  photo: "",
+
+  city: lead.city || "",
+
+  state: lead.state || "",
+
+  workingAreas: lead.workingAreas || [],
+
+  averageRating: lead.averageRating || 0,
+
+  totalReviews: lead.totalReviews || 0,
+
+  isVerified: false,
+
+  verifiedAt: null,
+
+  vehicleTypes: [
+    ...new Set(
+      (lead.vehicles || [])
+        .map((vehicle) => vehicle.vehicleType)
+        .filter(Boolean)
+    ),
+  ],
+
+  totalVehicles: (lead.vehicles || []).length,
+
+  createdAt: lead.createdAt,
+
+  // Important: frontend/backend knows this is dummy
+  isDummy: true,
+}));
 
     return res.status(200).json({
       success: true,
@@ -307,7 +375,7 @@ const formattedBusinesses = businesses.map((business) => {
       totalCount,
       totalPages: Math.ceil(totalCount / limitNum) || 0,
       currentPage: pageNum,
-      data: formattedBusinesses,
+      data: [...formattedBusinesses, ...formattedDummyLeads],
     });
   } catch (error) {
     console.error("Search By Field API Error:", error);
