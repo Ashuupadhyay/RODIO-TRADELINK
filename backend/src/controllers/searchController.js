@@ -185,9 +185,9 @@ exports.searchBusinessesByField = async (req, res) => {
 const [businesses, totalCount] = await Promise.all([
   Business.find(query)
     .populate("user", "mobile role")
-    .select(
-      "firmName category name phoneNumber email address currentCity currentState pincode workingAreas profileUnlocked createdAt user"
-    )
+ .select(
+  "firmName category name phoneNumber email address currentCity currentState pincode workingAreas profileUnlocked createdAt user isVerified verifiedAt"
+)
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limitNum)
@@ -292,8 +292,11 @@ const formattedBusinesses = businesses.map((business) => {
 
     averageRating:
       ratings.averageRating,
+      isVerified: business.isVerified || false,
+verifiedAt: business.verifiedAt || null,
 
     totalReviews:
+    
       ratings.totalReviews,
   };
 });
@@ -345,10 +348,9 @@ const formattedDummyLeads = dummyLeads.map((lead) => ({
   averageRating: lead.averageRating || 0,
 
   totalReviews: lead.totalReviews || 0,
-
-  isVerified: false,
-
-  verifiedAt: null,
+// DUMMY VERIFICATION - Compass/DB se status
+isVerified: lead.isVerified || false,
+verifiedAt: lead.verifiedAt || null,
 
   vehicleTypes: [
     ...new Set(
