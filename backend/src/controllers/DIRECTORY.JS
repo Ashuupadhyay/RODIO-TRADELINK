@@ -338,7 +338,7 @@ const Business = require("../models/business");
 const Vehicle = require("../models/vehicle");
 const Profile = require("../models/profile");
 const Comment = require("../models/comments");
-
+const DirectoryLead = require("../models/directoryLead");
 /**
  * @desc    Get Directory Data with Universal Category, State, and City Matching
  * @route   GET /api/directory
@@ -397,6 +397,15 @@ let allBusinesses = await Business.find({
       .populate("user", "mobile role")
       .sort({ averageRating: -1, totalReviews: -1, createdAt: -1 })
       .lean();
+
+      // dummy cards 
+      // -------------------------------------------------------------
+// Fetch active dummy directory leads
+// -------------------------------------------------------------
+const dummyLeads = await DirectoryLead.find({
+  status: "dummy",
+  isActive: true,
+}).lean();
       const businessUserIds = allBusinesses
   .map((b) => b.user?._id)
   .filter(Boolean);
@@ -503,6 +512,68 @@ const profile = b.user?._id
       return { business: b, score };
     }).filter(Boolean);
 
+  // -------------------------------------------------------------
+// Dummy Leads Filtering
+// Same State / City / Category / Search logic
+// -------------------------------------------------------------
+const scoredDummyLeads = dummyLeads.map((lead) => {
+  let score = 0;
+
+  const leadState = cleanInput(lead.state);
+  const leadCity = cleanInput(lead.city);
+  const leadCategory = cleanInput(lead.category);
+  const leadName = cleanInput(lead.firmName || lead.ownerName);
+  const leadPhone = cleanInput(lead.mobile);
+
+  // State
+  if (stateMatcher) {
+    if (stateMatcher.flexRegex.test(leadState)) score += 30;
+    else if (stateMatcher.prefixRegex.test(leadState)) score += 15;
+    else return null;
+  }
+
+  // City
+  if (cityMatcher) {
+    if (cityMatcher.flexRegex.test(leadCity)) score += 30;
+    else if (cityMatcher.prefixRegex.test(leadCity)) score += 15;
+    else return null;
+  }
+
+  // Category
+  if (categoryMatcher) {
+    if (categoryMatcher.flexRegex.test(leadCategory)) {
+      score += 40;
+    } else if (categoryMatcher.prefixRegex.test(leadCategory)) {
+      score += 20;
+    } else {
+      return null;
+    }
+  }
+
+  // Search
+  if (searchMatcher) {
+    if (
+      searchMatcher.flexRegex.test(leadName) ||
+      searchMatcher.flexRegex.test(leadPhone)
+    ) {
+      score += 50;
+    } else if (
+      searchMatcher.prefixRegex.test(leadName) ||
+      searchMatcher.prefixRegex.test(leadPhone)
+    ) {
+      score += 25;
+    } else {
+      return null;
+    }
+  }
+
+  return {
+    lead,
+    score,
+  };
+}).filter(Boolean);
+
+    /// dummy 
     let matchedBusinesses = [];
 
     if (scoredBusinesses.length > 0) {
@@ -640,6 +711,94 @@ result.push({
 });
     }
 
+    // dummy 
+    // -------------------------------------------------------------
+// Add Dummy Directory Leads
+// Same Card Response Structure
+// -------------------------------------------------------------
+for (const item of scoredDummyLeads) {
+  const lead = item.lead;
+
+  const vehicleTypes = [
+    ...new Set(
+      (lead.vehicles || [])
+        .map((v) => v.vehicleType)
+        .filter(Boolean)
+    ),
+  ];
+
+  // Vehicle Type Filter
+  if (
+    vehicleType &&
+    !vehicleTypes.some(
+      (v) => v.toLowerCase() === vehicleType.toLowerCase()
+    )
+  ) {
+    continue;
+  }
+
+  result.push({
+    _id: lead._id,
+
+    firmName:
+      lead.firmName ||
+      "Unnamed Business",
+
+    ownerName:
+      lead.ownerName ||
+      "Owner",
+
+    role:
+      lead.category ||
+      "Transporter",
+
+    phoneNumber:
+      lead.mobile ||
+      "",
+
+    email:
+      lead.email ||
+      "",
+
+    photo:
+      "",
+
+    city:
+      lead.city ||
+      "",
+
+    state:
+      lead.state ||
+      "",
+
+    workingAreas:
+      lead.workingAreas ||
+      [],
+
+    averageRating:
+      lead.averageRating || 0,
+
+    totalReviews:
+      lead.totalReviews || 0,
+
+    isVerified:
+      false,
+
+    verifiedAt:
+      null,
+
+    vehicleTypes,
+
+    totalVehicles:
+      (lead.vehicles || []).length,
+
+    createdAt:
+      lead.createdAt,
+
+    // Important: frontend can identify this as dummy
+    isDummy: true,
+  });
+}
     // -------------------------------------------------------------
     // Pinned Featured Card Logic
     // -------------------------------------------------------------
