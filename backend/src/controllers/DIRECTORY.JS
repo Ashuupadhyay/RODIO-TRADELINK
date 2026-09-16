@@ -800,10 +800,7 @@ for (const item of scoredDummyLeads) {
     totalReviews:
       lead.totalReviews || 0,
 
-    isVerified: false,
-
-    verifiedAt: null,
-
+    
     vehicleTypes,
 
     totalVehicles:
