@@ -172,10 +172,10 @@ exports.bulkCreateDirectoryLeads = async (req, res) => {
 exports.getDirectoryLeads = async (req, res) => {
   try {
 
-    const leads =
-      await DirectoryLead.find({
-        isActive: true,
-      })
+    const leads = await DirectoryLead.find({
+  status: "dummy",
+  isActive: true,
+})
         .sort({
           createdAt: -1,
         })
