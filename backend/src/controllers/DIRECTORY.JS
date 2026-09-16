@@ -522,9 +522,11 @@ const scoredDummyLeads = dummyLeads.map((lead) => {
   const leadState = cleanInput(lead.state);
   const leadCity = cleanInput(lead.city);
   const leadCategory = cleanInput(lead.category);
-  const leadName = cleanInput(lead.firmName || lead.ownerName);
-  const leadPhone = cleanInput(lead.mobile);
-
+  // const leadName = cleanInput(lead.firmName || lead.ownerName);
+  // const leadPhone = cleanInput(lead.mobile);
+const leadFirmName = cleanInput(lead.firmName);
+const leadOwnerName = cleanInput(lead.ownerName);
+const leadPhone = cleanInput(lead.mobile);
   // State
   if (stateMatcher) {
     if (stateMatcher.flexRegex.test(leadState)) score += 30;
@@ -552,20 +554,37 @@ const scoredDummyLeads = dummyLeads.map((lead) => {
 
   // Search
   if (searchMatcher) {
-    if (
-      searchMatcher.flexRegex.test(leadName) ||
-      searchMatcher.flexRegex.test(leadPhone)
-    ) {
-      score += 50;
-    } else if (
-      searchMatcher.prefixRegex.test(leadName) ||
-      searchMatcher.prefixRegex.test(leadPhone)
-    ) {
-      score += 25;
-    } else {
-      return null;
-    }
+  if (
+    searchMatcher.flexRegex.test(leadFirmName) ||
+    searchMatcher.flexRegex.test(leadOwnerName) ||
+    searchMatcher.flexRegex.test(leadPhone)
+  ) {
+    score += 50;
+  } else if (
+    searchMatcher.prefixRegex.test(leadFirmName) ||
+    searchMatcher.prefixRegex.test(leadOwnerName) ||
+    searchMatcher.prefixRegex.test(leadPhone)
+  ) {
+    score += 25;
+  } else {
+    return null;
   }
+}
+  // if (searchMatcher) {
+  //   if (
+  //     searchMatcher.flexRegex.test(leadName) ||
+  //     searchMatcher.flexRegex.test(leadPhone)
+  //   ) {
+  //     score += 50;
+  //   } else if (
+  //     searchMatcher.prefixRegex.test(leadName) ||
+  //     searchMatcher.prefixRegex.test(leadPhone)
+  //   ) {
+  //     score += 25;
+  //   } else {
+  //     return null;
+  //   }
+  // }
 
   return {
     lead,
@@ -711,10 +730,9 @@ result.push({
 });
     }
 
-    // dummy 
+    // dummy
     // -------------------------------------------------------------
-// Add Dummy Directory Leads
-// Same Card Response Structure
+// ADD DUMMY LEADS TO RESULT
 // -------------------------------------------------------------
 for (const item of scoredDummyLeads) {
   const lead = item.lead;
@@ -731,7 +749,9 @@ for (const item of scoredDummyLeads) {
   if (
     vehicleType &&
     !vehicleTypes.some(
-      (v) => v.toLowerCase() === vehicleType.toLowerCase()
+      (v) =>
+        String(v).toLowerCase() ===
+        String(vehicleType).toLowerCase()
     )
   ) {
     continue;
@@ -760,8 +780,7 @@ for (const item of scoredDummyLeads) {
       lead.email ||
       "",
 
-    photo:
-      "",
+    photo: "",
 
     city:
       lead.city ||
@@ -781,11 +800,9 @@ for (const item of scoredDummyLeads) {
     totalReviews:
       lead.totalReviews || 0,
 
-    isVerified:
-      false,
+    isVerified: false,
 
-    verifiedAt:
-      null,
+    verifiedAt: null,
 
     vehicleTypes,
 
@@ -795,11 +812,11 @@ for (const item of scoredDummyLeads) {
     createdAt:
       lead.createdAt,
 
-    // Important: frontend can identify this as dummy
+    // Frontend identification
     isDummy: true,
   });
 }
-    // -------------------------------------------------------------
+      // -------------------------------------------------------------
     // Pinned Featured Card Logic
     // -------------------------------------------------------------
     const featuredCard = [];
