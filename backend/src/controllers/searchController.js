@@ -10,35 +10,54 @@ const DirectoryLead = require("../models/directoryLead");
  */
 exports.searchBusinesses = async (req, res) => {
   try {
-    const { state, city,  category, page = 1, limit = 10 } = req.query;
+    const {
+      state,
+      city,
+      category,
+      page = 1,
+      limit = 10,
+    } = req.query;
 
-    // Helper to clean input & build MongoDB compatible space-insensitive regex
+    // ============================================
+    // REGEX HELPER
+    // ============================================
     const prepareRegex = (text) => {
       if (!text || typeof text !== "string") return null;
 
-      // 1. Remove extra/non-breaking spaces from incoming parameter
-      const cleaned = text.replace(/\u00A0/g, " ").trim();
+      const cleaned = text
+        .replace(/\u00A0/g, " ")
+        .trim();
+
       if (!cleaned) return null;
 
-      // 2. Escape special regex characters like ( ) [ ] + * ? etc.
-      const escaped = cleaned.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const escaped = cleaned.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
+      );
 
-      // 3. Replace spaces with [\s\xc2\xa0]+ (MongoDB PCRE2 safe for NBSP)
-      const regexPattern = escaped.replace(/ +/g, "[\\s\\xc2\\xa0]+");
+      const regexPattern = escaped.replace(
+        / +/g,
+        "[\\s\\xc2\\xa0]+"
+      );
 
-      return { $regex: regexPattern, $options: "i" };
+      return {
+        $regex: regexPattern,
+        $options: "i",
+      };
     };
 
-    // const firmNameQuery = prepareRegex(firmName);
     const stateQuery = prepareRegex(state);
     const cityQuery = prepareRegex(city);
     const categoryQuery = prepareRegex(category);
 
-    // 🛑 If no search query is passed
+    // ============================================
+    // NO FILTER
+    // ============================================
     if (!stateQuery && !cityQuery && !categoryQuery) {
       return res.status(200).json({
         success: true,
-        message: "Please provide search criteria (State/City/Category or Firm Name)",
+        message:
+          "Please provide search criteria (State/City/Category)",
         count: 0,
         totalCount: 0,
         totalPages: 0,
@@ -47,69 +66,448 @@ exports.searchBusinesses = async (req, res) => {
       });
     }
 
-    // Dynamic Filter Query
- // Dynamic Filter Query
-const query = {};
+    // ============================================
+    // ORIGINAL BUSINESS QUERY
+    // ============================================
+    const businessQuery = {};
 
-// if (firmNameQuery) {
-//   query.firmName = firmNameQuery;
-// }
+    if (categoryQuery) {
+      businessQuery.category = categoryQuery;
+    }
 
-if (categoryQuery) {
-  query.category = categoryQuery;
-}
+    if (stateQuery) {
+      businessQuery.currentState = stateQuery;
+    }
 
-if (stateQuery) {
-  query.currentState = stateQuery;
-}
+    if (cityQuery) {
+      businessQuery.currentCity = cityQuery;
+    }
 
-if (cityQuery) {
-  query.currentCity = cityQuery;
-}
+    // ============================================
+    // DUMMY DIRECTORY QUERY
+    // ============================================
+    const dummyQuery = {
+      status: "dummy",
+      isActive: true,
+    };
 
-// Sirf completed aur active profile hi dikhani ho to (optional)
-// query.registrationStatus = "completed";
-// query.profileUnlocked = true;
+    if (categoryQuery) {
+      dummyQuery.category = categoryQuery;
+    }
 
-    // Pagination Parameters
-    const pageNum = Math.max(1, parseInt(page, 10) || 1);
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
+    if (stateQuery) {
+      dummyQuery.state = stateQuery;
+    }
+
+    if (cityQuery) {
+      dummyQuery.city = cityQuery;
+    }
+
+    console.log(
+      "ORIGINAL QUERY:",
+      JSON.stringify(businessQuery, null, 2)
+    );
+
+    console.log(
+      "DUMMY QUERY:",
+      JSON.stringify(dummyQuery, null, 2)
+    );
+
+    // ============================================
+    // PAGINATION
+    // ============================================
+    const pageNum = Math.max(
+      1,
+      parseInt(page, 10) || 1
+    );
+
+    const limitNum = Math.min(
+      100,
+      Math.max(1, parseInt(limit, 10) || 10)
+    );
+
     const skip = (pageNum - 1) * limitNum;
 
-    console.log("EXECUTING MONGODB QUERY:", JSON.stringify(query, null, 2));
-
-    // Parallel DB Executions
-    const [businesses, totalCount] = await Promise.all([
-      Business.find(query)
+    // ============================================
+    // GET ORIGINAL + DUMMY
+    // ============================================
+    const [businesses, dummyLeads] = await Promise.all([
+      Business.find(businessQuery)
         .populate("user", "mobile role")
         .select(
-          "firmName category phoneNumber email address currentCity currentState pincode workingAreas averageRating totalReviews profileUnlocked createdAt"
+          "firmName category name phoneNumber email address currentCity currentState pincode workingAreas averageRating totalReviews profileUnlocked createdAt user isVerified verifiedAt"
         )
-        .sort({ averageRating: -1, totalReviews: -1, createdAt: -1 })
-        .skip(skip)
-        .limit(limitNum)
+        .sort({
+          averageRating: -1,
+          totalReviews: -1,
+          createdAt: -1,
+        })
         .lean(),
-      Business.countDocuments(query),
+
+      DirectoryLead.find(dummyQuery)
+        .sort({ createdAt: -1 })
+        .lean(),
     ]);
+
+    // ============================================
+    // GET PROFILES
+    // ============================================
+    const businessUserIds = businesses
+      .map((business) => business.user?._id)
+      .filter(Boolean);
+
+    const profiles = await Profile.find({
+      user: { $in: businessUserIds },
+    })
+      .select(
+        "user name firmName profileImage phoneNumber email"
+      )
+      .lean();
+
+    const profileMap = {};
+
+    for (const profile of profiles) {
+      profileMap[profile.user.toString()] = profile;
+    }
+
+    // ============================================
+    // RATINGS
+    // ============================================
+    const businessIds = businesses.map(
+      (business) => business._id
+    );
+
+    const ratingData = await Comment.aggregate([
+      {
+        $match: {
+          transporter: {
+            $in: businessIds,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$transporter",
+          averageRating: {
+            $avg: "$rating",
+          },
+          totalReviews: {
+            $sum: 1,
+          },
+        },
+      },
+    ]);
+
+    const ratingMap = {};
+
+    for (const item of ratingData) {
+      ratingMap[item._id.toString()] = {
+        averageRating: Number(
+          item.averageRating.toFixed(1)
+        ),
+        totalReviews: item.totalReviews,
+      };
+    }
+
+    // ============================================
+    // FORMAT ORIGINAL BUSINESS
+    // ============================================
+    const formattedBusinesses = businesses.map(
+      (business) => {
+        const profile = business.user?._id
+          ? profileMap[
+              business.user._id.toString()
+            ]
+          : null;
+
+        const ratings =
+          ratingMap[business._id.toString()] || {
+            averageRating: 0,
+            totalReviews: 0,
+          };
+
+        return {
+          ...business,
+
+          firmName:
+            business.firmName ||
+            profile?.firmName ||
+            business.name ||
+            profile?.name ||
+            "Unnamed Business",
+
+          ownerName:
+            business.name ||
+            profile?.name ||
+            "Owner",
+
+          phoneNumber:
+            business.phoneNumber ||
+            profile?.phoneNumber ||
+            business.user?.mobile ||
+            "",
+
+          email:
+            business.email ||
+            profile?.email ||
+            "",
+
+          photo:
+            profile?.profileImage || "",
+
+          city:
+            business.currentCity || "",
+
+          state:
+            business.currentState || "",
+
+          averageRating:
+            ratings.averageRating,
+
+          totalReviews:
+            ratings.totalReviews,
+
+          isVerified:
+            business.isVerified || false,
+
+          verifiedAt:
+            business.verifiedAt || null,
+
+          isDummy: false,
+        };
+      }
+    );
+
+    // ============================================
+    // FORMAT DUMMY
+    // ============================================
+    const formattedDummyLeads =
+      dummyLeads.map((lead) => ({
+        _id: lead._id,
+
+        firmName:
+          lead.firmName ||
+          "Unnamed Business",
+
+        ownerName:
+          lead.ownerName ||
+          "Owner",
+
+        role:
+          lead.category ||
+          "Transporter",
+
+        category:
+          lead.category ||
+          "transporter",
+
+        phoneNumber:
+          lead.mobile || "",
+
+        email:
+          lead.email || "",
+
+        photo: "",
+
+        city:
+          lead.city || "",
+
+        state:
+          lead.state || "",
+
+        workingAreas:
+          lead.workingAreas || [],
+
+        averageRating:
+          lead.averageRating || 0,
+
+        totalReviews:
+          lead.totalReviews || 0,
+
+        isVerified:
+          lead.isVerified || false,
+
+        verifiedAt:
+          lead.verifiedAt || null,
+
+        vehicleTypes: [
+          ...new Set(
+            (lead.vehicles || [])
+              .map(
+                (vehicle) =>
+                  vehicle.vehicleType
+              )
+              .filter(Boolean)
+          ),
+        ],
+
+        totalVehicles:
+          (lead.vehicles || []).length,
+
+        createdAt:
+          lead.createdAt,
+
+        isDummy: true,
+      }));
+
+    // ============================================
+    // COMBINE BOTH
+    // ============================================
+    const allResults = [
+      ...formattedBusinesses,
+      ...formattedDummyLeads,
+    ];
+
+    // ============================================
+    // PAGINATION AFTER COMBINE
+    // ============================================
+    const totalCount = allResults.length;
+
+    const paginatedResults =
+      allResults.slice(
+        skip,
+        skip + limitNum
+      );
 
     return res.status(200).json({
       success: true,
-      message: "Search results fetched successfully",
-     count: formattedBusinesses.length + formattedDummyLeads.length,
+
+      message:
+        "Search results fetched successfully",
+
+      count:
+        paginatedResults.length,
+
       totalCount,
-      totalPages: Math.ceil(totalCount / limitNum) || 0,
-      currentPage: pageNum,
-      data: businesses,
+
+      totalPages:
+        Math.ceil(
+          totalCount / limitNum
+        ) || 0,
+
+      currentPage:
+        pageNum,
+
+      data:
+        paginatedResults,
     });
+
   } catch (error) {
-    console.error("Search API Error:", error);
+    console.error(
+      "Search API Error:",
+      error
+    );
+
     return res.status(500).json({
       success: false,
-      message: "Server error while searching businesses",
+      message:
+        "Server error while searching businesses",
       error: error.message,
     });
   }
 };
+// exports.searchBusinesses = async (req, res) => {
+//   try {
+//     const { state, city,  category, page = 1, limit = 10 } = req.query;
+
+//     // Helper to clean input & build MongoDB compatible space-insensitive regex
+//     const prepareRegex = (text) => {
+//       if (!text || typeof text !== "string") return null;
+
+//       // 1. Remove extra/non-breaking spaces from incoming parameter
+//       const cleaned = text.replace(/\u00A0/g, " ").trim();
+//       if (!cleaned) return null;
+
+//       // 2. Escape special regex characters like ( ) [ ] + * ? etc.
+//       const escaped = cleaned.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+//       // 3. Replace spaces with [\s\xc2\xa0]+ (MongoDB PCRE2 safe for NBSP)
+//       const regexPattern = escaped.replace(/ +/g, "[\\s\\xc2\\xa0]+");
+
+//       return { $regex: regexPattern, $options: "i" };
+//     };
+
+//     // const firmNameQuery = prepareRegex(firmName);
+//     const stateQuery = prepareRegex(state);
+//     const cityQuery = prepareRegex(city);
+//     const categoryQuery = prepareRegex(category);
+
+//     // 🛑 If no search query is passed
+//     if (!stateQuery && !cityQuery && !categoryQuery) {
+//       return res.status(200).json({
+//         success: true,
+//         message: "Please provide search criteria (State/City/Category or Firm Name)",
+//         count: 0,
+//         totalCount: 0,
+//         totalPages: 0,
+//         currentPage: parseInt(page, 10) || 1,
+//         data: [],
+//       });
+//     }
+
+//     // Dynamic Filter Query
+//  // Dynamic Filter Query
+// const query = {};
+
+// // if (firmNameQuery) {
+// //   query.firmName = firmNameQuery;
+// // }
+
+// if (categoryQuery) {
+//   query.category = categoryQuery;
+// }
+
+// if (stateQuery) {
+//   query.currentState = stateQuery;
+// }
+
+// if (cityQuery) {
+//   query.currentCity = cityQuery;
+// }
+
+// // Sirf completed aur active profile hi dikhani ho to (optional)
+// // query.registrationStatus = "completed";
+// // query.profileUnlocked = true;
+
+//     // Pagination Parameters
+//     const pageNum = Math.max(1, parseInt(page, 10) || 1);
+//     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
+//     const skip = (pageNum - 1) * limitNum;
+
+//     console.log("EXECUTING MONGODB QUERY:", JSON.stringify(query, null, 2));
+
+//     // Parallel DB Executions
+//     const [businesses, totalCount] = await Promise.all([
+//       Business.find(query)
+//         .populate("user", "mobile role")
+//         .select(
+//           "firmName category phoneNumber email address currentCity currentState pincode workingAreas averageRating totalReviews profileUnlocked createdAt"
+//         )
+//         .sort({ averageRating: -1, totalReviews: -1, createdAt: -1 })
+//         .skip(skip)
+//         .limit(limitNum)
+//         .lean(),
+//       Business.countDocuments(query),
+//     ]);
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Search results fetched successfully",
+//      count: formattedBusinesses.length + formattedDummyLeads.length,
+//       totalCount,
+//       totalPages: Math.ceil(totalCount / limitNum) || 0,
+//       currentPage: pageNum,
+//       data: businesses,
+//     });
+//   } catch (error) {
+//     console.error("Search API Error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server error while searching businesses",
+//       error: error.message,
+//     });
+//   }
+// };
 
 
 /**
