@@ -362,27 +362,41 @@ exports.getDirectory = async (req, res) => {
     // -------------------------------------------------------------
     // Universal Matcher: Works for ALL Categories, States & Cities
     // -------------------------------------------------------------
+    // const createUniversalMatcher = (inputStr) => {
+    //   if (!inputStr || inputStr === "all" || inputStr === "pending") return null;
+
+    //   const alphaNumericOnly = inputStr.replace(/[^a-z0-9]/gi, "");
+    //   if (!alphaNumericOnly) return null;
+
+    //   // 1. Matches spaces, underscores, hyphens dynamically
+    //   const flexPattern = alphaNumericOnly.split("").join("[\\s\\-_]*");
+    //   const flexRegex = new RegExp(flexPattern, "i");
+
+    //   // 2. Prefix Matcher for Typos (first 3-4 chars)
+    //   const prefixLength = Math.min(alphaNumericOnly.length, 3);
+    //   const prefixPattern = alphaNumericOnly.substring(0, prefixLength);
+    //   const prefixRegex = new RegExp("^" + prefixPattern, "i");
+
+    //   return {
+    //     flexRegex,
+    //     prefixRegex,
+    //     rawText: alphaNumericOnly,
+    //   };
+    // };
     const createUniversalMatcher = (inputStr) => {
-      if (!inputStr || inputStr === "all" || inputStr === "pending") return null;
+  if (
+    !inputStr ||
+    inputStr === "all" ||
+    inputStr === "pending"
+  ) {
+    return null;
+  }
 
-      const alphaNumericOnly = inputStr.replace(/[^a-z0-9]/gi, "");
-      if (!alphaNumericOnly) return null;
-
-      // 1. Matches spaces, underscores, hyphens dynamically
-      const flexPattern = alphaNumericOnly.split("").join("[\\s\\-_]*");
-      const flexRegex = new RegExp(flexPattern, "i");
-
-      // 2. Prefix Matcher for Typos (first 3-4 chars)
-      const prefixLength = Math.min(alphaNumericOnly.length, 3);
-      const prefixPattern = alphaNumericOnly.substring(0, prefixLength);
-      const prefixRegex = new RegExp("^" + prefixPattern, "i");
-
-      return {
-        flexRegex,
-        prefixRegex,
-        rawText: alphaNumericOnly,
-      };
-    };
+  return inputStr
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "");
+};
 
     const stateMatcher = createUniversalMatcher(rawState);
     const cityMatcher = createUniversalMatcher(rawCity);
@@ -474,33 +488,75 @@ const profile = b.user?._id
   ? profileMap[b.user._id.toString()]
   : null;
       // --- State Filtering ---
-      if (stateMatcher) {
-        if (stateMatcher.flexRegex.test(busState)) score += 30;
-        else if (stateMatcher.prefixRegex.test(busState)) score += 15;
-        else return null; // Exclude if state doesn't match
-      }
 
-      // --- City Filtering ---
-      if (cityMatcher) {
-        if (cityMatcher.flexRegex.test(busCity)) score += 30;
-        else if (cityMatcher.prefixRegex.test(busCity)) score += 15;
-        else return null; // Exclude if city doesn't match
-      }
+// --- EXACT STATE FILTER ---
+if (stateMatcher) {
+  if (
+    cleanInput(b.currentState)
+      .replace(/[\s_-]+/g, "") !== stateMatcher
+  ) {
+    return null;
+  }
+}
 
-      // --- Universal Category / Role Check ---
-      if (categoryMatcher) {
-        const matchesCategoryFlex =
-          categoryMatcher.flexRegex.test(busCategory) ||
-          categoryMatcher.flexRegex.test(busUserRole);
+// --- EXACT CITY FILTER ---
+if (cityMatcher) {
+  if (
+    cleanInput(b.currentCity)
+      .replace(/[\s_-]+/g, "") !== cityMatcher
+  ) {
+    return null;
+  }
+}
 
-        const matchesCategoryPrefix =
-          categoryMatcher.prefixRegex.test(busCategory) ||
-          categoryMatcher.prefixRegex.test(busUserRole);
+// --- EXACT CATEGORY / ROLE FILTER ---
+if (categoryMatcher) {
+  const businessCategory = cleanInput(b.category)
+    .replace(/[\s_-]+/g, "");
 
-        if (matchesCategoryFlex) score += 40;
-        else if (matchesCategoryPrefix) score += 20;
-        else return null; // Exclude if category doesn't match
-      }
+  const userRole = cleanInput(b.user?.role)
+    .replace(/[\s_-]+/g, "");
+
+  if (
+    businessCategory !== categoryMatcher &&
+    userRole !== categoryMatcher
+  ) {
+    return null;
+  }
+}
+
+
+
+
+
+
+      // if (stateMatcher) {
+      //   if (stateMatcher.flexRegex.test(busState)) score += 30;
+      //   else if (stateMatcher.prefixRegex.test(busState)) score += 15;
+      //   else return null; // Exclude if state doesn't match
+      // }
+
+      // // --- City Filtering ---
+      // if (cityMatcher) {
+      //   if (cityMatcher.flexRegex.test(busCity)) score += 30;
+      //   else if (cityMatcher.prefixRegex.test(busCity)) score += 15;
+      //   else return null; // Exclude if city doesn't match
+      // }
+
+      // // --- Universal Category / Role Check ---
+      // if (categoryMatcher) {
+      //   const matchesCategoryFlex =
+      //     categoryMatcher.flexRegex.test(busCategory) ||
+      //     categoryMatcher.flexRegex.test(busUserRole);
+
+      //   const matchesCategoryPrefix =
+      //     categoryMatcher.prefixRegex.test(busCategory) ||
+      //     categoryMatcher.prefixRegex.test(busUserRole);
+
+      //   if (matchesCategoryFlex) score += 40;
+      //   else if (matchesCategoryPrefix) score += 20;
+      //   else return null; // Exclude if category doesn't match
+      // }
 
       // --- Firm/Business Search ---
       if (searchMatcher) {
@@ -528,29 +584,65 @@ const leadFirmName = cleanInput(lead.firmName);
 const leadOwnerName = cleanInput(lead.ownerName);
 const leadPhone = cleanInput(lead.mobile);
   // State
-  if (stateMatcher) {
-    if (stateMatcher.flexRegex.test(leadState)) score += 30;
-    else if (stateMatcher.prefixRegex.test(leadState)) score += 15;
-    else return null;
+// ============================================
+// EXACT DUMMY STATE FILTER
+// ============================================
+if (stateMatcher) {
+  if (
+    cleanInput(lead.state)
+      .replace(/[\s_-]+/g, "") !== stateMatcher
+  ) {
+    return null;
   }
+}
 
-  // City
-  if (cityMatcher) {
-    if (cityMatcher.flexRegex.test(leadCity)) score += 30;
-    else if (cityMatcher.prefixRegex.test(leadCity)) score += 15;
-    else return null;
+// ============================================
+// EXACT DUMMY CITY FILTER
+// ============================================
+if (cityMatcher) {
+  if (
+    cleanInput(lead.city)
+      .replace(/[\s_-]+/g, "") !== cityMatcher
+  ) {
+    return null;
   }
+}
 
-  // Category
-  if (categoryMatcher) {
-    if (categoryMatcher.flexRegex.test(leadCategory)) {
-      score += 40;
-    } else if (categoryMatcher.prefixRegex.test(leadCategory)) {
-      score += 20;
-    } else {
-      return null;
-    }
+// ============================================
+// EXACT DUMMY CATEGORY FILTER
+// ============================================
+if (categoryMatcher) {
+  if (
+    cleanInput(lead.category)
+      .replace(/[\s_-]+/g, "") !== categoryMatcher
+  ) {
+    return null;
   }
+}
+
+  // if (stateMatcher) {
+  //   if (stateMatcher.flexRegex.test(leadState)) score += 30;
+  //   else if (stateMatcher.prefixRegex.test(leadState)) score += 15;
+  //   else return null;
+  // }
+
+  // // City
+  // if (cityMatcher) {
+  //   if (cityMatcher.flexRegex.test(leadCity)) score += 30;
+  //   else if (cityMatcher.prefixRegex.test(leadCity)) score += 15;
+  //   else return null;
+  // }
+
+  // // Category
+  // if (categoryMatcher) {
+  //   if (categoryMatcher.flexRegex.test(leadCategory)) {
+  //     score += 40;
+  //   } else if (categoryMatcher.prefixRegex.test(leadCategory)) {
+  //     score += 20;
+  //   } else {
+  //     return null;
+  //   }
+  // }
 
   // Search
   if (searchMatcher) {
@@ -594,26 +686,30 @@ const leadPhone = cleanInput(lead.mobile);
 
     /// dummy 
     let matchedBusinesses = [];
-
-    if (scoredBusinesses.length > 0) {
-      scoredBusinesses.sort((a, b) => b.score - a.score);
-      matchedBusinesses = scoredBusinesses.map((item) => item.business);
-    } else if (categoryMatcher) {
-      // Fallback: If location had heavy typos, still show results by Category
-      matchedBusinesses = allBusinesses.filter((b) => {
-        const busCat = cleanInput(b.category);
-        const busRole = cleanInput(b.user?.role);
-        return (
-          categoryMatcher.flexRegex.test(busCat) ||
-          categoryMatcher.flexRegex.test(busRole)
-        );
-      });
-    }
+if (scoredBusinesses.length > 0) {
+  matchedBusinesses = scoredBusinesses.map(
+    (item) => item.business
+  );
+}
+    // if (scoredBusinesses.length > 0) {
+    //   scoredBusinesses.sort((a, b) => b.score - a.score);
+    //   matchedBusinesses = scoredBusinesses.map((item) => item.business);
+    // } else if (categoryMatcher) {
+    //   // Fallback: If location had heavy typos, still show results by Category
+    //   matchedBusinesses = allBusinesses.filter((b) => {
+    //     const busCat = cleanInput(b.category);
+    //     const busRole = cleanInput(b.user?.role);
+    //     return (
+    //       categoryMatcher.flexRegex.test(busCat) ||
+    //       categoryMatcher.flexRegex.test(busRole)
+    //     );
+    //   });
+    // }
 
     // Default Fallback: Show all active cards if initial load / no matching filters
-    if (matchedBusinesses.length === 0 && !search) {
-      matchedBusinesses = allBusinesses;
-    }
+    // if (matchedBusinesses.length === 0 && !search) {
+    //   matchedBusinesses = allBusinesses;
+    // }
 
     // -------------------------------------------------------------
     // Fetch Matching Vehicles
