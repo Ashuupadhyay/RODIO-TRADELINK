@@ -129,7 +129,7 @@ exports.searchBusinessesByField = async (req, res) => {
     // Validate search type
     const allowedFields = {
       firmName: "firmName",
-      ownerName: "ownerName",
+        ownerName: "name",
       phoneNumber: "phoneNumber",
     };
 
