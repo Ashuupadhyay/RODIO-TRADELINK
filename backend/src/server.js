@@ -50,6 +50,8 @@ const reviewRoutes = require("./routes/rodioreviewRoutes");
 const adminReviewRoutes = require("./routes/adminrevewrout");
 const heroslide=require("./routes/heroSlideRoutes.js");
 const mediaPostRoutes = require("./routes/mediaPostRoutes");
+const directoryLeadRoutes =
+  require("./routes/directoryLeadRoutes");
 //const adminUserRoutes2 = require("./routes/adminUserRoutes2");
 /*
     API Routes
@@ -104,6 +106,10 @@ app.use("/api/admin", adminReviewRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/admin", adminReviewRoutes);
 app.use("/api/media-posts", mediaPostRoutes);
+app.use(
+  "/api/directory-leads",
+  directoryLeadRoutes
+);
 
 // const PORT = process.env.PORT || 5000;
 
