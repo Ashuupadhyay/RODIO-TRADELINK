@@ -328,7 +328,7 @@
 //   }
 // };
 
-
+const DirectoryLead = require("../models/directoryLead");
 const Business = require("../models/business");
 const User = require("../models/register");
 const Vehicle = require("../models/vehicle");
@@ -668,11 +668,76 @@ exports.getPublicBusiness = async (req, res) => {
       .lean();
 
     if (!business) {
-      return res.status(404).json({
-        success: false,
-        message: "Business card not found",
-      });
-    }
+  const dummyLead = await DirectoryLead.findOne({
+    _id: req.params.id,
+    status: "dummy",
+    isActive: true,
+  }).lean();
+
+  if (dummyLead) {
+    return res.status(200).json({
+      success: true,
+      data: {
+        _id: dummyLead._id,
+
+        category: dummyLead.category || "transporter",
+
+        name: dummyLead.ownerName || "",
+
+        ownerName: dummyLead.ownerName || "",
+
+        role: dummyLead.category || "Transporter",
+
+        firmName: dummyLead.firmName || "",
+
+        email: dummyLead.email || "",
+
+        phoneNumber: dummyLead.mobile || "",
+
+        whatsappNumber: dummyLead.whatsappNumber || "",
+
+        alternatePhoneNumbers: [],
+
+        address: dummyLead.address || "",
+
+        pincode: dummyLead.pincode || "",
+
+        location: {
+          city: dummyLead.city || "",
+          state: dummyLead.state || "",
+        },
+
+        workingAreas: dummyLead.workingAreas || [],
+
+        vehicles: dummyLead.vehicles || [],
+
+        routes: [],
+
+        averageRating: dummyLead.averageRating || 0,
+
+        totalReviews: dummyLead.totalReviews || 0,
+
+        businessDescription:
+          dummyLead.businessDescription || "",
+
+        officeWorkingHours:
+          dummyLead.officeWorkingHours || {},
+
+        officeWorkingDays:
+          dummyLead.officeWorkingDays || [],
+
+        gallery: dummyLead.gallery || [],
+
+        isDummy: true,
+      },
+    });
+  }
+
+  return res.status(404).json({
+    success: false,
+    message: "Business card not found",
+  });
+}
 
     const [vehicles, routes] = await Promise.all([
       Vehicle.find({
