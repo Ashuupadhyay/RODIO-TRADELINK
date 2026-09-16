@@ -436,6 +436,8 @@ const Comment = require("../models/comments");
 const Post = require("../models/Post");
 const BusinessDocument = require("../models/documents");
 
+const DirectoryLead = require("../models/directoryLead");
+
 /**
  * @desc    Get Business / Transporter Detail by ID (Works with Business ID or User ID)
  * @route   GET /api/v1/transporters/:id
@@ -453,13 +455,66 @@ const getTransporterById = async (req, res) => {
       isActive: true,
       registrationStatus: "completed",
     });
+if (!business) {
+  const dummyLead = await DirectoryLead.findOne({
+    _id: id,
+    status: "dummy",
+    isActive: true,
+  }).lean();
 
-    if (!business) {
-      return res.status(404).json({
-        success: false,
-        message: "Business details not found or profile incomplete",
-      });
-    }
+  if (dummyLead) {
+    return res.status(200).json({
+      success: true,
+      data: {
+        _id: dummyLead._id,
+        category: dummyLead.category || "transporter",
+        firmName: dummyLead.firmName || "",
+
+        profile: {
+          name: dummyLead.ownerName || dummyLead.firmName || "",
+          profileImage: "",
+        },
+
+        role: dummyLead.category || "transporter",
+        mobile: dummyLead.mobile || "",
+        phoneNumber: dummyLead.mobile || "",
+        email: dummyLead.email || "",
+
+        address: dummyLead.address || "",
+        currentCity: dummyLead.city || "",
+        currentState: dummyLead.state || "",
+        pincode: dummyLead.pincode || "",
+
+        workingAreas: dummyLead.workingAreas || [],
+
+        totalVehicles: Array.isArray(dummyLead.vehicles)
+          ? dummyLead.vehicles.length
+          : 0,
+
+        vehicles: dummyLead.vehicles || [],
+
+        totalUploadedImages: 0,
+        gallery: dummyLead.gallery || [],
+
+        averageRating: dummyLead.averageRating || 0,
+        totalReviews: dummyLead.totalReviews || 0,
+
+        comments: [],
+
+        businessDescription: dummyLead.businessDescription || "",
+        officeWorkingHours: dummyLead.officeWorkingHours || {},
+        officeWorkingDays: dummyLead.officeWorkingDays || [],
+
+        isDummy: true,
+      },
+    });
+  }
+
+  return res.status(404).json({
+    success: false,
+    message: "Business details not found or profile incomplete",
+  });
+}
 
     // =====================================================
     // 2. PARALLEL FETCHING (Vehicles, Posts, Comments, User, Profile)
