@@ -156,6 +156,7 @@
 
 const Vehicle = require("../models/vehicle");
 const Business = require("../models/business");
+const DirectoryLead = require("../models/directoryLead");
 
 /**
  * @desc    Search Vehicles & Businesses by Origin (From), Destination (To) & Vehicle Type
@@ -295,14 +296,188 @@ exports.searchVehicles = async (req, res) => {
     let result = await Vehicle.aggregate(primaryPipeline);
     let vehicles = result[0]?.data || [];
     let totalCount = result[0]?.totalCount[0]?.count || 0;
+// ==================================================
+// DUMMY DIRECTORY VEHICLE SEARCH
+// ==================================================
+
+const dummyQuery = {
+  status: "dummy",
+  isActive: true,
+};
+
+const dummyLeads = await DirectoryLead.find(dummyQuery).lean();
+
+const normalize = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "");
+
+const fromValue = normalize(from);
+const toValue = normalize(to);
+const vehicleValue = normalize(vehicleType);
+
+const dummyVehicleResults = [];
+
+for (const lead of dummyLeads) {
+
+  // -----------------------------------------
+  // FROM = Dummy current city / current state
+  // -----------------------------------------
+
+  if (fromValue) {
+    const dummyCity = normalize(lead.city);
+    const dummyState = normalize(lead.state);
+
+    if (
+      dummyCity !== fromValue &&
+      dummyState !== fromValue
+    ) {
+      continue;
+    }
+  }
+
+  // -----------------------------------------
+  // TO = Dummy working areas
+  // -----------------------------------------
+
+  if (toValue) {
+
+    let toMatched = false;
+
+    for (const area of lead.workingAreas || []) {
+
+      const areaState = normalize(area.state);
+
+      if (areaState === toValue) {
+        toMatched = true;
+        break;
+      }
+
+      for (const city of area.cities || []) {
+
+        if (normalize(city) === toValue) {
+          toMatched = true;
+          break;
+        }
+      }
+
+      if (toMatched) break;
+    }
+
+    if (!toMatched) {
+      continue;
+    }
+  }
+
+  // -----------------------------------------
+  // VEHICLE MATCH
+  // -----------------------------------------
+
+  const matchingVehicles = (lead.vehicles || []).filter((vehicle) => {
+
+    // unavailable vehicle ko ignore karo
+    if (vehicle.available === false) {
+      return false;
+    }
+
+    // All Vehicles selected
+    if (
+      !vehicleType ||
+      vehicleType === "All Vehicles"
+    ) {
+      return true;
+    }
+
+    return (
+      normalize(vehicle.vehicleType) === vehicleValue
+    );
+  });
+
+  // -----------------------------------------
+  // Matching vehicle mil gaya
+  // -----------------------------------------
+
+  for (const vehicle of matchingVehicles) {
+
+    dummyVehicleResults.push({
+
+      _id: `${lead._id}_${vehicle.vehicleType}`,
+
+      vehicleType: vehicle.vehicleType || "",
+
+      vehicleNumber: vehicle.vehicleNumber || "",
+
+      capacity: vehicle.capacity || "",
+
+      bodyType: vehicle.bodyType || "",
+
+      status: "available",
+
+      createdAt: lead.createdAt,
+
+      isDummy: true,
+
+      business: {
+
+        _id: lead._id,
+
+        firmName: lead.firmName || "",
+
+        ownerName: lead.ownerName || "",
+
+        category: lead.category || "",
+
+        phoneNumber: lead.mobile || "",
+
+        whatsappNumber: lead.whatsappNumber || "",
+
+        email: lead.email || "",
+
+        currentCity: lead.city || "",
+
+        currentState: lead.state || "",
+
+        workingAreas: lead.workingAreas || [],
+
+        averageRating: lead.averageRating || 0,
+
+        totalReviews: lead.totalReviews || 0,
+
+        address: lead.address || "",
+
+        pincode: lead.pincode || "",
+
+        isVerified: lead.isVerified || false,
+
+        isDummy: true,
+      },
+    });
+  }
+}
+
+
 
     // --------------------------------------------------
     // STEP 3: Fallback Strategy (If no vehicles found)
     // Fetch Businesses matching From & To directly
+if (dummyVehicleResults.length > 0) {
+
+  vehicles = [
+    ...vehicles,
+    ...dummyVehicleResults,
+  ];
+
+  totalCount =
+    totalCount + dummyVehicleResults.length;
+}
+
+
+    
     // --------------------------------------------------
     let isFallback = false;
 
-    if (vehicles.length === 0) {
+    if (vehicles.length === 0 && dummyVehicleResults.length === 0) {
       isFallback = true;
       const fallbackPipeline = [
         { $match: { ...businessLocationMatch, isActive: true } },
@@ -337,6 +512,111 @@ exports.searchVehicles = async (req, res) => {
       const fallbackResult = await Business.aggregate(fallbackPipeline);
       vehicles = fallbackResult[0]?.data || [];
       totalCount = fallbackResult[0]?.totalCount[0]?.count || 0;
+
+      // ==================================================
+// DUMMY BUSINESS FALLBACK
+// ==================================================
+
+if (isFallback)  {
+
+  const dummyFallbackLeads = await DirectoryLead.find({
+    status: "dummy",
+    isActive: true,
+  }).lean();
+
+  const dummyFallbackResults = [];
+
+  for (const lead of dummyFallbackLeads) {
+
+    // FROM MATCH
+    if (fromValue) {
+
+      const dummyCity = normalize(lead.city);
+      const dummyState = normalize(lead.state);
+
+      if (
+        dummyCity !== fromValue &&
+        dummyState !== fromValue
+      ) {
+        continue;
+      }
+    }
+
+    // TO MATCH
+    if (toValue) {
+
+      let toMatched = false;
+
+      for (const area of lead.workingAreas || []) {
+
+        if (normalize(area.state) === toValue) {
+          toMatched = true;
+          break;
+        }
+
+        if (
+          (area.cities || []).some(
+            (city) => normalize(city) === toValue
+          )
+        ) {
+          toMatched = true;
+          break;
+        }
+      }
+
+      if (!toMatched) {
+        continue;
+      }
+    }
+
+    dummyFallbackResults.push({
+      _id: lead._id,
+      isFallbackBusiness: true,
+      isDummy: true,
+
+      business: {
+        _id: lead._id,
+
+        firmName: lead.firmName || "",
+        ownerName: lead.ownerName || "",
+        category: lead.category || "",
+
+        phoneNumber: lead.mobile || "",
+        whatsappNumber: lead.whatsappNumber || "",
+
+        email: lead.email || "",
+
+        currentCity: lead.city || "",
+        currentState: lead.state || "",
+
+        workingAreas: lead.workingAreas || [],
+
+        averageRating: lead.averageRating || 0,
+        totalReviews: lead.totalReviews || 0,
+
+        address: lead.address || "",
+        pincode: lead.pincode || "",
+
+        isVerified: lead.isVerified || false,
+
+        isDummy: true,
+      },
+    });
+  }
+
+if (dummyFallbackResults.length > 0) {
+
+  vehicles = [
+    ...vehicles,
+    ...dummyFallbackResults,
+  ];
+
+  totalCount =
+    totalCount + dummyFallbackResults.length;
+
+  isFallback = true;
+}
+}
     }
 
     return res.status(200).json({

@@ -1,5 +1,6 @@
 import express from "express";
 import { connectDB } from "./services/db.js";
+import { searchDirectory } from "./tools/directoryTool.js";
 import cors from "cors";
 import dotenv from "dotenv";
 import knowledgeRoutes from "./routs/knowledge.js";
@@ -78,7 +79,27 @@ ANSWER:
     });
   }
 });
+app.get("/api/ai/test-directory", async (req, res) => {
+  try {
+    const result = await searchDirectory({
+      state: req.query.state,
+      city: req.query.city,
+      category: req.query.category
+    });
 
+    res.json({
+      success: true,
+      result
+    });
+  } catch (error) {
+    console.error("Directory AI test error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
 const PORT = process.env.AI_PORT || 5001;
 await connectDB();
 app.listen(PORT, () => {
