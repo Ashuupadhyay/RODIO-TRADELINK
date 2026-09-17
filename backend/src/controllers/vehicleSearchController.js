@@ -296,6 +296,96 @@ exports.searchVehicles = async (req, res) => {
     let result = await Vehicle.aggregate(primaryPipeline);
     let vehicles = result[0]?.data || [];
     let totalCount = result[0]?.totalCount[0]?.count || 0;
+    // ==================================================
+// REAL BUSINESS - GET ALL VEHICLES OF MATCHED BUSINESS
+// ONE BUSINESS = ONE CARD
+// ==================================================
+
+const matchedBusinessIds = [
+  ...new Set(
+    vehicles
+      .map((item) => item.business?._id)
+      .filter(Boolean)
+      .map((id) => String(id))
+  ),
+];
+
+if (matchedBusinessIds.length > 0) {
+
+  const allBusinessVehicles = await Vehicle.find({
+    business: {
+      $in: matchedBusinessIds,
+    },
+    status: "available",
+  })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const vehicleMap = new Map();
+
+  for (const vehicle of allBusinessVehicles) {
+
+    const businessId = String(vehicle.business);
+
+    if (!vehicleMap.has(businessId)) {
+      vehicleMap.set(businessId, []);
+    }
+
+    vehicleMap.get(businessId).push({
+      _id: vehicle._id,
+      vehicleType: vehicle.vehicleType || "",
+      vehicleNumber: vehicle.vehicleNumber || "",
+      capacity: vehicle.capacity || "",
+      bodyType: vehicle.bodyType || "",
+      status: vehicle.status || "available",
+    });
+  }
+
+  // Attach ALL vehicles to matched business
+  for (const item of vehicles) {
+
+    const businessId = String(item.business?._id);
+
+    item.business.vehicles =
+      vehicleMap
+      .get(businessId) || [];
+  }
+  // ==================================================
+// GROUP REAL VEHICLES
+// ONE BUSINESS = ONE CARD
+// ==================================================
+
+const groupedRealBusinesses = new Map();
+
+for (const item of vehicles) {
+
+  const businessId = String(item.business?._id);
+
+  if (!businessId) continue;
+
+  if (!groupedRealBusinesses.has(businessId)) {
+
+    groupedRealBusinesses.set(businessId, {
+      _id: businessId,
+
+      isDummy: false,
+      isFallbackBusiness: false,
+
+      business: {
+        ...item.business,
+
+        vehicles: item.business.vehicles || [],
+      },
+    });
+  }
+}
+
+// Replace vehicle-level results with business-level results
+vehicles = Array.from(groupedRealBusinesses.values());
+
+// Now total count means total businesses/cards
+totalCount = vehicles.length;
+}
 // ==================================================
 // DUMMY DIRECTORY VEHICLE SEARCH
 // ==================================================
@@ -397,63 +487,127 @@ for (const lead of dummyLeads) {
   // -----------------------------------------
   // Matching vehicle mil gaya
   // -----------------------------------------
+// -----------------------------------------
+// ONE DUMMY BUSINESS = ONE CARD
+// -----------------------------------------
 
-  for (const vehicle of matchingVehicles) {
+if (matchingVehicles.length > 0) {
 
-    dummyVehicleResults.push({
+  // Is business ke saare available vehicles
+  const allDummyVehicles = (lead.vehicles || []).filter(
+    (vehicle) => vehicle.available !== false
+  );
 
-      _id: `${lead._id}_${vehicle.vehicleType}`,
+  dummyVehicleResults.push({
 
-      vehicleType: vehicle.vehicleType || "",
+    // ONE ID FOR ONE BUSINESS
+    _id: String(lead._id),
 
-      vehicleNumber: vehicle.vehicleNumber || "",
+    isDummy: true,
 
-      capacity: vehicle.capacity || "",
+    business: {
 
-      bodyType: vehicle.bodyType || "",
+      _id: lead._id,
 
-      status: "available",
+      firmName: lead.firmName || "",
+      ownerName: lead.ownerName || "",
+      category: lead.category || "",
 
-      createdAt: lead.createdAt,
+      phoneNumber: lead.mobile || "",
+      whatsappNumber: lead.whatsappNumber || "",
+      email: lead.email || "",
+
+      currentCity: lead.city || "",
+      currentState: lead.state || "",
+
+      workingAreas: lead.workingAreas || [],
+
+      averageRating: lead.averageRating || 0,
+      totalReviews: lead.totalReviews || 0,
+
+      address: lead.address || "",
+      pincode: lead.pincode || "",
+
+      isVerified: lead.isVerified || false,
 
       isDummy: true,
 
-      business: {
+      // ALL VEHICLES OF THIS DUMMY BUSINESS
+      vehicles: allDummyVehicles.map((vehicle, index) => ({
+        _id:
+          vehicle._id ||
+          `${lead._id}_vehicle_${index}`,
 
-        _id: lead._id,
+        vehicleType: vehicle.vehicleType || "",
+        vehicleNumber: vehicle.vehicleNumber || "",
+        capacity: vehicle.capacity || "",
+        bodyType: vehicle.bodyType || "",
 
-        firmName: lead.firmName || "",
+        status:
+          vehicle.available === false
+            ? "unavailable"
+            : "available",
+      })),
+    },
+  });
+}
+  // for (const vehicle of matchingVehicles) 
+  //   {
 
-        ownerName: lead.ownerName || "",
+  //   dummyVehicleResults.push({
 
-        category: lead.category || "",
+  //     _id: `${lead._id}_${vehicle.vehicleType}`,
 
-        phoneNumber: lead.mobile || "",
+  //     vehicleType: vehicle.vehicleType || "",
 
-        whatsappNumber: lead.whatsappNumber || "",
+  //     vehicleNumber: vehicle.vehicleNumber || "",
 
-        email: lead.email || "",
+  //     capacity: vehicle.capacity || "",
 
-        currentCity: lead.city || "",
+  //     bodyType: vehicle.bodyType || "",
 
-        currentState: lead.state || "",
+  //     status: "available",
 
-        workingAreas: lead.workingAreas || [],
+  //     createdAt: lead.createdAt,
 
-        averageRating: lead.averageRating || 0,
+  //     isDummy: true,
 
-        totalReviews: lead.totalReviews || 0,
+  //     business: {
 
-        address: lead.address || "",
+  //       _id: lead._id,
 
-        pincode: lead.pincode || "",
+  //       firmName: lead.firmName || "",
 
-        isVerified: lead.isVerified || false,
+  //       ownerName: lead.ownerName || "",
 
-        isDummy: true,
-      },
-    });
-  }
+  //       category: lead.category || "",
+
+  //       phoneNumber: lead.mobile || "",
+
+  //       whatsappNumber: lead.whatsappNumber || "",
+
+  //       email: lead.email || "",
+
+  //       currentCity: lead.city || "",
+
+  //       currentState: lead.state || "",
+
+  //       workingAreas: lead.workingAreas || [],
+
+  //       averageRating: lead.averageRating || 0,
+
+  //       totalReviews: lead.totalReviews || 0,
+
+  //       address: lead.address || "",
+
+  //       pincode: lead.pincode || "",
+
+  //       isVerified: lead.isVerified || false,
+
+  //       isDummy: true,
+  //     },
+  //   });
+  // }
 }
 
 
