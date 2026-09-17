@@ -913,25 +913,67 @@ verifiedAt: lead.verifiedAt || null,
 }
       // -------------------------------------------------------------
     // Pinned Featured Card Logic
+    // -------------
+    // ------------------------------------------------
+    // const featuredCard = [];
+    // const otherCards = [];
+
+    // const targetPhone = "8319501708";
+    // const targetName = "vandana motors";
+
+    // for (const item of result) {
+    //   const name = String(item.firmName || "").toLowerCase().trim();
+    //   const phone = String(item.phoneNumber || "").trim();
+
+    //   if (phone === targetPhone || name === targetName) {
+    //     featuredCard.push(item);
+    //   } else {
+    //     otherCards.push(item);
+    //   }
+    // }
+
+    // const finalData = [...featuredCard, ...otherCards];
     // -------------------------------------------------------------
-    const featuredCard = [];
-    const otherCards = [];
+// FINAL DIRECTORY ORDER
+// 1. Vandana Motors - Fixed Top
+// 2. Verified - Original + Dummy
+// 3. Unverified - Original + Dummy
+// -------------------------------------------------------------
 
-    const targetPhone = "8319501708";
-    const targetName = "vandana motors";
+const featuredCard = [];
+const verifiedCards = [];
+const unverifiedCards = [];
 
-    for (const item of result) {
-      const name = String(item.firmName || "").toLowerCase().trim();
-      const phone = String(item.phoneNumber || "").trim();
+const targetPhone = "8319501708";
+const targetName = "vandana motors";
 
-      if (phone === targetPhone || name === targetName) {
-        featuredCard.push(item);
-      } else {
-        otherCards.push(item);
-      }
-    }
+for (const item of result) {
+  const name = String(item.firmName || "").toLowerCase().trim();
+  const phone = String(item.phoneNumber || "").trim();
 
-    const finalData = [...featuredCard, ...otherCards];
+  // Vandana Motors always on top
+  if (phone === targetPhone || name === targetName) {
+    featuredCard.push(item);
+    continue;
+  }
+
+  // Verified cards
+  if (item.isVerified === true) {
+    verifiedCards.push(item);
+  }
+
+  // Unverified cards
+  else {
+    unverifiedCards.push(item);
+  }
+}
+
+// FINAL ORDER
+const finalData = [
+  ...featuredCard,
+  ...verifiedCards,
+  ...unverifiedCards,
+];
 
     return res.status(200).json({
       success: true,
