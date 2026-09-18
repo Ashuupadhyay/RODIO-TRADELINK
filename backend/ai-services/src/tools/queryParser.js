@@ -1,10 +1,11 @@
 import "dotenv/config";
+
 const OLLAMA_URL = "http://127.0.0.1:11434/api/generate";
 const RODIO_API_BASE_URL = process.env.RODIO_API_BASE_URL;
 
 export async function parseDirectoryQuery(message) {
   try {
-    // 1. Qwen se city/category identify
+    // Qwen sirf category identify karega
     const response = await fetch(OLLAMA_URL, {
       method: "POST",
       headers: {
@@ -15,24 +16,38 @@ export async function parseDirectoryQuery(message) {
 
         prompt: `You are a Rodio Tradelink query parser.
 
-Extract only the city and category from the user's request.
+Extract ONLY the category from the user's request.
+
+Allowed categories:
+- transporter
+- broker
+- fleet_owner
+- driver
+- vehicle_owner
 
 Rules:
-- Return JSON only.
-- No explanation.
-- "transporter", "transporters", "transport company", "transport wala" = "transporter".
-- "broker", "brokers" = "broker".
-- Keep the city name exactly as spoken, with normal capitalization.
-- If city or category is missing, return an empty string.
+- transport
+- transporter
+- transporters
+- transport company
+- transport wala
+- truck transport
+- logistics transport
+
+must return exactly:
+transporter
+
+If user says broker or brokers, return exactly:
+broker
+
+Return ONLY one category word.
+Do not return JSON.
+Do not return explanation.
 
 User request:
 ${message}
 
-Return exactly:
-{
-  "city": "",
-  "category": ""
-}`,
+Category:`,
 
         stream: false
       })
@@ -44,37 +59,79 @@ Return exactly:
 
     const data = await response.json();
 
-    const cleanResponse = data.response
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
+    const categoryText = data.response
+      .trim()
+      .toLowerCase();
 
-    const parsed = JSON.parse(cleanResponse);
+    // Category normalize
+    let category = "";
+
+    if (
+      categoryText.includes("transporter") ||
+      categoryText.includes("transport")
+    ) {
+      category = "transporter";
+    } else if (categoryText.includes("broker")) {
+      category = "broker";
+    } else if (categoryText.includes("fleet")) {
+      category = "fleet_owner";
+    } else if (categoryText.includes("driver")) {
+      category = "driver";
+    } else if (categoryText.includes("vehicle")) {
+      category = "vehicle_owner";
+    }
+
+    // Simple city extraction
+    const cityMatch = message.match(
+      /(?:in|at|from|for|ke|ki|ka)\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/i
+    );
+
+    let city = cityMatch ? cityMatch[1].trim() : "";
+
+    // Common Hinglish pattern:
+    // "Indore ke transporter"
+    if (!city) {
+      const hinglishMatch = message.match(
+        /^([A-Za-z]+(?:\s+[A-Za-z]+)?)\s+(?:ke|ki|ka)\s+/i
+      );
+
+      if (hinglishMatch) {
+        city = hinglishMatch[1].trim();
+      }
+    }
 
     let state = "";
 
-    // 2. City mil gayi to existing location API se state find karo
-    if (parsed.city) {
+    // Existing Rodio Location API se state find karo
+    if (city && RODIO_API_BASE_URL) {
       const locationResponse = await fetch(
-        `${RODIO_API_BASE_URL}/api/location/search?query=${encodeURIComponent(parsed.city)}`
+        `${RODIO_API_BASE_URL}/api/location/search?query=${encodeURIComponent(
+          city
+        )}`
       );
 
       if (locationResponse.ok) {
         const locationData = await locationResponse.json();
 
         if (locationData.data?.length > 0) {
-          state = locationData.data[0].state || "";
+          const exactCity = locationData.data.find(
+            (item) =>
+              item.name?.toLowerCase() === city.toLowerCase()
+          );
+
+          const location = exactCity || locationData.data[0];
+
+          city = location.name || city;
+          state = location.state || "";
         }
       }
     }
 
-    // 3. Final structured query
     return {
       state,
-      city: parsed.city || "",
-      category: parsed.category || ""
+      city,
+      category
     };
-
   } catch (error) {
     console.error("Query parser error:", error.message);
     throw error;

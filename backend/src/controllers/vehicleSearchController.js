@@ -157,7 +157,7 @@
 const Vehicle = require("../models/vehicle");
 const Business = require("../models/business");
 const DirectoryLead = require("../models/directoryLead");
-
+const Profile = require("../models/profile");
 /**
  * @desc    Search Vehicles & Businesses by Origin (From), Destination (To) & Vehicle Type
  * @route   GET /api/v1/vehicles/search
@@ -309,6 +309,25 @@ const matchedBusinessIds = [
       .map((id) => String(id))
   ),
 ];
+const matchedBusinesses = vehicles
+  .map((item) => item.business)
+  .filter(Boolean);
+
+const businessUserIds = matchedBusinesses
+  .map((business) => business.user)
+  .filter(Boolean);
+
+const profiles = await Profile.find({
+  user: { $in: businessUserIds },
+})
+  .select("user profileImage name firmName")
+  .lean();
+
+const profileMap = {};
+
+for (const profile of profiles) {
+  profileMap[String(profile.user)] = profile;
+}
 
 if (matchedBusinessIds.length > 0) {
 

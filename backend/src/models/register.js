@@ -160,7 +160,7 @@ const userSchema = new mongoose.Schema(
       },
       plan: {
         type: String,
-        default: "Monthly",
+        default: "",
       },
       startDate: {
         type: Date,

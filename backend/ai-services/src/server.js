@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import knowledgeRoutes from "./routs/knowledge.js";
 import { askOllama } from "./services/ollamaService.js";
 import { searchKnowledge } from "./services/knowledgeService.js";
+import { parseDirectoryQuery } from "./tools/queryParser.js";
 dotenv.config();
 
 const app = express();
@@ -13,6 +14,26 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api/ai/knowledge", knowledgeRoutes);
+app.get("/api/ai/test-parser", async (req, res) => {
+  try {
+    const message = req.query.message || "";
+
+    const result = await parseDirectoryQuery(message);
+
+    res.json({
+      success: true,
+      message,
+      parsed: result
+    });
+  } catch (error) {
+    console.error("Parser test error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
 
 app.get("/api/ai/health", (req, res) => {
   res.json({
