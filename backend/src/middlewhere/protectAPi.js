@@ -1,26 +1,42 @@
 const allowedOrigins = [
-  "https://www.rodiotradelink.com",
   "https://rodiotradelink.com",
+  "https://www.rodiotradelink.com",
   "https://rodio-tradelink.onrender.com",
-   "https://www.rodio-tradelink.onrender.com",
+  "https://www.rodio-tradelink.onrender.com",
+    "https://rodio.in",
+      "https://www.rodio.in",
 ];
 
 const protectApi = (req, res, next) => {
   const origin = req.headers.origin;
   const referer = req.headers.referer;
 
-  const originAllowed = allowedOrigins.includes(origin);
+  // API key
+  const apiKey = req.headers["x-api-key"];
 
-  const refererAllowed = allowedOrigins.some(
-    (allowedOrigin) =>
-      referer && referer.startsWith(`${allowedOrigin}/`)
-  );
+  // Website request
+  const websiteAllowed =
+    allowedOrigins.includes(origin) ||
+    allowedOrigins.some(
+      (url) => referer && referer.startsWith(`${url}/`)
+    );
 
-  if (!originAllowed && !refererAllowed) {
-    return res.status(404).send("Not Found");
+  // Website ko allow karo
+  if (websiteAllowed) {
+    return next();
   }
 
-  next();
+  // Postman / React Native / trusted app
+  if (
+    apiKey &&
+    process.env.DIRECTORY_API_KEY &&
+    apiKey === process.env.DIRECTORY_API_KEY
+  ) {
+    return next();
+  }
+
+  // Baaki sab block
+  return res.status(404).send("Not Found");
 };
 
 module.exports = protectApi;
