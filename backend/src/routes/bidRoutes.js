@@ -3,7 +3,7 @@ const express = require("express");
 
 
 const router = express.Router();
-
+const protect=require("../middlewhere/protectAPi");
 
 
 const {
@@ -42,7 +42,7 @@ const auth = require("../middlewhere/auth");
 
 
 
-router.post("/create/:bookingId", auth, createBid);
+router.post("/create/:bookingId",protect, auth, createBid);
 
 
 
@@ -53,7 +53,7 @@ router.get(
     "/booking/:bookingId",
 
 
-
+protect,
     auth,
 
 
@@ -73,6 +73,7 @@ router.put(
     "/accept/:bidId",
 
 
+protect,
 
     auth,
 
@@ -93,7 +94,7 @@ router.get(
     "/my-bids",
 
 
-
+protect,
     auth,
 
 
@@ -112,7 +113,7 @@ router.put(
 
     "/update/:bidId",
 
-
+protect,
 
     auth,
 
@@ -133,7 +134,7 @@ router.delete(
     "/delete/:bidId",
 
 
-
+protect,
     auth,
 
 

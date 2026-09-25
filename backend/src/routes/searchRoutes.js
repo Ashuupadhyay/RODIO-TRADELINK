@@ -1,4 +1,5 @@
 const express = require("express");
+const protect=require("../middlewhere/protectAPi");
 
 const router = express.Router();
 
@@ -8,9 +9,9 @@ const {
 } = require("../controllers/searchController");
 
 // Existing API
-router.get("/search", searchBusinesses);
+router.get("/search", protect,searchBusinesses);
 
 // New API - Firm Name / Owner Name / Number search
-router.get("/search-by", searchBusinessesByField);
+router.get("/search-by",protect, searchBusinessesByField);
 
 module.exports = router;

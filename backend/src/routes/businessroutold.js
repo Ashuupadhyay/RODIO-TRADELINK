@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-
+const protect=require("../middlewhere/protectAPi");
 // Middleware (Aapke project ke spelling/path ke according)
 const auth = require("../middlewhere/auth");
 const upload = require("../middlewhere/multer");
@@ -21,6 +21,7 @@ const {
 // Step 1: Basic details submit karna (Before Payment)
 router.post(
   "/create-step-one",
+  protect,
   auth,
   createStepOneBusiness
 );
@@ -28,6 +29,7 @@ router.post(
 // Payment verify karna (Step 1 ke baad)
 router.post(
   "/verify-payment",
+  protect,
   auth,
   verifyPayment
 );
@@ -35,6 +37,7 @@ router.post(
 // Step 2: Documents + Remaining details submit karna (After Payment)
 router.put(
   "/update-step-two/:businessId",
+  protect,
   auth,
   upload.fields([
     { name: "photo", maxCount: 1 },
@@ -51,9 +54,9 @@ router.put(
 // ==========================================
 
 // Sabhi active businesses fetch karna
-router.get("/business", getAllBusiness);
+router.get("/business",protect, getAllBusiness);
 
 // Business search filter karna
-router.get("/search", searchBusiness);
+router.get("/search",protect, searchBusiness);
 
 module.exports = router;

@@ -1,5 +1,7 @@
 const express = require("express");
 
+const protect=require("../middlewhere/protectAPi");
+
 const router = express.Router();
 
 const heroSlideController = require("../controllers/heroSlideController");
@@ -10,6 +12,7 @@ const { upload } = require("../config/cloudnary");
 // ==========================================
 router.get(
   "/active",
+  protect,
   heroSlideController.getActiveSlides
 );
 
@@ -19,6 +22,7 @@ router.get(
 // ==========================================
 router.get(
   "/admin/all",
+  protect,
   heroSlideController.getAllAdminSlides
 );
 
@@ -50,6 +54,7 @@ router.post(
 // ==========================================
 router.patch(
   "/admin/toggle/:id",
+  protect,
   heroSlideController.toggleSlideStatus
 );
 
@@ -59,6 +64,7 @@ router.patch(
 // ==========================================
 router.delete(
   "/admin/delete/:id",
+  protect,
   heroSlideController.deleteSlide
 );
 

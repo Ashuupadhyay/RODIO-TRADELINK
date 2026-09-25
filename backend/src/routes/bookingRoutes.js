@@ -1,5 +1,5 @@
 const express = require("express");
-
+const protect=require("../middlewhere/protectAPi");
 const router = express.Router();
 const auth = require("../middlewhere/auth");
 
@@ -20,17 +20,19 @@ updateLead,
 
 
 
-router.post("/create",auth,createBooking);
+router.post("/create",protect,auth,createBooking);
 
-router.get("/my-bookings", auth, myBookings);
-router.get("/all", getAllBookings);
+router.get("/my-bookings", protect,auth, myBookings);
+router.get("/all", protect,getAllBookings);
 router.get(
     "/assigned-leads",
+    protect,
     auth,
     myAssignedLeads
 );
 router.put(
     "/status/:id",
+    protect,
     auth,
     updateLeadStatus
 );
@@ -38,12 +40,14 @@ router.put(
 router.patch(
     "/:id",
     auth,
+    protect,
     updateLead
 );
 
 // Delete Lead
 router.delete(
     "/:id",
+    protect,
     auth,
     deleteLead
 );

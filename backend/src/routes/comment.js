@@ -1,4 +1,5 @@
 const express = require("express");
+const protect=require("../middlewhere/protectAPi");
 
 const router = express.Router();
 
@@ -6,7 +7,7 @@ const { addComment,getTransporterComments} = require("../controllers/commentCont
 
 const isAuthenticated = require("../middlewhere/auth");
 
-router.post("/:id", isAuthenticated, addComment);
-router.get("/:id", getTransporterComments);
+router.post("/:id", protect,isAuthenticated, addComment);
+router.get("/:id",protect, getTransporterComments);
 
 module.exports = router;

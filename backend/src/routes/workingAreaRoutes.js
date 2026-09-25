@@ -1,4 +1,5 @@
 const express = require("express");
+const protect=require("../middlewhere/protectAPi");
 
 const router = express.Router();
 
@@ -12,6 +13,7 @@ const {
 
 router.put(
   "/working-areas",
+  protect,
   auth,
   addWorkingAreas
 );
@@ -19,6 +21,7 @@ router.put(
 // GET Working Areas
 router.get(
   "/working-areas",
+  protect,
   auth,
   getMyWorkingAreas
 );
@@ -26,6 +29,7 @@ router.get(
 // DELETE Working Area
 router.delete(
   "/working-areas",
+  protect,
   auth,
   deleteWorkingArea
 );
