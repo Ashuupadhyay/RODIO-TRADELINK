@@ -52,6 +52,7 @@ const heroslide=require("./routes/heroSlideRoutes.js");
 const mediaPostRoutes = require("./routes/mediaPostRoutes");
 const directoryLeadRoutes =
   require("./routes/directoryLeadRoutes");
+  const notificationRoutes = require("./routes/notificationRoutes");
 //const adminUserRoutes2 = require("./routes/adminUserRoutes2");
 /*
     API Routes
@@ -110,6 +111,7 @@ app.use(
   "/api/directory-leads",
   directoryLeadRoutes
 );
+app.use("/api/notifications", notificationRoutes);
 
 // const PORT = process.env.PORT || 5000;
 
