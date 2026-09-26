@@ -151,7 +151,12 @@ const userSchema = new mongoose.Schema(
   trim: true,
   default: "",
 },
-
+fcmTokens: [
+  {
+    type: String,
+    trim: true,
+  },
+],
     subscription: {
       status: {
         type: String,
