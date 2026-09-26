@@ -57,6 +57,8 @@ const directoryLeadRoutes =
 /*
     API Routes
 */
+console.log("NOTIFICATION ROUTES:", notificationRoutes);
+console.log("NOTIFICATION ROUTES TYPE:", typeof notificationRoutes);
 
 app.use("/api/booking", bookingRoutes);
 

@@ -8,47 +8,39 @@ const {
   markAsRead,
   markAllAsRead,
   saveFcmToken,
-    testNotification,
+  testNotification,
 } = require("../controllers/notificationController");
 
 const authMiddleware = require("../middlewhere/auth");
 
-// Get notifications
-router.get(
-  "/",
-  authMiddleware,
-  getMyNotifications
-);
+// GET /api/notifications
+router.get("/", authMiddleware, getMyNotifications);
 
-// Get unread count
-router.get(
-  "/unread-count",
-  authMiddleware,
-  getUnreadCount
-);
+// GET /api/notifications/unread-count
+router.get("/unread-count", authMiddleware, getUnreadCount);
 
-// Mark one as read
+// PATCH /api/notifications/:notificationId/read
 router.patch(
   "/:notificationId/read",
   authMiddleware,
   markAsRead
 );
 
-// Mark all as read
+// PATCH /api/notifications/read-all
 router.patch(
   "/read-all",
   authMiddleware,
   markAllAsRead
 );
 
-// Save FCM token
+// POST /api/notifications/fcm-token
 router.post(
   "/fcm-token",
   authMiddleware,
   saveFcmToken
 );
 
-// Test notification
+// POST /api/notifications/test
 router.post(
   "/test",
   authMiddleware,
