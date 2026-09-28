@@ -395,11 +395,13 @@
 //     }
 // };
 
-
+const { createNotification } = require("../services/notificationService");
 
 const Booking = require("../models/lead");
 const Bid = require("../models/bid");
 const mongoose = require("mongoose");
+const User = require("../models/register");
+
 // ===============================
 // Create Booking / Lead
 // ===============================
@@ -411,6 +413,24 @@ exports.createBooking = async (req, res) => {
             createdBy: req.user.id,
             creatorRole: req.user.role
         });
+        // 🔔 NEW LOAD NOTIFICATION
+const users = await User.find({
+  _id: { $ne: req.user.id },
+}).select("_id");
+
+await Promise.all(
+  users.map((user) =>
+    createNotification({
+      recipient: user._id,
+      sender: req.user.id,
+      title: "New Load Available",
+      message: "A new load has been posted.",
+      type: "NEW_LOAD",
+      entityId: booking._id,
+      entityType: "LOAD",
+    })
+  )
+);
 
         return res.status(201).json({
             success: true,

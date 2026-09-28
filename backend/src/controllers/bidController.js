@@ -79,7 +79,21 @@ exports.createBid = async (req, res) => {
             amount,
             message
         });
-
+// 🔔 NEW BID NOTIFICATION
+await createNotification({
+    recipient: booking.createdBy,
+    sender: req.user.id,
+    title: "New Bid Received",
+    message: `You received a new bid of ₹${amount} on your load.`,
+    type: "NEW_BID",
+    entityId: bid._id,
+    entityType: "BID",
+    data: {
+        bookingId: booking._id.toString(),
+        bidId: bid._id.toString(),
+        amount: String(amount),
+    },
+});
         return res.status(201).json({
             success: true,
             message: "Bid placed successfully.",
@@ -335,17 +349,55 @@ exports.acceptBid = async (req, res) => {
         // Selected Bid Accepted
         bid.status = "Accepted";
         await bid.save();
+        // 🔔 BID ACCEPTED NOTIFICATION
+await createNotification({
+    recipient: bid.transporter,
+    sender: req.user.id,
+    title: "Bid Accepted",
+    message: "Your bid has been accepted.",
+    type: "BID_ACCEPTED",
+    entityId: bid._id,
+    entityType: "BID",
+    data: {
+        bookingId: booking._id.toString(),
+        bidId: bid._id.toString(),
+    },
+});
 
         // Remaining Bids Rejected
-        await Bid.updateMany(
-            {
-                booking: booking._id,
-                _id: { $ne: bid._id }
+       const rejectedBids = await Bid.find({
+    booking: booking._id,
+    _id: { $ne: bid._id }
+});
+
+await Bid.updateMany(
+    {
+        booking: booking._id,
+        _id: { $ne: bid._id }
+    },
+    {
+        status: "Rejected"
+    }
+);
+
+// 🔔 REJECTED BID NOTIFICATIONS
+await Promise.all(
+    rejectedBids.map((rejectedBid) =>
+        createNotification({
+            recipient: rejectedBid.transporter,
+            sender: req.user.id,
+            title: "Bid Rejected",
+            message: "Your bid was not selected for this load.",
+            type: "BID_REJECTED",
+            entityId: rejectedBid._id,
+            entityType: "BID",
+            data: {
+                bookingId: booking._id.toString(),
+                bidId: rejectedBid._id.toString(),
             },
-            {
-                status: "Rejected"
-            }
-        );
+        })
+    )
+);
 
         return res.status(200).json({
             success: true,
