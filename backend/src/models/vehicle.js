@@ -51,6 +51,7 @@ vehicleSchema.index(
   },
   {
     unique: true,
+     sparse: true,
   }
 );
 
