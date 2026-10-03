@@ -1,5 +1,5 @@
  const express = require("express");
- const protect=require("../middlewhere/protectAPi");
+ //const protect=require("../middlewhere/protectAPi");
 
 const router = express.Router();
 
@@ -20,7 +20,6 @@ const {
 // Upload
 router.post(
   "/upload",
-  protect,
   authMiddleware,
   upload.single("document"),
   uploadDocument
@@ -29,7 +28,7 @@ router.post(
 // My Documents
 router.get(
   "/my",
-  protect,
+
   authMiddleware,
   getMyDocuments
 );
@@ -37,7 +36,6 @@ router.get(
 // Delete
 router.delete(
   "/:id",
-  protect,
   authMiddleware,
   deleteDocument
 );
